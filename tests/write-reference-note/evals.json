@@ -1,0 +1,27 @@
+{
+  "test_cases": [
+    {
+      "prompt": "I want a reference note for 'agentic tools', prompted by resources/ai-for-ux-guide.md",
+      "expected_output": "Runs a real discussion (not a one-shot proposal), grounds against the named resource, gates on explicit confirmation of the definition, writes a new reference note with type/created/sources frontmatter, flips the seeds row to type=reference with a renamed slug matching the new file.",
+      "assertions": [
+        {"type": "file_exists", "path_pattern": "reference/agentic-tools.md"}
+      ]
+    },
+    {
+      "prompt": "a second, different resource also mentions 'agentic tools' - extend the existing note",
+      "expected_output": "Does not create a second reference note or attempt to rename the new seeds row's slug to match the existing one; instead extends the existing file, adds a links row with rel_type='extends', keeps the new row's original slug unchanged, adds the new resource to the sources frontmatter array.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM links WHERE rel_type='extends' AND target_id LIKE '%agentic%'", "min": 1},
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE type='reference' AND note_path LIKE '%agentic-tools%'", "min": 2}
+      ]
+    },
+    {
+      "prompt": "I want a reference note for 'agentic tools' — .slipbox/config.json does not exist in this vault",
+      "expected_output": "Stops before checking for an existing note or invoking discussion, tells the user to run setup-slipbox first, writes no file.",
+      "assertions": [
+        {"type": "file_not_created"},
+        {"type": "contains", "text": "setup-slipbox"}
+      ]
+    }
+  ]
+}

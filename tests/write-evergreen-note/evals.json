@@ -1,0 +1,26 @@
+{
+  "test_cases": [
+    {
+      "prompt": "I want to think through whether tools shape how we think, and how that connects to atomic note-taking",
+      "expected_output": "Inserts an evergreen placeholder row, retrieves relevant literature/reference notes via FTS5, runs a real discussion where the agent's questions stay grounded to retrieved notes but the user's answers are free, applies the purity rule and sign-off rubric, writes a new evergreen note whose title is none of the individually-cited notes' claims restated.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM evergreen WHERE status='discussed'", "min": 1}
+      ]
+    },
+    {
+      "prompt": "I want to revisit and rewrite an existing evergreen note with new thinking",
+      "expected_output": "Moves the existing row's status back to discussing, re-reads the file from disk, runs discussion again, and on completion replaces the note's content (not just appends), increments iteration.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT iteration FROM evergreen WHERE status='discussed'", "min": 2}
+      ]
+    },
+    {
+      "prompt": "I want to think through whether tools shape how we think — .slipbox/config.json does not exist in this vault",
+      "expected_output": "Stops before inserting a placeholder row or retrieving anything from idea.db, tells the user to run setup-slipbox first.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM evergreen", "expect": 0},
+        {"type": "contains", "text": "setup-slipbox"}
+      ]
+    }
+  ]
+}

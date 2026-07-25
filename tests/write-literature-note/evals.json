@@ -1,0 +1,26 @@
+{
+  "test_cases": [
+    {
+      "prompt": "let's discuss one of the pending ideas from the ai-for-ux-guide resource",
+      "expected_output": "Presents the to-discuss, target_type=literature seeds rows for that resource, lets the user pick one, then runs a real back-and-forth discussion (not a one-shot proposal) grounded in the source, gates on explicit confirmation, and writes a literature note holding only the confirmed Claim.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT status FROM seeds WHERE slug LIKE '%'", "expect_any": "discussed"}
+      ]
+    },
+    {
+      "prompt": "I confirm, that's the claim. Actually here's what I personally think about it too.",
+      "expected_output": "Accepts the confirmed claim, but flags the personal-opinion drift rather than folding it into the literature note — offers to log it as a new open question / seeds row instead.",
+      "assertions": [
+        {"type": "not_contains_in_file", "text": "I think", "file_pattern": "literature/*.md"}
+      ]
+    },
+    {
+      "prompt": "let's discuss one of the pending ideas from the ai-for-ux-guide resource — .slipbox/config.json does not exist in this vault",
+      "expected_output": "Stops before querying seeds or listing resume files, tells the user to run setup-slipbox first, writes no note and flips no row.",
+      "assertions": [
+        {"type": "file_not_created"},
+        {"type": "contains", "text": "setup-slipbox"}
+      ]
+    }
+  ]
+}

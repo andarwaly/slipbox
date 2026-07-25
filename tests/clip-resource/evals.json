@@ -1,0 +1,34 @@
+{
+  "test_cases": [
+    {
+      "prompt": "clip this article for me https://example.com/some-post",
+      "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, reports the file path.",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "article"}
+      ]
+    },
+    {
+      "prompt": "clip https://reddit.com/r/somewhere/comments/xyz, I think it's an article",
+      "expected_output": "Detects the URL is a Reddit thread, notices the conflict with the user's stated type, flags it before writing rather than silently picking either side.",
+      "assertions": [
+        {"type": "contains", "text": "conflict"}
+      ]
+    },
+    {
+      "prompt": "clip this youtube video: https://youtube.com/watch?v=abc123, it has no captions at all",
+      "expected_output": "Attempts youtube-transcript-api, gets NoTranscriptFound or TranscriptsDisabled, reports a clean failure and writes nothing — does not attempt any workaround.",
+      "assertions": [
+        {"type": "file_not_created"},
+        {"type": "contains", "text": "transcript"}
+      ]
+    },
+    {
+      "prompt": "clip this article for me https://example.com/some-post — .slipbox/config.json does not exist in this vault",
+      "expected_output": "Stops before fetching anything, tells the user to run setup-slipbox first, and does not write any file or improvise conventions in config.json's absence.",
+      "assertions": [
+        {"type": "file_not_created"},
+        {"type": "contains", "text": "setup-slipbox"}
+      ]
+    }
+  ]
+}

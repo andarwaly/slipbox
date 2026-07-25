@@ -1,0 +1,33 @@
+{
+  "test_cases": [
+    {
+      "prompt": "surface ideas from resources/ai-for-ux-guide.md",
+      "expected_output": "Reads the resource, produces 5-10 seeds rows shaped as question+motivation, none phrased as a finished conclusion, spread across compass directions, each reason specific enough it couldn't be pasted onto an unrelated resource.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE resource='ai-for-ux-guide' AND status='to-discuss'", "min": 5, "max": 10}
+      ]
+    },
+    {
+      "prompt": "surface ideas from a resource that mentions 'LLM' as a term, a term this vault hasn't seen before",
+      "expected_output": "In addition to literature candidates, inserts one seeds row with target_type='reference' for the term 'LLM'.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE target_type='reference' AND reason LIKE '%LLM%'", "min": 1}
+      ]
+    },
+    {
+      "prompt": "surface ideas from the same resource I already ran this on yesterday",
+      "expected_output": "Detects existing rows for that resource, fuzzy-compares new candidates against them, and asks before adding a near-duplicate rather than auto-merging or silently re-adding it.",
+      "assertions": [
+        {"type": "contains", "text": "already"}
+      ]
+    },
+    {
+      "prompt": "surface ideas from resources/ai-for-ux-guide.md — .slipbox/config.json does not exist in this vault",
+      "expected_output": "Stops before reading the resource or querying idea.db, tells the user to run setup-slipbox first, inserts no seeds rows.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE resource='ai-for-ux-guide'", "expect": 0},
+        {"type": "contains", "text": "setup-slipbox"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "test_cases": [
+    {
+      "prompt": "Set up slipbox in my vault for the first time.",
+      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults, runs Section B style analysis or greenfield interview, initializes idea.db, and shows a draft config.json for approval before writing.",
+      "assertions": [
+        {"type": "file_exists", "path": ".slipbox/idea.db"},
+        {"type": "file_exists", "path": ".slipbox/config.json"},
+        {"type": "file_exists", "path": ".slipbox/style-profile.md"},
+        {"type": "file_exists", "path": ".slipbox/humanize-checklist.md"}
+      ]
+    },
+    {
+      "prompt": "sqlite3 is not installed, set up slipbox anyway.",
+      "expected_output": "Stops before writing anything, tells the user sqlite3 is required, and offers to install it or asks the user to install it themselves — never proceeds or auto-installs without asking.",
+      "assertions": [
+        {"type": "contains", "text": "sqlite3"},
+        {"type": "not_contains", "text": "installed automatically without confirmation"}
+      ]
+    },
+    {
+      "prompt": "youtube-transcript-api is not installed, set up slipbox anyway.",
+      "expected_output": "Stops before writing anything, tells the user youtube-transcript-api is required for clipping video transcripts, and offers to pip install it or asks the user to install it themselves — never proceeds or auto-installs without asking.",
+      "assertions": [
+        {"type": "contains", "text": "youtube-transcript-api"},
+        {"type": "not_contains", "text": "installed automatically without confirmation"}
+      ]
+    },
+    {
+      "prompt": "I already ran setup-slipbox once, my vault's filename convention changed from kebab-case to Title Case since then. Re-run setup.",
+      "expected_output": "Re-discovers conventions, diffs against the existing config.json, reports the specific mismatch (kebab-case vs Title Case), and asks the user which side wins — does not silently overwrite, does not re-ask every question from scratch, does not touch idea.db or existing notes.",
+      "assertions": [
+        {"type": "contains", "text": "mismatch"},
+        {"type": "not_contains", "text": "idea.db"}
+      ]
+    }
+  ]
+}
