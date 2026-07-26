@@ -24,10 +24,10 @@ Invoke it by name, pointing at a Resource:
 
 ## Installation
 
-This skill ships as part of the `andarwaly/skills` collection:
+This skill ships as part of the `andarwaly/slipbox` repo:
 
 ```bash
-npx skills add andarwaly/skills
+npx skills add andarwaly/slipbox
 ```
 
 ## Reference

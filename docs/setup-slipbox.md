@@ -26,10 +26,10 @@ Once it completes, all six other slipbox skills are ready to use.
 
 ## Installation
 
-This skill ships as part of the `andarwaly/skills` collection:
+This skill ships as part of the `andarwaly/slipbox` repo:
 
 ```bash
-npx skills add andarwaly/skills
+npx skills add andarwaly/slipbox
 ```
 
 See the [skill source](../../skills/slipbox/setup-slipbox/) for the full agent-facing instructions.

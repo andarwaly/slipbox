@@ -28,10 +28,10 @@ Or pick from pending candidates:
 
 ## Installation
 
-This skill ships as part of the `andarwaly/skills` collection:
+This skill ships as part of the `andarwaly/slipbox` repo:
 
 ```bash
-npx skills add andarwaly/skills
+npx skills add andarwaly/slipbox
 ```
 
 See the [skill source](../../skills/slipbox/write-reference-note/) for the full agent-facing instructions.

@@ -26,10 +26,10 @@ Or resume an in-progress session:
 
 ## Installation
 
-This skill ships as part of the `andarwaly/skills` collection:
+This skill ships as part of the `andarwaly/slipbox` repo:
 
 ```bash
-npx skills add andarwaly/skills
+npx skills add andarwaly/slipbox
 ```
 
 See the [skill source](../../skills/slipbox/write-literature-note/) for the full agent-facing instructions.

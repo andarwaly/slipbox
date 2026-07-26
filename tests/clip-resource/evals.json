@@ -1,15 +1,46 @@
 {
+  "_comment": "web_clipper_diff assertions reference fixtures/expected/*-expected.md, which are placeholders pending real Obsidian Web Clipper output — see fixtures/expected/README.md. Do not mark those assertions as run until the corresponding expected file is real.",
   "test_cases": [
     {
       "prompt": "clip this article for me https://example.com/some-post",
       "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, reports the file path.",
+      "fixture_vault": "fixtures/vault-configured",
       "assertions": [
-        {"type": "frontmatter_field_equals", "field": "type", "value": "article"}
+        {"type": "frontmatter_field_equals", "field": "type", "value": "article"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/article-expected.md", "graded_by": "llm_judge"}
+      ]
+    },
+    {
+      "prompt": "clip this for me https://example-news.com/some-story",
+      "expected_output": "Fetches the URL, resolves author/published/publisher via the extraction ladder, writes a frozen Resource file with type: news and a publisher field in frontmatter, body as verbatim {{content}} per the News template's bare-variable body.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "news"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/news-expected.md", "graded_by": "llm_judge"}
+      ]
+    },
+    {
+      "prompt": "clip this thread for me https://x.com/someuser/status/123456789",
+      "expected_output": "Detects the URL as a Social/Forum thread, writes a frozen Resource file with type: social, bare root_post plus the author's own continuation replies (not other participants' replies), author as display name falling back to handle.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "social"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/social-expected.md", "graded_by": "llm_judge"}
+      ]
+    },
+    {
+      "prompt": "clip this youtube video: https://youtube.com/watch?v=abc123def",
+      "expected_output": "Pulls the transcript via youtube-transcript-api (not the extraction ladder), writes a frozen Resource file with type: video, bare transcript, author as the channel name.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "video"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/video-expected.md", "graded_by": "llm_judge"}
       ]
     },
     {
       "prompt": "clip https://reddit.com/r/somewhere/comments/xyz, I think it's an article",
       "expected_output": "Detects the URL is a Reddit thread, notices the conflict with the user's stated type, flags it before writing rather than silently picking either side.",
+      "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "contains", "text": "conflict"}
       ]
@@ -17,14 +48,16 @@
     {
       "prompt": "clip this youtube video: https://youtube.com/watch?v=abc123, it has no captions at all",
       "expected_output": "Attempts youtube-transcript-api, gets NoTranscriptFound or TranscriptsDisabled, reports a clean failure and writes nothing — does not attempt any workaround.",
+      "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "file_not_created"},
         {"type": "contains", "text": "transcript"}
       ]
     },
     {
-      "prompt": "clip this article for me https://example.com/some-post — .slipbox/config.json does not exist in this vault",
-      "expected_output": "Stops before fetching anything, tells the user to run setup-slipbox first, and does not write any file or improvise conventions in config.json's absence.",
+      "prompt": "clip this article for me https://example.com/some-post",
+      "expected_output": "Stops before fetching anything, tells the user to run setup-slipbox first, and does not write any file or improvise conventions in config.json's absence — regardless of whether the vault has no .slipbox/ at all, has one with no config.json yet, or has an interrupted/partial setup. clip-resource only ever checks for config.json's presence, so all three states are equivalent from its point of view.",
+      "fixture_vault": "fixtures/vault-unconfigured",
       "assertions": [
         {"type": "file_not_created"},
         {"type": "contains", "text": "setup-slipbox"}

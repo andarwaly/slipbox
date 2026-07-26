@@ -59,16 +59,9 @@ No Whisper fallback, or any other transcription workaround, under any failure co
 
 ## 4. Transform
 
-Resolve whatever the user's template (see `.slipbox/config.json`) asks for — this skill doesn't dictate template content, it fills in the variables a template uses (see `references/variable-glossary.md`). The shipped/default templates ask for:
+`clip-resource` has no opinion on what any template's body should contain — every template is 100% user-authored via `setup-slipbox`, and there is no shipped/default treatment implied by content type. This skill resolves bare variables verbatim and executes quoted instructions exactly as written (see `references/variable-glossary.md`), for every content type equally. A template author may write bare `{{content}}` for Article, a quoted cleanup instruction for News, `{{root_post}}` plus `{{continuation}}` for Social, bare `{{transcript}}` for Video, entity sections (People/Tools/Resources/Definition) or none at all — this skill fills in whatever the actual template asks for, without assuming a "typical" shape per type.
 
-- **Frontmatter**: `type` holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. Plus `link`, `author`, `published`, `tags` as usual.
-- **Article**: a quoted instruction for a full cleaned rewrite of the source, not bare `{{content}}`.
-- **News**: adds a `publisher` frontmatter field. A quoted instruction for a summarized/compressed treatment, not a full rewrite and not bare `{{content}}`.
-- **Social/Forum thread**: bare `{{root_post}}` plus `{{continuation}}` — the author's own continuation replies — the thread-as-a-single-post case (e.g. an X/Twitter thread), not top community replies from other participants. `author` is the display name, falling back to handle if no display name is available.
-- **Video**: bare `{{transcript}}` pulled in Step 3. `author` is the channel.
-- Entity sections where the content supports them: People, Tools, Resources, Definition.
-
-A different template can ask for something else — e.g. a bare, unrewritten Article body — and this skill fills it in exactly the same way, without objecting.
+Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via the extraction ladder in Step 3, same as any other bare fact.
 
 Stop there. Do not add a "Bud candidate" section, a "Further exploration" section, or any other line that names an idea worth pursuing or a conclusion about what the content means. Reading the material and forming an opinion on it is `surface-ideas`'s Socratic stage, run later and separately. A Resource file that already contains a take skips that stage instead of feeding it.
 
