@@ -1,22 +1,24 @@
 {
-  "_comment": "web_clipper_diff assertions reference fixtures/expected/*-expected.md, which are placeholders pending real Obsidian Web Clipper output — see fixtures/expected/README.md. Do not mark those assertions as run until the corresponding expected file is real.",
+  "_comment": "web_clipper_diff assertions reference real fixtures/expected/*.md files — actual Obsidian Web Clipper output, kept under their real derived titles (not a generic {{type}}-expected.md name) since filename derivation is itself part of what filename_equals verifies.",
   "test_cases": [
     {
-      "prompt": "clip this article for me https://example.com/some-post",
-      "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, reports the file path.",
+      "prompt": "clip this article for me https://nervegna.substack.com/p/claude-code-for-designers-a-practical",
+      "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, filename derived from the title in Title Case (per config.json's filenames.resource), reports the file path.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "article"},
-        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/article-expected.md", "graded_by": "llm_judge"}
+        {"type": "filename_equals", "expected_filename": "Claude Code for Designers A Practical Guide.md"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/Claude Code for Designers A Practical Guide.md", "graded_by": "llm_judge"}
       ]
     },
     {
-      "prompt": "clip this for me https://example-news.com/some-story",
-      "expected_output": "Fetches the URL, resolves author/published/publisher via the extraction ladder, writes a frozen Resource file with type: news and a publisher field in frontmatter, body as verbatim {{content}} per the News template's bare-variable body.",
+      "prompt": "clip this for me https://www.bbc.com/news/articles/cjrv77gl4deo",
+      "expected_output": "Fetches the URL, resolves author/published/publisher via the extraction ladder, writes a frozen Resource file with type: news and a publisher field in frontmatter, filename derived from the title in Title Case, body as verbatim {{content}} per the News template's bare-variable body.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "news"},
-        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/news-expected.md", "graded_by": "llm_judge"}
+        {"type": "filename_equals", "expected_filename": "Israeli settlers set fire to mosques, cars and farm land in West Bank, Palestinians say.md"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/Israeli settlers set fire to mosques, cars and farm land in West Bank, Palestinians say.md", "graded_by": "llm_judge"}
       ]
     },
     {
@@ -29,12 +31,13 @@
       ]
     },
     {
-      "prompt": "clip this youtube video: https://youtube.com/watch?v=abc123def",
-      "expected_output": "Pulls the transcript via youtube-transcript-api (not the extraction ladder), writes a frozen Resource file with type: video, bare transcript, author as the channel name.",
+      "prompt": "clip this youtube video: https://www.youtube.com/watch?v=V-jd3v9P-Ps&t=1185s",
+      "expected_output": "Pulls the transcript via youtube-transcript-api (not the extraction ladder), writes a frozen Resource file with type: video, bare transcript, author as the channel name, filename derived from the title in Title Case.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "video"},
-        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/video-expected.md", "graded_by": "llm_judge"}
+        {"type": "filename_equals", "expected_filename": "How Anthropic, Every, & Ramp design with AI.md"},
+        {"type": "web_clipper_diff", "expected_file": "fixtures/expected/How Anthropic, Every, & Ramp design with AI.md", "graded_by": "llm_judge"}
       ]
     },
     {

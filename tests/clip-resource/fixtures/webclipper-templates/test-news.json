@@ -5,7 +5,7 @@
   "noteContentFormat": "# {{title}}\n\n{{content}}",
   "noteNameFormat": "{{title|safe_name}}",
   "path": "resources",
-  "triggers": ["https://example-news.com/some-story"],
+  "triggers": ["https://www.bbc.com/news/articles/cjrv77gl4deo"],
   "properties": [
     { "name": "type", "value": "news", "type": "text" },
     { "name": "link", "value": "{{url}}", "type": "text" },

@@ -5,7 +5,7 @@
   "noteContentFormat": "# {{title}}\n\n{{content}}",
   "noteNameFormat": "{{title|safe_name}}",
   "path": "resources",
-  "triggers": ["https://example.com/some-post"],
+  "triggers": ["https://nervegna.substack.com/p/claude-code-for-designers-a-practical"],
   "properties": [
     { "name": "type", "value": "article", "type": "text" },
     { "name": "link", "value": "{{url}}", "type": "text" },
