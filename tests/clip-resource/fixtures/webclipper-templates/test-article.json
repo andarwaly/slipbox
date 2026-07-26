@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "test-article",
+  "behavior": "create",
+  "noteContentFormat": "# {{title}}\n\n{{content}}",
+  "noteNameFormat": "{{title|safe_name}}",
+  "path": "resources",
+  "triggers": ["https://example.com/some-post"],
+  "properties": [
+    { "name": "type", "value": "article", "type": "text" },
+    { "name": "link", "value": "{{url}}", "type": "text" },
+    { "name": "author", "value": "{{author}}", "type": "text" },
+    { "name": "published", "value": "{{published|date:\"YYYY-MM-DD\"}}", "type": "date" },
+    { "name": "tags", "value": "", "type": "multitext" }
+  ]
+}

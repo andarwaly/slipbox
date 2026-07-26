@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "test-video",
+  "behavior": "create",
+  "noteContentFormat": "# {{title}}\n\n{{transcript}}",
+  "noteNameFormat": "{{title|safe_name}}",
+  "path": "resources",
+  "triggers": ["https://youtube.com/watch?v=abc123def"],
+  "properties": [
+    { "name": "type", "value": "video", "type": "text" },
+    { "name": "link", "value": "{{url}}", "type": "text" },
+    { "name": "author", "value": "{{author}}", "type": "text" },
+    { "name": "published", "value": "{{published|date:\"YYYY-MM-DD\"}}", "type": "date" },
+    { "name": "tags", "value": "", "type": "multitext" }
+  ]
+}
