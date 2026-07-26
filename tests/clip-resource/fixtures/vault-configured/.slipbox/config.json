@@ -1,0 +1,32 @@
+{
+  "paths": {
+    "resources": "resources",
+    "literature": "literature",
+    "evergreen": "evergreen",
+    "reference": "reference"
+  },
+  "filenames": {
+    "resource": "kebab-case",
+    "literature": "kebab-case",
+    "reference": "kebab-case",
+    "evergreen": "kebab-case"
+  },
+  "frontmatter": {
+    "literature": { "type": "type", "created": "created", "source": "source" },
+    "reference": { "type": "type", "created": "created", "sources": "sources", "aliases": "aliases" },
+    "evergreen": { "type": "type", "created": "created", "derived-from": "derived-from" }
+  },
+  "links": {
+    "style": "wikilink"
+  },
+  "templates": {
+    "literature_path": ".obsidian/templates/literature.md",
+    "reference_path": ".obsidian/templates/reference.md",
+    "evergreen_path": ".obsidian/templates/evergreen.md",
+    "article_path": ".obsidian/templates/article.md",
+    "news_path": ".obsidian/templates/news.md",
+    "social_path": ".obsidian/templates/social.md",
+    "video_path": ".obsidian/templates/video.md"
+  },
+  "transcript_languages": ["en"]
+}
