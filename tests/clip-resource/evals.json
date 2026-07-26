@@ -22,8 +22,17 @@
       ]
     },
     {
-      "prompt": "clip this thread for me https://x.com/someuser/status/123456789",
+      "prompt": "clip this thread for me https://www.threads.com/@zudoplatov/post/DbPViUDEahD?hl=en",
       "expected_output": "Detects the URL as a Social/Forum thread, writes a frozen Resource file with type: social, bare root_post plus the author's own continuation replies (not other participants' replies), author as display name falling back to handle.",
+      "fixture_vault": "fixtures/vault-configured",
+      "_no_web_clipper_diff": "Real Obsidian Web Clipper has no concept matching continuation (author's own reply-chain) — only single-post text extraction, no schema.org on X/Twitter or Threads. No fair comparison possible; verified by mechanical assertions only.",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "social"}
+      ]
+    },
+    {
+      "prompt": "clip this thread for me https://x.com/Aiwithpoonam/status/2081330831961039108",
+      "expected_output": "Detects the URL as a Social/Forum thread (X/Twitter), writes a frozen Resource file with type: social, bare root_post plus the author's own continuation replies (not other participants' replies), author as display name falling back to handle.",
       "fixture_vault": "fixtures/vault-configured",
       "_no_web_clipper_diff": "Real Obsidian Web Clipper has no concept matching continuation (author's own reply-chain) — only single-post text extraction, no schema.org on X/Twitter. No fair comparison possible; verified by mechanical assertions only.",
       "assertions": [
@@ -41,7 +50,7 @@
       ]
     },
     {
-      "prompt": "clip https://reddit.com/r/somewhere/comments/xyz, I think it's an article",
+      "prompt": "clip https://www.reddit.com/r/ClaudeAI/comments/1v73ep8/unpopular_opinion_messy_unstructured_prompts_give/, I think it's an article",
       "expected_output": "Detects the URL is a Reddit thread, notices the conflict with the user's stated type, flags it before writing rather than silently picking either side.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
