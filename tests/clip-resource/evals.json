@@ -3,7 +3,7 @@
   "test_cases": [
     {
       "prompt": "clip this article for me https://nervegna.substack.com/p/claude-code-for-designers-a-practical",
-      "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, filename derived from the title in Title Case (per config.json's filenames.resource), reports the file path.",
+      "expected_output": "Fetches the URL, climbs the extraction ladder for author/published/description, writes a frozen Resource file with type: article in frontmatter, filename derived verbatim from the title (per config.json's filenames.resource), reports the file path.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "article"},
@@ -13,7 +13,7 @@
     },
     {
       "prompt": "clip this for me https://www.bbc.com/news/articles/cjrv77gl4deo",
-      "expected_output": "Fetches the URL, resolves author/published/publisher via the extraction ladder, writes a frozen Resource file with type: news and a publisher field in frontmatter, filename derived from the title in Title Case, body as verbatim {{content}} per the News template's bare-variable body.",
+      "expected_output": "Fetches the URL, resolves author/published/publisher via the extraction ladder, writes a frozen Resource file with type: news and a publisher field in frontmatter, filename derived verbatim from the title, body as verbatim {{content}} per the News template's bare-variable body.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "news"},
@@ -41,12 +41,22 @@
     },
     {
       "prompt": "clip this youtube video: https://www.youtube.com/watch?v=V-jd3v9P-Ps&t=1185s",
-      "expected_output": "Pulls the transcript via youtube-transcript-api (not the extraction ladder), writes a frozen Resource file with type: video, bare transcript, author as the channel name, filename derived from the title in Title Case.",
+      "expected_output": "Pulls the transcript via youtube-transcript-api (not the extraction ladder), writes a frozen Resource file with type: video, bare transcript, author as the channel name, filename derived verbatim from the title.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "frontmatter_field_equals", "field": "type", "value": "video"},
         {"type": "filename_equals", "expected_filename": "How Anthropic, Every, & Ramp design with AI.md"},
         {"type": "web_clipper_diff", "expected_file": "fixtures/expected/How Anthropic, Every, & Ramp design with AI.md", "graded_by": "llm_judge"}
+      ]
+    },
+    {
+      "prompt": "clip this thread for me https://www.reddit.com/r/ClaudeAI/comments/1v73ep8/unpopular_opinion_messy_unstructured_prompts_give/",
+      "expected_output": "Detects the URL as a Reddit thread (Social/Forum), no conflict since no user-stated type disagrees, writes a frozen Resource file with type: social, bare root_post plus continuation (the OP's own comment replies, not other participants'), author as the OP's username.",
+      "fixture_vault": "fixtures/vault-configured",
+      "_no_web_clipper_diff": "Same continuation-gap reasoning as the other two Social cases — no fair comparison possible.",
+      "_note": "Reddit chosen because it's the one Social-shaped platform proven anonymously fetchable (clip-resource-pilot-run-findings.md, Finding 3) — Threads and X both gate full thread content behind a login wall.",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "social"}
       ]
     },
     {

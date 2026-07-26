@@ -6,7 +6,7 @@
     "reference": "reference"
   },
   "filenames": {
-    "resource": "verbatim",
+    "resource": "Title Case",
     "literature": "kebab-case",
     "reference": "kebab-case",
     "evergreen": "kebab-case"
