@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://slipbox.local/schemas/config.schema.json",
+  "title": ".slipbox/config.json",
+  "type": "object",
+  "required": ["paths", "filenames", "frontmatter", "links", "templates", "transcript_languages"],
+  "additionalProperties": false,
+  "properties": {
+    "paths": {
+      "type": "object",
+      "required": ["resources", "literature", "evergreen", "reference"],
+      "additionalProperties": false,
+      "properties": {
+        "resources": { "type": "string" },
+        "literature": { "type": "string" },
+        "evergreen": { "type": "string" },
+        "reference": { "type": "string" }
+      }
+    },
+    "filenames": {
+      "type": "object",
+      "required": ["literature", "reference", "evergreen"],
+      "additionalProperties": false,
+      "properties": {
+        "literature": { "$ref": "#/definitions/casing" },
+        "reference": { "$ref": "#/definitions/casing" },
+        "evergreen": { "$ref": "#/definitions/casing" }
+      }
+    },
+    "frontmatter": {
+      "type": "object",
+      "required": ["literature", "reference", "evergreen"],
+      "additionalProperties": false,
+      "properties": {
+        "literature": { "$ref": "#/definitions/field_map" },
+        "reference": { "$ref": "#/definitions/field_map" },
+        "evergreen": { "$ref": "#/definitions/field_map" }
+      }
+    },
+    "links": {
+      "type": "object",
+      "required": ["style"],
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "type": "string",
+          "enum": ["wikilink", "markdown"]
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "required": [
+        "literature_path",
+        "reference_path",
+        "evergreen_path",
+        "article_path",
+        "news_path",
+        "social_path",
+        "video_path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "literature_path": { "type": "string" },
+        "reference_path": { "type": "string" },
+        "evergreen_path": { "type": "string" },
+        "article_path": { "type": "string" },
+        "news_path": { "type": "string" },
+        "social_path": { "type": "string" },
+        "video_path": { "type": "string" }
+      }
+    },
+    "transcript_languages": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  },
+  "definitions": {
+    "casing": {
+      "type": "string",
+      "enum": ["kebab-case", "Title Case", "snake_case", "verbatim", "other"]
+    },
+    "field_map": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "boolean", "const": false }
+        ]
+      },
+      "description": "Per required field, one of: (a) the existing user property it maps onto (string), (b) the standard field name if newly created (string), or (c) false for explicit opt-out. Never a key equal to the reserved properties tags, aliases, or cssclasses."
+    }
+  }
+}
