@@ -35,15 +35,31 @@ The four content types: **Article**, **News**, **Social/Forum thread**, **Video*
 
 ## 3. Fetch and extract
 
-Retrieve the page or video content directly. Note what you actually got back: full content, a truncated snippet, or nothing.
+Note what you actually got back: full content, a truncated snippet, or nothing. Extraction splits by type — Article and News go through Defuddle; Social and Video each have their own path below.
 
-For all four types, resolve facts (author, title, published date, etc.) via the same extraction ladder, in order, stopping at the first rung that yields the value:
+### Article and News: use the `defuddle` CLI
+
+Do not fetch the page with a general-purpose web-fetch tool for these two types — a tool that runs fetched content through an intermediate summarizing model will silently drop content on long pages before this skill ever sees it (this is what caused a real verbatim-content bug: an image gallery, a subsection, and a full walkthrough section disappeared from an Article clip with no error reported). Bare `{{content}}` must reproduce what Defuddle extracted, not a pre-summarized version of it.
+
+Run:
+
+```bash
+defuddle parse "<url>" --markdown
+```
+
+Call the `defuddle` binary directly, not via `npx` — `npx`'s own resolution/caching has been observed to be unreliable across working directories (inconsistent version output, occasional `enoent` failures) even when `defuddle` is correctly installed and on `PATH`.
+
+Take `content`, `title`, `author`, and any schema.org-derived metadata directly from Defuddle's output — this replaces the schema.org / `<meta>` tag / LLM-read ladder for these two types. Defuddle parses via a DOM implementation (not a real browser), so it still won't see JS-rendered or lazy-loaded content that only appears after client-side execution — that ceiling is unchanged, it's just no longer masked by an upstream summarizing pass. If `defuddle` is missing, stop and tell the user to run `setup-slipbox` to install it — do not attempt `npm install` from inside this skill.
+
+### Social: extraction ladder (unchanged)
+
+Defuddle has no concept of `root_post` plus `continuation` (the author's own reply chain, not other participants' replies) — it would flatten a thread into one article-shaped blob. Resolve facts for Social via the same extraction ladder as before, in order, stopping at the first rung that yields the value:
 
 1. **schema.org JSON-LD** — structured data embedded in the page.
 2. **`<meta>` tags** — Open Graph / standard meta tags (`og:title`, `article:author`, etc.).
 3. **LLM-read fallback** — read the fetched content directly and infer the value.
 
-There is no CSS-selector extraction rung — this skill has no DOM access (no headless browser). That's a future addition once a headless-browser capability exists in this environment, not something to fake with regex or guesswork today.
+There is no CSS-selector extraction rung for Social — this skill has no DOM access for it (no headless browser). That's a future addition once a headless-browser capability exists in this environment, not something to fake with regex or guesswork today.
 
 ### Video is the one exception to "fetch the page"
 
@@ -61,7 +77,7 @@ No Whisper fallback, or any other transcription workaround, under any failure co
 
 `clip-resource` has no opinion on what any template's body should contain — every template is 100% user-authored via `setup-slipbox`, and there is no shipped/default treatment implied by content type. This skill resolves bare variables verbatim and executes quoted instructions exactly as written (see `references/variable-glossary.md`), for every content type equally. A template author may write bare `{{content}}` for Article, a quoted cleanup instruction for News, `{{root_post}}` plus `{{continuation}}` for Social, bare `{{transcript}}` for Video, entity sections (People/Tools/Resources/Definition) or none at all — this skill fills in whatever the actual template asks for, without assuming a "typical" shape per type.
 
-Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via the extraction ladder in Step 3, same as any other bare fact.
+Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the extraction ladder in Step 3 for Social, same as any other bare fact for that type.
 
 Stop there. Do not add a "Bud candidate" section, a "Further exploration" section, or any other line that names an idea worth pursuing or a conclusion about what the content means. Reading the material and forming an opinion on it is `surface-ideas`'s Socratic stage, run later and separately. A Resource file that already contains a take skips that stage instead of feeding it.
 

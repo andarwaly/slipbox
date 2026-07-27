@@ -15,9 +15,9 @@ Every other skill in this family reads `.slipbox/config.json` before it writes a
 
 This is the only place in the slipbox family that installs anything — every other skill that hits a missing dependency stops and points back here rather than installing it inline.
 
-Run `scripts/check-prereqs.sh` and read its report. It checks `sqlite3` on PATH and `youtube_transcript_api` importability, and only detects — it never installs anything itself. The video-transcript check can be skipped entirely if the user has already said they have no interest in clipping video; otherwise check both by default.
+Run `scripts/check-prereqs.sh` and read its report. It checks `sqlite3` on PATH, `youtube_transcript_api` importability, and `defuddle` resolvability via `npx`, and only detects — it never installs anything itself. The video-transcript check can be skipped entirely if the user has already said they have no interest in clipping video; otherwise check all three by default.
 
-For each dependency the report marks missing: stop, tell the user what it's needed for (`sqlite3` for initializing `idea.db`; `youtube-transcript-api` for `clip-resource`'s Video path), and ask explicitly before doing anything about it — never install without that per-dependency ask. If the user agrees, run `scripts/install-prereqs.sh <dependency>` for just that one dependency (`sqlite3` or `youtube-transcript-api`). If they'd rather install it themselves, tell them to re-run this skill once it's in place.
+For each dependency the report marks missing: stop, tell the user what it's needed for (`sqlite3` for initializing `idea.db`; `youtube-transcript-api` for `clip-resource`'s Video path; `defuddle` for `clip-resource`'s Article and News path), and ask explicitly before doing anything about it — never install without that per-dependency ask. If the user agrees, run `scripts/install-prereqs.sh <dependency>` for just that one dependency (`sqlite3`, `youtube-transcript-api`, or `defuddle`). If they'd rather install it themselves, tell them to re-run this skill once it's in place.
 
 ## 1. Explore (no questions yet)
 

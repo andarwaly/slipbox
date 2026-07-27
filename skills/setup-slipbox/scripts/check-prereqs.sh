@@ -21,4 +21,11 @@ else
   missing=1
 fi
 
+if command -v defuddle >/dev/null 2>&1; then
+  echo "defuddle: present ($(defuddle --version))"
+else
+  echo "defuddle: missing"
+  missing=1
+fi
+
 exit "$missing"
