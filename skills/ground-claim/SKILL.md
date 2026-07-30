@@ -1,7 +1,7 @@
 ---
 name: ground-claim
 description: Ground a surfaced idea into a Claim — the source's own position, restated
-  in your own words and checked against the source, then written as a literature note.
+  in the user's own words and checked against the source, then written as a literature note.
 disable-model-invocation: true
 license: MIT
 metadata:
