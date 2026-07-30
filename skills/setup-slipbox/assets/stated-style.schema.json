@@ -3,7 +3,7 @@
   "$id": "https://slipbox.local/schemas/stated-style.schema.json",
   "title": ".slipbox/stated_style.json",
   "type": "object",
-  "required": ["person", "pacing", "register", "tone", "forbidden_vocabulary"],
+  "required": ["person", "pacing", "register", "tone", "language", "forbidden_vocabulary"],
   "additionalProperties": false,
   "properties": {
     "person": {
@@ -34,6 +34,26 @@
         "formal_casual": { "$ref": "#/definitions/formal_casual" },
         "respectful_irreverent": { "$ref": "#/definitions/respectful_irreverent" },
         "matter_of_fact_enthusiastic": { "$ref": "#/definitions/matter_of_fact_enthusiastic" }
+      }
+    },
+    "language": {
+      "type": "object",
+      "description": "Primary/additional languages the user says they write in and their code-switching behavior, stated directly (no corpus to detect it from).",
+      "required": ["primary", "additional", "code_switching"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "type": "string",
+          "description": "Language code, e.g. en."
+        },
+        "additional": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "code_switching": {
+          "type": "string",
+          "enum": ["none", "register-gated", "free-mixing"]
+        }
       }
     },
     "forbidden_vocabulary": {
