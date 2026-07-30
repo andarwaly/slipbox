@@ -9,7 +9,7 @@ metadata:
 
 # Setup Slipbox
 
-Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `config.json` plus `idea.db`, `style-profile.md`, and `humanize-checklist.md` through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (style), humanize checklist, idea.db init, config write. Four of those outputs are built from fixed assets rather than composed fresh each run — `assets/config.schema.json`, `assets/humanize-checklist.md`, `assets/style-profile.template.md`, and `assets/stated-style.template.md` — so re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones.
+Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `config.json` plus `idea.db`, `style-profile.json`, and `humanize-checklist.json` through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (style), humanize checklist, idea.db init, config write. Four of those outputs are built from fixed assets rather than composed fresh each run — `assets/config.schema.json`, `assets/humanize-checklist.json`, `assets/style-profile.schema.json`, and `assets/stated-style.schema.json` — so re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `idea-db config get`/`idea-db config set` CLI (see Step 7).
 
 ## 0. Prerequisites
 
@@ -28,7 +28,7 @@ Check the vault for existing signal before asking the user anything:
 - Existing `Literature`/`Term`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
 - An existing `.slipbox/` directory. Its presence branches three ways, not two:
   - `.slipbox/config.json` exists → this is a re-run; switch to the drift-check flow in Step 8.
-  - `.slipbox/` exists but `config.json` does not → an interrupted prior run. Check individually for `idea.db`, `style-profile.md`/`stated_style`, and `humanize-checklist.md` — don't assume `idea.db`'s presence alone tells you how far the prior run got. Tell the user setup was interrupted before completion, then **resume with a clean restart of Sections A/B below** (this and the first-run path are identical from here — there is no partial-answer persistence to resume from, and no existing `config.json` to diff against, so Step 8's drift-check mechanics don't apply). Never delete or overwrite whatever partial artifacts already exist until their step is reached normally.
+  - `.slipbox/` exists but `config.json` does not → an interrupted prior run. Check individually for `idea.db`, `style-profile.json`/`stated_style.json`, and `humanize-checklist.json` — don't assume `idea.db`'s presence alone tells you how far the prior run got. Tell the user setup was interrupted before completion, then **resume with a clean restart of Sections A/B below** (this and the first-run path are identical from here — there is no partial-answer persistence to resume from, and no existing `config.json` to diff against, so Step 8's drift-check mechanics don't apply). Never delete or overwrite whatever partial artifacts already exist until their step is reached normally.
   - No `.slipbox/` at all → first run, proceed below.
 
 **Done when:** you know, for each check above, whether it found something or came up empty, and which of the three branches above applies.
@@ -46,7 +46,7 @@ Present what you found, one item at a time. Recommend a default and lead with it
     2. Ask what they want captured in the note and in what order (title, source link, a raw excerpt, a synthesized summary, etc.).
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
-  - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.md`/`style-profile.md` elsewhere in this skill.
+  - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
 - **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. Then **verify** by reading one real note of that type and confirming the property round-trips (present, correctly typed, not silently dropped by the template). Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties.
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
   - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
@@ -62,19 +62,19 @@ Present what you found, one item at a time. Recommend a default and lead with it
 
 Check whether Step 1 found a real note corpus (the user's own notes only — exclude `resources/` and exclude formal/academic writing that isn't representative of their voice).
 
-- **Corpus exists:** start from `assets/style-profile.template.md` — its 8 headings are fixed and must not be renamed, reordered, merged, or split. Analyze the corpus deeply and fill in each section per the template's own guidance comments. Show the draft to the user. They edit or approve it. Only write `.slipbox/style-profile.md` (with the template's guidance comments stripped) after approval.
+- **Corpus exists:** start from `assets/style-profile.schema.json` — its 9 required top-level fields (`voice_summary`, `tone`, `sentence_rhythm`, `punctuation_fingerprint`, `lexicon`, `structure_mechanics`, `stance`, `language`, `exemplar_snippets`) are fixed and must not be renamed, reordered, merged, or split. Analyze the corpus deeply and fill in each field per the schema's own field descriptions and enums, including `language` (`primary`, `additional`, `code_switching: none|register-gated|free-mixing`) — detect this directly from the corpus, the same way you'd detect sentence rhythm or punctuation habits. Show the draft to the user. They edit or approve it. Only write `.slipbox/style-profile.json` after approval, validated against `assets/style-profile.schema.json`.
 
-- **Greenfield (no corpus):** start from `assets/stated-style.template.md` — its fields are fixed (person, pacing, register, tone, forbidden vocabulary). Interview the user directly against each field and record their answers as `.slipbox/stated_style` (guidance comments stripped) in place of a style profile.
+- **Greenfield (no corpus):** start from `assets/stated-style.schema.json` — its required fields (`person`, `pacing`, `register`, `tone`, `forbidden_vocabulary`) are fixed. Interview the user directly against each field, asking about `language` (primary language, any additional ones, and code-switching behavior) the same way you'd ask about person/pacing/register/tone, and record their answers as `.slipbox/stated_style.json` in place of a style profile.
 
-These two paths are mutually exclusive — never run both, and never produce a style-profile.md that mixes a stated fallback with corpus analysis.
+These two paths are mutually exclusive — never run both, and never produce a `style-profile.json` that mixes a stated fallback with corpus analysis.
 
-**Done when:** either `.slipbox/style-profile.md` is approved and written, or the greenfield interview's `stated_style` is confirmed and recorded for Step 7.
+**Done when:** either `.slipbox/style-profile.json` is approved and written, or the greenfield interview's `stated_style.json` is confirmed and recorded for Step 7.
 
-## 4. Write `.slipbox/humanize-checklist.md`
+## 4. Write `.slipbox/humanize-checklist.json`
 
-Fixed, not user-negotiable, and not composed per-vault: copy `assets/humanize-checklist.md` verbatim to `.slipbox/humanize-checklist.md`. Do not edit its content, tiers, or wording — it is versioned at the skill-package level (updated centrally as AI-vocabulary trends shift, shipped with skill releases), not per-vault. Explain to the user why it exists regardless of preference: it protects their own words from drifting into generic AI patterns, and it never rewrites anything on its own — it only flags a cluster of 2 or more signals in the same passage, per its own stated rule. The checklist itself points at `.slipbox/style-profile.md`/`stated_style` for register context at application time — that pointer is fixed text in the copied file, not something this step fills in.
+Fixed, not user-negotiable, and not composed per-vault: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. Do not edit its content, tiers, or wording — it is versioned at the skill-package level (updated centrally as AI-vocabulary trends shift, shipped with skill releases), not per-vault. Explain to the user why it exists regardless of preference: it protects their own words from drifting into generic AI patterns, and it never rewrites anything on its own — it only flags a cluster of 2 or more signals in the same passage, per its own stated rule. The checklist itself points at `.slipbox/style-profile.json`/`stated_style.json` for register context at application time — that pointer is fixed data in the copied file, not something this step fills in.
 
-**Done when:** `.slipbox/humanize-checklist.md` matches `assets/humanize-checklist.md` exactly.
+**Done when:** `.slipbox/humanize-checklist.json` matches `assets/humanize-checklist.json` exactly.
 
 ## 5. Initialize `idea.db`
 
@@ -106,7 +106,7 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 ## 7. Done
 
-Tell the user what was created: `.slipbox/config.json`, `.slipbox/idea.db`, `.slipbox/style-profile.md` (or the greenfield `stated_style` record), `.slipbox/humanize-checklist.md`. Tell them which skills depend on this having run first: `clip-resource`, `surface-ideas`, and the ground-family skills that write notes from it — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `ground-claim` (literature notes), `ground-term` (term notes), and `ground-my-take` (evergreen notes).
+Tell the user what was created: `.slipbox/config.json`, `.slipbox/idea.db`, `.slipbox/style-profile.json` (or the greenfield `stated_style.json` record), `.slipbox/humanize-checklist.json`. Tell them which skills depend on this having run first: `clip-resource`, `surface-ideas`, and the ground-family skills that write notes from it — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `ground-claim` (literature notes), `ground-term` (term notes), and `ground-my-take` (evergreen notes). Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `idea-db config set <dotted.path> <value>` (and `idea-db config get` to inspect current values).
 
 ## 8. Re-run semantics (drift check, manual trigger only)
 
@@ -118,9 +118,9 @@ Triggered only when the user explicitly asks to re-run, or when Step 1 finds an 
 4. Report specific mismatches, e.g. "config says kebab-case, the last 12 notes are Title Case" — name the field and both values, don't just say something changed.
 5. For each mismatch, ask the user which side wins. Do not re-ask questions that didn't drift.
 6. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
-7. Refresh `.slipbox/style-profile.md` from the larger corpus (still against the fixed `assets/style-profile.template.md` skeleton — the diff below depends on both versions sharing that structure), diff old vs. new, and show the user what changed before overwriting it.
-8. Re-copy `assets/humanize-checklist.md` to `.slipbox/humanize-checklist.md`, overwriting the existing copy — this picks up any skill-package-level update to the canonical checklist since the vault was last set up.
+7. Refresh `.slipbox/style-profile.json` from the larger corpus (still against the fixed `assets/style-profile.schema.json` shape — the diff below depends on both versions sharing that structure), diff old vs. new, and show the user what changed before overwriting it.
+8. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical checklist since the vault was last set up.
 
 **Never** overwrite `idea.db`, `.slipbox/discussions/`, or any existing note during a re-run.
 
-**Done when:** `config.json` reflects only the mismatches the user resolved and re-validates against `assets/config.schema.json`, the user has seen the style-profile diff (if any), and `.slipbox/humanize-checklist.md` matches the current `assets/humanize-checklist.md`.
+**Done when:** `config.json` reflects only the mismatches the user resolved and re-validates against `assets/config.schema.json`, the user has seen the style-profile diff (if any), and `.slipbox/humanize-checklist.json` matches the current `assets/humanize-checklist.json`.
