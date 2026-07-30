@@ -84,6 +84,9 @@ the Take states something none of the individual notes said on their own.
   `.slipbox/config.json`'s `frontmatter.evergreen`: write it under whichever existing
   property that field maps onto, or under the standard name if newly created — skip the
   field entirely if it's mapped to `false`. Never assume the field name is the mapping.
+  Format the value per the entry's recorded `type` (e.g. a `list` type is a YAML array,
+  a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap each value per
+  `config.json`'s top-level `links.style` (wikilink or markdown link — don't hardcode).
 - Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
   doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.

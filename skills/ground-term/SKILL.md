@@ -72,7 +72,10 @@ Write fresh:
   look up its mapping in `.slipbox/config.json`'s `frontmatter.term`: write it under
   whichever existing property that field maps onto, or under the standard name if newly
   created — skip the field entirely if it's mapped to `false`. Never assume the field
-  name is the mapping.
+  name is the mapping. Format the value per the entry's recorded `type` (e.g. a `list`
+  type is a YAML array, a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap
+  each value per `config.json`'s top-level `links.style` (wikilink or markdown link —
+  don't hardcode).
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
@@ -106,9 +109,10 @@ that existing row. So this row keeps its own original slug, permanently.
 3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
    session on the draft before writing. Re-read the file from disk immediately before
    writing (state can have changed since the read in "Take the term"). Append/extend
-   only — add the new resource to the `sources` frontmatter array, and fold in whatever
-   the new resource adds or complicates about the term. Never overwrite the file
-   wholesale.
+   only — add the new resource to the `sources` frontmatter array, formatted per its
+   field_map entry's recorded `type` (list) and `wikilink` flag (per `links.style`, same
+   as "Write — new term"), and fold in whatever the new resource adds or complicates
+   about the term. Never overwrite the file wholesale.
 
 ## Done
 

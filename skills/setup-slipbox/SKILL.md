@@ -49,7 +49,12 @@ Present what you found, one item at a time. Recommend a default and lead with it
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
-- **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. Then **verify** by reading one real note of that type and confirming the property round-trips (present, correctly typed, not silently dropped by the template). Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties.
+- **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. When mapping onto an EXISTING property, read its actual type from the note (Text/List/Number/Checkbox/Date/Date & Time) and record that discovered type in the field_map entry — don't assume a type. When creating a NEW field, assign the type that fits its semantic nature, per this table (still verify+record the discovered type instead when mapping onto an existing property):
+  - Literature: `type` → text, `created` → date, `source` → list + wikilink: true.
+  - Term: `type` → text, `created` → date, `sources` → list + wikilink: true, `aliases` (optional) → list, no wikilink.
+  - Evergreen: `type` → text, `created` → date, `derived-from` → list + wikilink: true.
+
+  Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties. The required fields themselves, for reference:
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
   - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
   - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body).
@@ -97,7 +102,7 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 
 - `paths` — the resources/literature/evergreen/term folder paths from Step 2.
 - `filenames` — casing per note type.
-- `frontmatter` — the field_map from Step 2, per type (literature/term/evergreen).
+- `frontmatter` — the field_map from Step 2, per type (literature/term/evergreen); each entry carries `name`/`type`/`wikilink` (or the bare string/`false` shorthand), validated against the updated `assets/config.schema.json`.
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
 - `templates` — seven explicit paths: `literature_path`, `term_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Step 2's clip config.

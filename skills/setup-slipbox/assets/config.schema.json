@@ -86,10 +86,20 @@
       "additionalProperties": {
         "oneOf": [
           { "type": "string" },
-          { "type": "boolean", "const": false }
+          { "type": "boolean", "const": false },
+          {
+            "type": "object",
+            "required": ["name", "type"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string", "enum": ["text", "list", "number", "checkbox", "date", "datetime"] },
+              "wikilink": { "type": "boolean", "default": false }
+            }
+          }
         ]
       },
-      "description": "Per required field, one of: (a) the existing user property it maps onto (string), (b) the standard field name if newly created (string), or (c) false for explicit opt-out. Never a key equal to the reserved properties tags, aliases, or cssclasses."
+      "description": "Per required field, one of three forms: (a) a bare string — shorthand for {name: <string>, type: \"text\", wikilink: false}, the existing user property it maps onto or the standard field name if newly created; (b) false for explicit opt-out; (c) an object {name, type, wikilink} giving full control — name is the existing or standard property name, type is Obsidian's own native Properties type (text/list/number/checkbox/date/datetime, i.e. Text/List/Number/Checkbox/Date/Date & Time), and wikilink (default false) marks whether the value(s) get wrapped per the sibling top-level links.style field. Never a key equal to the reserved properties tags, aliases, or cssclasses."
     }
   }
 }
