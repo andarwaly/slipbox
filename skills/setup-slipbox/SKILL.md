@@ -19,6 +19,8 @@ Run `scripts/check-prereqs.sh` and read its report. It checks `sqlite3` on PATH,
 
 For each dependency the report marks missing: stop, tell the user what it's needed for (`sqlite3` for initializing `idea.db`; `youtube-transcript-api` for `clip-resource`'s Video path; `defuddle` for `clip-resource`'s Article and News path), and ask explicitly before doing anything about it — never install without that per-dependency ask. If the user agrees, run `scripts/install-prereqs.sh <dependency>` for just that one dependency (`sqlite3`, `youtube-transcript-api`, or `defuddle`). If they'd rather install it themselves, tell them to re-run this skill once it's in place.
 
+**Done when:** every dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves.
+
 ## 1. Explore (no questions yet)
 
 Check the vault for existing signal before asking the user anything:
@@ -72,7 +74,7 @@ These two paths are mutually exclusive — never run both, and never produce a `
 
 ## 4. Write `.slipbox/humanize-checklist.json`
 
-Fixed, not user-negotiable, and not composed per-vault: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. Do not edit its content, tiers, or wording — it is versioned at the skill-package level (updated centrally as AI-vocabulary trends shift, shipped with skill releases), not per-vault. Explain to the user why it exists regardless of preference: it protects their own words from drifting into generic AI patterns, and it never rewrites anything on its own — it only flags a cluster of 2 or more signals in the same passage, per its own stated rule. The checklist itself points at `.slipbox/style-profile.json`/`stated_style.json` for register context at application time — that pointer is fixed data in the copied file, not something this step fills in.
+Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. Do not edit its content, tiers, or wording — it is versioned at the skill-package level (updated centrally as AI-vocabulary trends shift, shipped with skill releases), not per-vault. Explain to the user why it exists regardless of preference: it protects their own words from drifting into generic AI patterns, and it never rewrites anything on its own — it only flags a cluster of 2 or more signals in the same passage, per its own stated rule. The checklist itself points at `.slipbox/style-profile.json`/`stated_style.json` for register context at application time — that pointer is fixed data in the copied file, not something this step fills in.
 
 **Done when:** `.slipbox/humanize-checklist.json` matches `assets/humanize-checklist.json` exactly.
 

@@ -77,12 +77,7 @@ the Take states something none of the individual notes said on their own.
 
 ## Write
 
-- Prose should read consistent with `.slipbox/style-profile.json` (or `.slipbox/stated_style.json`
-  if no corpus exists) — voice, tone, punctuation fingerprint, lexicon, language/code-switching
-  pattern — not a generic register.
-- After drafting, apply `humanize-checklist.json`'s `judgment` section directly and run its
-  `mechanical` section via `idea-db humanize check <draft-path>`; if either flags a cluster, revise
-  before writing the file, don't write first and check after.
+- Apply `../grounding/references/write-checks.md`'s style and humanize checks before writing.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the evergreen
   type.

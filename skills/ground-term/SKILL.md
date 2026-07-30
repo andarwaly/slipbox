@@ -65,12 +65,7 @@ idea-db seeds add --resource <resource> --type raw --target-type literature --re
 
 Write fresh:
 
-- Prose should read consistent with `.slipbox/style-profile.json` (or `.slipbox/stated_style.json`
-  if no corpus exists) — voice, tone, punctuation fingerprint, lexicon, language/code-switching
-  pattern — not a generic register.
-- After drafting, apply `humanize-checklist.json`'s `judgment` section directly and run its
-  `mechanical` section via `idea-db humanize check <draft-path>`; if either flags a cluster, revise
-  before writing the file, don't write first and check after.
+- Apply `../grounding/references/write-checks.md`'s style and humanize checks before writing.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the Term type:
   `type: term`, `created`, `sources: [[resource]]`, plus `aliases: [...]` if any were
@@ -105,23 +100,12 @@ that existing row. So this row keeps its own original slug, permanently.
    idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
    ```
 
-3. **Fold the new resource's contribution into the existing file.** Prose should read
-   consistent with `.slipbox/style-profile.json` (or `.slipbox/stated_style.json` if no
-   corpus exists) — voice, tone, punctuation fingerprint, lexicon, language/code-switching
-   pattern — not a generic register. After drafting, apply `humanize-checklist.json`'s
-   `judgment` section directly and run its `mechanical` section via
-   `idea-db humanize check <draft-path>`; if either flags a cluster, revise before
-   writing, don't write first and check after. Re-read the file from disk immediately
-   before writing (state can have changed since the read in "Take the term").
-   Append/extend only — add the new resource to the `sources` frontmatter array, and
-   fold in whatever the new resource adds or complicates about the term. Never overwrite
-   the file wholesale.
-
-Why this is correct: exactly one `seeds` row per term ever holds the term's
-"canonical" final slug (the first occurrence). Every subsequent extending resource
-keeps its own distinct, never-renamed slug, connected to the canonical row purely
-through the `links` table (`rel_type: 'extends'`) — never by sharing or reassigning the
-primary key.
+3. **Fold the new resource's contribution into the existing file.** Apply
+   `../grounding/references/write-checks.md`'s style and humanize checks before writing.
+   Re-read the file from disk immediately before writing (state can have changed since
+   the read in "Take the term"). Append/extend only — add the new resource to the
+   `sources` frontmatter array, and fold in whatever the new resource adds or complicates
+   about the term. Never overwrite the file wholesale.
 
 ## Done
 
