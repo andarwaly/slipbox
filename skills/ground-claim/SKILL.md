@@ -69,6 +69,7 @@ Once confirmed:
   Format the value per the entry's recorded `type` (e.g. a `list` type is a YAML array,
   a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap each value per
   `config.json`'s top-level `links.style` (wikilink or markdown link — don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 - One-shot — write once, never revisit.
 - Filename collision → stop and ask, never auto-disambiguate.
 

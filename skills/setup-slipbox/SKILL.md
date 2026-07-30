@@ -28,6 +28,7 @@ Check the vault for existing signal before asking the user anything:
 - `.obsidian/` for a `templates/` folder and Templater plugin config (`.obsidian/plugins/templater-obsidian`), which show the vault's real template location and syntax.
 - Root `AGENTS.md` or `CLAUDE.md` for conventions the user already wrote down.
 - Existing `Literature`/`Term`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
+- Whatever `tags` actually seems to be used for in this vault — note it in plain language for Section A's presentation (e.g. subtype-marker, topic/subject labels, a catch-all, a minimal signal, some mixture, or not used at all). This is descriptive narration only, never a mapping decision, and never forced into a fixed category list — real vaults don't fit a clean taxonomy, so describe what's actually observed. `tags` itself is never mapped onto or written to by any field_map resolution, regardless of what this narration finds.
 - An existing `.slipbox/` directory. Its presence branches three ways, not two:
   - `.slipbox/config.json` exists → this is a re-run; switch to the drift-check flow in Step 8.
   - `.slipbox/` exists but `config.json` does not → an interrupted prior run. Check individually for `idea.db`, `style-profile.json`/`stated_style.json`, and `humanize-checklist.json` — don't assume `idea.db`'s presence alone tells you how far the prior run got. Tell the user setup was interrupted before completion, then **resume with a clean restart of Sections A/B below** (this and the first-run path are identical from here — there is no partial-answer persistence to resume from, and no existing `config.json` to diff against, so Step 8's drift-check mechanics don't apply). Never delete or overwrite whatever partial artifacts already exist until their step is reached normally.
@@ -49,10 +50,15 @@ Present what you found, one item at a time. Recommend a default and lead with it
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
-- **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. When mapping onto an EXISTING property, read its actual type from the note (Text/List/Number/Checkbox/Date/Date & Time) and record that discovered type in the field_map entry — don't assume a type. When creating a NEW field, assign the type that fits its semantic nature, per this table (still verify+record the discovered type instead when mapping onto an existing property):
-  - Literature: `type` → text, `created` → date, `source` → list + wikilink: true.
-  - Term: `type` → text, `created` → date, `sources` → list + wikilink: true, `aliases` (optional) → list, no wikilink.
-  - Evergreen: `type` → text, `created` → date, `derived-from` → list + wikilink: true.
+- **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. When mapping onto an EXISTING property, read its actual type from the note (Text/List/Number/Checkbox/Date/Date & Time) and record that discovered type in the field_map entry — don't assume a type. When creating a NEW field, assign the type that fits its semantic nature, per this table (still verify+record the discovered type instead when mapping onto an existing property), with a `zone` (top/bottom) alongside each type — zone only governs placement of fields being newly created, never fields mapped onto an existing property:
+  - Literature: `type` → text, zone top; `created` → date, zone top; `source` → list + wikilink: true, zone bottom.
+  - Term: `type` → text, zone top; `created` → date, zone top; `sources` → list + wikilink: true, zone bottom; `alt_names` (optional) → list, no wikilink, zone bottom.
+  - Evergreen: `type` → text, zone top; `created` → date, zone top; `derived-from` → list + wikilink: true, zone bottom; `updated-at` → datetime (not bare date — multiple revisions can land the same day), no wikilink, zone bottom.
+
+  **`type`-occupancy check**, resolving the `type` field specifically (present in all three note types' field tables): this is a 3-way branch, not a simple create-or-map choice.
+  - `type` is absent/unused in existing notes → create fresh with the standard name `type` (today's default, unchanged).
+  - `type` already holds exactly the identity value needed (existing notes literally already have `type: literature`/`type: term`/`type: evergreen`) → map onto the existing `type` property directly, no new field needed.
+  - `type` already holds something unrelated (e.g. a base/umbrella value like `note`) → stop and ask: recommend mapping slipbox's own type-identity onto a new, differently-named field (e.g. `note-type`) instead of colliding with the existing `type`, leaving the existing `type` property untouched. Offer the user the choice of field name — don't hardcode `note-type` as the only option, it's just the recommended default.
 
   **Type-mismatch check**, only for multi-valued fields (`source`s that grow: `sources`,
   `derived-from` — never `source`, which is genuinely single-valued and fits into an
@@ -65,8 +71,8 @@ Present what you found, one item at a time. Recommend a default and lead with it
 
   Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties. The required fields themselves, for reference:
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
-  - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
-  - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body).
+  - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `alt_names: [...]` (optional).
+  - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body), `updated-at` (written on first write, refreshed every time an existing evergreen note is revisited/rewritten — mirrors `schema.sql`'s own `evergreen.updated_at` column, now also surfaced into the note's own frontmatter).
 - **Clip config** (folded into this same flow, not a separate gate):
   - All four resource content-types (article, news, social, video) are on by default. Ask only about exceptions the user wants to turn off.
   - Transcript language: ask which languages are wanted (multi-select). Only ask for a priority order if more than one language is selected.
@@ -111,7 +117,7 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 
 - `paths` — the resources/literature/evergreen/term folder paths from Step 2.
 - `filenames` — casing per note type.
-- `frontmatter` — the field_map from Step 2, per type (literature/term/evergreen); each entry carries `name`/`type`/`wikilink` (or the bare string/`false` shorthand), validated against the updated `assets/config.schema.json`.
+- `frontmatter` — the field_map from Step 2, per type (literature/term/evergreen); each entry carries `name`/`type`/`wikilink`/`zone` (or the bare string/`false` shorthand, where `zone` defaults to `top`), validated against the updated `assets/config.schema.json`.
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
 - `templates` — seven explicit paths: `literature_path`, `term_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Step 2's clip config.

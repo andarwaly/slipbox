@@ -68,7 +68,7 @@ Write fresh:
 - Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
 - Filename per `.slipbox/config.json`'s casing convention for the Term type.
-- For each Term field (`type`, `created`, `sources`, plus `aliases` if any were given),
+- For each Term field (`type`, `created`, `sources`, plus `alt_names` if any were given),
   look up its mapping in `.slipbox/config.json`'s `frontmatter.term`: write it under
   whichever existing property that field maps onto, or under the standard name if newly
   created — skip the field entirely if it's mapped to `false`. Never assume the field
@@ -76,6 +76,7 @@ Write fresh:
   type is a YAML array, a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap
   each value per `config.json`'s top-level `links.style` (wikilink or markdown link —
   don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
@@ -112,7 +113,11 @@ that existing row. So this row keeps its own original slug, permanently.
    only — add the new resource to the `sources` frontmatter array, formatted per its
    field_map entry's recorded `type` (list) and `wikilink` flag (per `links.style`, same
    as "Write — new term"), and fold in whatever the new resource adds or complicates
-   about the term. Never overwrite the file wholesale.
+   about the term. Never overwrite the file wholesale. `sources` is zone `bottom` — since
+   the field already exists in the file from the term's first write, this extension
+   simply appends within the frontmatter block wherever that property already sits; the
+   zone rule only places a field the first time it's newly created, which already
+   happened at "Write — new term".
 
 ## Done
 

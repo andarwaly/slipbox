@@ -87,6 +87,7 @@ the Take states something none of the individual notes said on their own.
   Format the value per the entry's recorded `type` (e.g. a `list` type is a YAML array,
   a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap each value per
   `config.json`'s top-level `links.style` (wikilink or markdown link — don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 - Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
   doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.
@@ -128,4 +129,6 @@ idea-db evergreen update <slug> --status discussed --note-path <path>
 
 Rename the slug too if this was a first write — same pattern as ground-term's own
 "Write — new term" step. Bump `--iteration` instead if this is a revisit to an existing
-evergreen note rather than a first write.
+evergreen note rather than a first write. On a revisit, also refresh `updated-at` to the
+current time — `created` already covers the first-write case, so `updated-at` only
+changes when an existing evergreen note is being rewritten.

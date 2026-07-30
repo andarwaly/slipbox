@@ -89,17 +89,18 @@
           { "type": "boolean", "const": false },
           {
             "type": "object",
-            "required": ["name", "type"],
+            "required": ["name", "type", "zone"],
             "additionalProperties": false,
             "properties": {
               "name": { "type": "string" },
               "type": { "type": "string", "enum": ["text", "list", "number", "checkbox", "date", "datetime"] },
-              "wikilink": { "type": "boolean", "default": false }
+              "wikilink": { "type": "boolean", "default": false },
+              "zone": { "type": "string", "enum": ["top", "bottom"] }
             }
           }
         ]
       },
-      "description": "Per required field, one of three forms: (a) a bare string — shorthand for {name: <string>, type: \"text\", wikilink: false}, the existing user property it maps onto or the standard field name if newly created; (b) false for explicit opt-out; (c) an object {name, type, wikilink} giving full control — name is the existing or standard property name, type is Obsidian's own native Properties type (text/list/number/checkbox/date/datetime, i.e. Text/List/Number/Checkbox/Date/Date & Time), and wikilink (default false) marks whether the value(s) get wrapped per the sibling top-level links.style field. Never a key equal to the reserved properties tags, aliases, or cssclasses."
+      "description": "Per required field, one of three forms: (a) a bare string — shorthand for {name: <string>, type: \"text\", wikilink: false, zone: \"top\"}, the existing user property it maps onto or the standard field name if newly created (zone defaults to \"top\" for this shorthand form); (b) false for explicit opt-out; (c) an object {name, type, wikilink, zone} giving full control — name is the existing or standard property name, type is Obsidian's own native Properties type (text/list/number/checkbox/date/datetime, i.e. Text/List/Number/Checkbox/Date/Date & Time), wikilink (default false) marks whether the value(s) get wrapped per the sibling top-level links.style field, and zone (required, \"top\" or \"bottom\") places a newly-created field at the top or bottom of the frontmatter block — only meaningful for fields being newly created, since a field mapped onto an existing user property stays wherever that property already sits in the user's template. Never a key equal to the reserved properties tags, aliases, or cssclasses."
     }
   }
 }
