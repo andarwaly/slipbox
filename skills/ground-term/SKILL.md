@@ -65,6 +65,12 @@ idea-db seeds add --resource <resource> --type raw --target-type literature --re
 
 Write fresh:
 
+- Prose should read consistent with `.slipbox/style-profile.json` (or `.slipbox/stated_style.json`
+  if no corpus exists) — voice, tone, punctuation fingerprint, lexicon, language/code-switching
+  pattern — not a generic register.
+- After drafting, apply `humanize-checklist.json`'s `judgment` section directly and run its
+  `mechanical` section via `idea-db humanize check <draft-path>`; if either flags a cluster, revise
+  before writing the file, don't write first and check after.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the Term type:
   `type: term`, `created`, `sources: [[resource]]`, plus `aliases: [...]` if any were
