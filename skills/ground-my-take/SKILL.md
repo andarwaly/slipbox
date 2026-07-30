@@ -1,6 +1,6 @@
 ---
 name: ground-my-take
-description: Ground a hunch into a Take — your own synthesized position, checked
+description: Ground a hunch into a Take — the user's own synthesized position, checked
   against existing notes it connects, then written as an evergreen note.
 disable-model-invocation: true
 license: MIT
@@ -12,7 +12,7 @@ metadata:
 
 ## What these words mean
 
-- **Take** — your own position on an idea, requiring synthesis across sources or
+- **Take** — the user's own position on an idea, requiring synthesis across sources or
   experience. Lives only in an evergreen note — never restates a single cited note
   unchanged.
 - **Evergreen note** — the file a confirmed Take gets written into. Unlike a Claim,
