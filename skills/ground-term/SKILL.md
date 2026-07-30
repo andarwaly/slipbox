@@ -30,8 +30,8 @@ stop and say so.
 - **Named directly** → the user says which term they want grounded.
 - **From the backlog** → query the pending queue:
 
-  ```sql
-  SELECT * FROM seeds WHERE target_type='term' AND status='to-discuss';
+  ```bash
+  idea-db seeds find --target-type term --status to-discuss
   ```
 
   Offer these; let the user choose one.
@@ -55,7 +55,11 @@ what's already recorded, not contradict it silently.
 /grounding hands back the confirmed definition, and — only if the user opted in — a
 flagged tension. If a tension came back, insert it as its own `seeds` row
 (`target_type: 'literature'`, since a term-grounding tension is source-facing, not a
-personal synthesis) before moving on to writing.
+personal synthesis) before moving on to writing:
+
+```bash
+idea-db seeds add --resource <resource> --type raw --target-type literature --reason "<tension description>"
+```
 
 ## Write — new term
 
@@ -69,10 +73,8 @@ Write fresh:
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
 
-```sql
-UPDATE seeds
-SET type = 'term', status = 'discussed', note_path = '<new-path>', slug = '<final-slug>'
-WHERE slug = '<original-slug>';
+```bash
+idea-db seeds update <original-slug> --type term --status discussed --note-path <new-path> --slug <final-slug>
 ```
 
 ## Write — extending an existing term
@@ -86,18 +88,15 @@ that existing row. So this row keeps its own original slug, permanently.
 
 1. **Update this row in place — do not touch its slug:**
 
-   ```sql
-   UPDATE seeds
-   SET type = 'term', status = 'discussed', note_path = '<the EXISTING note''s path>'
-   WHERE slug = '<this row's original, unchanged slug>';
+   ```bash
+   idea-db seeds update <this-row-original-slug> --type term --status discussed --note-path <existing-note-path>
    ```
 
 2. **Insert a `links` row recording the relationship** — this row's own (unchanged)
    slug is the source, the existing term row's slug is the target:
 
-   ```sql
-   INSERT INTO links (source_id, target_id, rel_type)
-   VALUES ('<this row's slug>', '<existing term row's slug>', 'extends');
+   ```bash
+   idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
    ```
 
 3. **Fold the new resource's contribution into the existing file.** Re-read the file
