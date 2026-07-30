@@ -7,13 +7,13 @@ One frozen source-type plus three note types, produced by four different skills 
 **Resource** (`clip-resource`'s output):
 Frozen clip, not a note. `type` frontmatter field holds the content-type directly (`article`/`news`/`social`/`video`) — no generic `"resource"` value; being a Resource is implied by folder location, not stated in frontmatter.
 
-**Literature note** (bibliographic note, `write-literature-note`'s output — internally discussed via `discussion`, mode `literature`):
+**Literature note** (bibliographic note, `ground-claim`'s output — internally discussed via `grounding`, source-bound fidelity):
 Source-oriented. Answers "what did this author argue?" Contains only the Claim — the author's position restated in the user's own words. Anchored to exactly one source, one clip, one discussion, written once, never revisited afterward. Contains no personal stance and no reaction/reflection field of any kind — even a lightweight spontaneous reaction edges into personal synthesis, which this note type never holds. A stance requires weighing multiple sources, which a single-source note structurally cannot do.
 
-**Term note** (`write-reference-note`'s output):
+**Term note** (`ground-term`'s output):
 Term-oriented. Answers "what is X?" Not a one-shot write: accumulates across however many resources touch that term, extended on repeat runs rather than finalized once — but only ever appends/extends, never overwrites what's already there wholesale. Anchored to a term, not to any single source — it may draw on several. Not a personal idea (that's evergreen's job) and not primarily a citation record (the source anchors the definition, it isn't the point of the note).
 
-**Evergreen note** (Zettel / permanent note, `write-evergreen-note`'s output — internally discussed via `discussion`, mode `evergreen`):
+**Evergreen note** (Zettel / permanent note, `ground-my-take`'s output — internally discussed via `grounding`, notes-bound fidelity):
 Idea-oriented. Answers "what do I think, as my own contribution?" Not bound to any one source or term. Holds exactly one atomic claim (the Take), synthesized from multiple existing notes (literature and/or evergreen) plus personal experience. Cites the notes that fed it; does not bundle or contain them, and never merely restates one of them un-transformed. **Can be revisited and evolve across separate sessions** (corrected 2026-07-23 — see Flagged ambiguities) — and unlike a term note's append-only accumulation, an evergreen note's update can be a full rewrite of its existing content, not just an addition alongside the old.
 
 **Claim**:
@@ -31,8 +31,8 @@ An evergreen note is atomic if it expresses exactly one independently referencea
 - A term note is anchored to a term, accumulates across multiple sources over separate runs, and holds a definition, not a stance.
 - An evergreen note cites zero or more literature/term/evergreen notes as support; it does not contain them, and holds the Take.
 - A Claim lives in a literature note; a Take lives in an evergreen note. They never coexist in the same note.
-- `write-literature-note` and `write-evergreen-note` both internally invoke the same skill, **`discussion`** (bare, mode-agnostic name, matching how `grill-with-docs` invokes `grilling`) — each states its own framing inline (mode `literature`, mode `term`, or mode `evergreen`), rather than each having its own separate discussion skill. `discussion` itself is not invoked directly by the user.
-- `write-reference-note` produces/extends term notes, triggered by the user naming a term directly, or by a recurring-term row `surface-ideas` surfaces into `idea.db` (`type: raw, target_type: term`). Routes its interview through `discussion` (mode `term`) too, same as the other two — not left inline.
+- `ground-claim` and `ground-my-take` both internally invoke the same skill, **`grounding`** (bare, fidelity-agnostic name, matching how `grill-with-docs` invokes `grilling`) — each states its own fidelity-direction inline (source-bound, term-bound, or notes-bound), rather than each having its own separate discussion skill. `grounding` is also user-invocable directly, unlike the old internal-only discussion skill it replaces.
+- `ground-term` produces/extends term notes, triggered by the user naming a term directly, or by a recurring-term row `surface-ideas` surfaces into `idea.db` (`type: raw, target_type: term`). Routes its interview through `grounding` (term-bound fidelity) too, same as the other two — not left inline.
 - Each of the three note types has its own template file (Obsidian core Templates plugin or Templater, whichever the user has), discovered or offered by `setup-slipbox` per type, not a single shared template.
 
 ## Flagged ambiguities

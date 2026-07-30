@@ -23,10 +23,11 @@ slipbox/                    ← repo root, this file's location
 │   ├── setup-slipbox/       ← one-time onboarding: vault conventions, idea.db init
 │   ├── clip-resource/        ← fetches a URL, writes a frozen Resource
 │   ├── surface-ideas/        ← surfaces discussion-worthy candidates + recurring terms
-│   ├── write-literature-note/
-│   ├── write-reference-note/
-│   ├── write-evergreen-note/
-│   └── discussion/           ← internal only; invoked by the three write-*-note skills, never directly
+│   ├── grounding/            ← lean interview engine; user-invocable, like grilling
+│   ├── ground-me/             ← bare passthrough wrapper, no note-writing
+│   ├── ground-claim/          ← literature-note wrapper (was write-literature-note)
+│   ├── ground-term/           ← term-note wrapper (was write-reference-note)
+│   └── ground-my-take/        ← evergreen-note wrapper (was write-evergreen-note)
 └── tests/
     └── {{skill-name}}/
         ├── evals.json         ← test cases: prompt, expected_output, assertions
@@ -48,5 +49,4 @@ slipbox/                    ← repo root, this file's location
 ## Guardrails
 
 - A folder gets its own `AGENTS.md` only when it has a rule not already covered by inheriting this doc (the delta test — see `.agents/dox-framework.md`). Individual `skills/{{skill-name}}/` folders do not get their own `AGENTS.md` under this test.
-- `discussion` (the skill) is internal only — never document it as something a user invokes directly.
 - A Resource file, once written by `clip-resource`, is frozen — no skill in this family reopens it to edit, append, or correct it.
