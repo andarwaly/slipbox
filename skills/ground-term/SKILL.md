@@ -65,18 +65,12 @@ idea-db seeds add --resource <resource> --type raw --target-type literature --re
 
 Write fresh:
 
-- Run a /write-checks session on the draft before writing.
+- Run a /write-checks session on the draft, passing the Term field list (`type`,
+  `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
+  mapping, formatting, and zone placement, and checks the draft's style and humanize
+  signals.
 - Re-read the target path from disk right before writing.
 - Filename per `.slipbox/config.json`'s casing convention for the Term type.
-- For each Term field (`type`, `created`, `sources`, plus `alt_names` if any were given),
-  look up its mapping in `.slipbox/config.json`'s `frontmatter.term`: write it under
-  whichever existing property that field maps onto, or under the standard name if newly
-  created — skip the field entirely if it's mapped to `false`. Never assume the field
-  name is the mapping. Format the value per the entry's recorded `type` (e.g. a `list`
-  type is a YAML array, a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap
-  each value per `config.json`'s top-level `links.style` (wikilink or markdown link —
-  don't hardcode).
-- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
@@ -108,16 +102,12 @@ that existing row. So this row keeps its own original slug, permanently.
    ```
 
 3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
-   session on the draft before writing. Re-read the file from disk immediately before
-   writing (state can have changed since the read in "Take the term"). Append/extend
-   only — add the new resource to the `sources` frontmatter array, formatted per its
-   field_map entry's recorded `type` (list) and `wikilink` flag (per `links.style`, same
-   as "Write — new term"), and fold in whatever the new resource adds or complicates
-   about the term. Never overwrite the file wholesale. `sources` is zone `bottom` — since
-   the field already exists in the file from the term's first write, this extension
-   simply appends within the frontmatter block wherever that property already sits; the
-   zone rule only places a field the first time it's newly created, which already
-   happened at "Write — new term".
+   session on the draft for style and humanize checks only — `sources` already has its
+   resolved mapping and formatting from the term's first write, no field resolution
+   needed here. Re-read the file from disk immediately before writing (state can have
+   changed since the read in "Take the term"). Append/extend only — add the new
+   resource to the `sources` frontmatter array, formatted per its existing recorded
+   `type` (list) and `wikilink` flag. Never overwrite the file wholesale.
 
 ## Done
 
