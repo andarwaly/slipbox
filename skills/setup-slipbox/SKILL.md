@@ -54,6 +54,15 @@ Present what you found, one item at a time. Recommend a default and lead with it
   - Term: `type` → text, `created` → date, `sources` → list + wikilink: true, `aliases` (optional) → list, no wikilink.
   - Evergreen: `type` → text, `created` → date, `derived-from` → list + wikilink: true.
 
+  **Type-mismatch check**, only for multi-valued fields (`source`s that grow: `sources`,
+  `derived-from` — never `source`, which is genuinely single-valued and fits into an
+  existing Text property fine): if the existing property's discovered type isn't List,
+  it structurally can't hold what the field needs to grow into. Stop and ask, recommending
+  mapping onto a new, standard-named List property instead and leaving the existing
+  property untouched — the same recommend-a-default pattern as every other item in this
+  section. Offer the other two answers too: point at a different existing property, or
+  override and accept the mismatch anyway (least recommended, never the silent default).
+
   Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties. The required fields themselves, for reference:
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
   - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
