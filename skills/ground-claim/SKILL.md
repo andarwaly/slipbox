@@ -46,8 +46,14 @@ a one-line reason — the user accepts or rejects each one individually, never l
 silently.
 
 /grounding hands back two things when it finishes: the confirmed Claim, and — only if
-the user opted in — a flagged tension. If a tension came back, insert it as its own
-`seeds` row (`target_type: 'evergreen'`) before moving on to writing.
+the user opted in — a flagged tension. If a tension came back, insert it into the
+evergreen backlog:
+
+```bash
+idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+```
+
+before moving on to writing.
 
 ## Write
 
@@ -66,4 +72,4 @@ Flip the original `seeds` row: `status` → `'discussed'`, note path attached.
 ## Done
 
 The Claim note exists on disk, the backlog row is closed, any flagged tension is logged
-as its own `seeds` row, and the user is told the file path.
+in the evergreen backlog, and the user is told the file path.
