@@ -25,7 +25,7 @@ Check the vault for existing signal before asking the user anything:
 
 - `.obsidian/` for a `templates/` folder and Templater plugin config (`.obsidian/plugins/templater-obsidian`), which show the vault's real template location and syntax.
 - Root `AGENTS.md` or `CLAUDE.md` for conventions the user already wrote down.
-- Existing `Literature`/`Reference`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
+- Existing `Literature`/`Term`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
 - An existing `.slipbox/` directory. Its presence branches three ways, not two:
   - `.slipbox/config.json` exists → this is a re-run; switch to the drift-check flow in Step 8.
   - `.slipbox/` exists but `config.json` does not → an interrupted prior run. Check individually for `idea.db`, `style-profile.md`/`stated_style`, and `humanize-checklist.md` — don't assume `idea.db`'s presence alone tells you how far the prior run got. Tell the user setup was interrupted before completion, then **resume with a clean restart of Sections A/B below** (this and the first-run path are identical from here — there is no partial-answer persistence to resume from, and no existing `config.json` to diff against, so Step 8's drift-check mechanics don't apply). Never delete or overwrite whatever partial artifacts already exist until their step is reached normally.
@@ -37,9 +37,9 @@ Check the vault for existing signal before asking the user anything:
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
-- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder.
+- **Paths**: `resources/`, `literature/`, `evergreen/`, and the term notes' folder.
 - **Filename casing** per note type (kebab-case, Title Case, snake_case, or whatever the vault already does).
-- **Templates**: three note templates (literature, reference, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
+- **Templates**: three note templates (literature, term, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
   - **The three note templates almost always already exist** — resolve their path and move on, same as any other convention item.
   - **The four resource templates usually don't** — the templates *folder* typically exists (from note-taking), but article/news/social/video `.md` files inside it typically don't, since clipping is a newer concept for most vaults than note-taking. For each one that's missing at its resolved path, offer to draft it together right there rather than asking the user to go write Obsidian template syntax cold:
     1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `../clip-resource/references/variable-glossary.md` and `../clip-resource/references/filter-glossary.md`, but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
@@ -49,7 +49,7 @@ Present what you found, one item at a time. Recommend a default and lead with it
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.md`/`style-profile.md` elsewhere in this skill.
 - **`field_map`**: for each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. Then **verify** by reading one real note of that type and confirming the property round-trips (present, correctly typed, not silently dropped by the template). Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties.
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
-  - Reference: `type: reference`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
+  - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `aliases: [...]` (optional).
   - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body).
 - **Clip config** (folded into this same flow, not a separate gate):
   - All four resource content-types (article, news, social, video) are on by default. Ask only about exceptions the user wants to turn off.
@@ -93,11 +93,11 @@ Never overwrite an existing `idea.db` — if it's already there, leave it untouc
 
 Draft the config from everything confirmed in Sections A and B, against the fields defined in `assets/config.schema.json`:
 
-- `paths` — the resources/literature/evergreen/reference folder paths from Step 2.
+- `paths` — the resources/literature/evergreen/term folder paths from Step 2.
 - `filenames` — casing per note type.
-- `frontmatter` — the field_map from Step 2, per type (literature/reference/evergreen).
+- `frontmatter` — the field_map from Step 2, per type (literature/term/evergreen).
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
-- `templates` — seven explicit paths: `literature_path`, `reference_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
+- `templates` — seven explicit paths: `literature_path`, `term_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Step 2's clip config.
 
 Show the draft to the user, let them edit it, then validate the approved draft against `assets/config.schema.json` before writing. If validation fails, fix the draft and re-validate — never write a config that doesn't conform.
@@ -106,7 +106,7 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 ## 7. Done
 
-Tell the user what was created: `.slipbox/config.json`, `.slipbox/idea.db`, `.slipbox/style-profile.md` (or the greenfield `stated_style` record), `.slipbox/humanize-checklist.md`. Tell them which skills depend on this having run first: `clip-resource`, `surface-ideas`, `write-literature-note`, `write-reference-note`, `write-evergreen-note`.
+Tell the user what was created: `.slipbox/config.json`, `.slipbox/idea.db`, `.slipbox/style-profile.md` (or the greenfield `stated_style` record), `.slipbox/humanize-checklist.md`. Tell them which skills depend on this having run first: `clip-resource`, `surface-ideas`, and the ground-family skills that write notes from it — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `ground-claim` (literature notes), `ground-term` (term notes), and `ground-my-take` (evergreen notes).
 
 ## 8. Re-run semantics (drift check, manual trigger only)
 

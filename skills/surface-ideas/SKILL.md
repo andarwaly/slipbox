@@ -1,6 +1,6 @@
 ---
 name: surface-ideas
-description: Surface 5-10 discussion-worthy candidate ideas from a clipped Resource, and detect recurring terms worth their own note — explore, no structure committed yet. Does not write a literature note or Term note itself; that's write-literature-note's or write-reference-note's job, run separately.
+description: Surface 5-10 discussion-worthy candidate ideas from a clipped Resource, and detect recurring terms worth their own note — explore, no structure committed yet. Does not write a literature note or Term note itself; that's ground-claim's or ground-term's job, run separately.
 disable-model-invocation: true
 license: MIT
 metadata:
@@ -9,7 +9,7 @@ metadata:
 
 # Surface Ideas
 
-This skill takes a Resource file and surfaces candidate ideas from it, and separately flags any terms worth their own note. It does not decide which candidate is worth writing up, and it does not write the literature note or Term note itself: that's `write-literature-note`'s or `write-reference-note`'s job, run separately, possibly in a different session.
+This skill takes a Resource file and surfaces candidate ideas from it, and separately flags any terms worth their own note. It does not decide which candidate is worth writing up, and it does not write the literature note or Term note itself: that's `ground-claim`'s or `ground-term`'s job, run separately, possibly in a different session.
 
 ## 0. Prerequisite: `.slipbox/config.json` must exist
 
@@ -25,7 +25,7 @@ Ask for the path to an already-captured Resource file: one written by `clip-reso
 
 Read the Resource and surface 5-10 candidates. This is an explore pass, not an exploit pass: the goal is a spread of open questions worth discussing, not a shortlist of answers.
 
-Each candidate is a question plus the motivation for asking it. Neither half is a conclusion. A candidate that already states what the idea means, or what follows from it, has skipped past exploration into the discussion that's supposed to happen later, in `discussion`. Watch for this shape and reject it:
+Each candidate is a question plus the motivation for asking it. Neither half is a conclusion. A candidate that already states what the idea means, or what follows from it, has skipped past exploration into the discussion that's supposed to happen later, in `grounding`. Watch for this shape and reject it:
 
 > Reason: "Knowledge is most useful when broken into atomic, standalone ideas that can be freely recombined."
 
@@ -80,7 +80,7 @@ This lookup is cross-resource by design — it's the only place in the whole ski
 
 ## 6. No cross-resource dedup for literature candidates
 
-This is intentional, not a gap: each literature-destined candidate is anchored to *its own* source's argument. Two similar-sounding questions surfaced from different resources each get their own `seeds` row — never merged, never deduped against each other. Noticing that two resources are actually talking about the same thing is `discussion` (evergreen mode)'s job, not this skill's. Don't reach across resources here except for the term lookup in Step 5.
+This is intentional, not a gap: each literature-destined candidate is anchored to *its own* source's argument. Two similar-sounding questions surfaced from different resources each get their own `seeds` row — never merged, never deduped against each other. Noticing that two resources are actually talking about the same thing is `ground-my-take`'s job, not this skill's. Don't reach across resources here except for the term lookup in Step 5.
 
 ## 7. Repeat-run dedup, same-resource only
 
@@ -88,7 +88,7 @@ Before writing, check for a natural-key collision against existing rows *for thi
 
 ## 8. Dismiss at surface time
 
-Some candidates that come up during the pass aren't worth keeping at all: too thin, too redundant with another candidate, or not really a question. Drop these before writing anything — no `seeds` row is written for them at all. That's different from a candidate dismissed later, during `discussion`'s pick step, which does get a row, with `status: 'dismissed'` and `reason` left exactly as it was written at surface time.
+Some candidates that come up during the pass aren't worth keeping at all: too thin, too redundant with another candidate, or not really a question. Drop these before writing anything — no `seeds` row is written for them at all. That's different from a candidate dismissed later, during `grounding`'s pick step, which does get a row, with `status: 'dismissed'` and `reason` left exactly as it was written at surface time.
 
 ## 9. Write
 
