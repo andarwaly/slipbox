@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://slipbox.local/schemas/style-profile.schema.json",
+  "title": ".slipbox/style-profile.json",
+  "type": "object",
+  "required": [
+    "voice_summary",
+    "tone",
+    "sentence_rhythm",
+    "punctuation_fingerprint",
+    "lexicon",
+    "structure_mechanics",
+    "stance",
+    "language",
+    "exemplar_snippets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "voice_summary": {
+      "type": "string",
+      "description": "One paragraph: how this person's writing reads at a glance."
+    },
+    "tone": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Score on NN/g's four tone-of-voice axes. One entry per register if the corpus shows more than one (e.g. notes-to-self vs. notes-for-sharing).",
+      "items": {
+        "type": "object",
+        "required": [
+          "register",
+          "funny_serious",
+          "formal_casual",
+          "respectful_irreverent",
+          "matter_of_fact_enthusiastic"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "register": { "type": "string" },
+          "funny_serious": { "$ref": "#/definitions/funny_serious" },
+          "formal_casual": { "$ref": "#/definitions/formal_casual" },
+          "respectful_irreverent": { "$ref": "#/definitions/respectful_irreverent" },
+          "matter_of_fact_enthusiastic": { "$ref": "#/definitions/matter_of_fact_enthusiastic" }
+        }
+      }
+    },
+    "sentence_rhythm": {
+      "type": "object",
+      "description": "Typical sentence length, clause structure, rhythm, paragraph length.",
+      "required": ["sentence_length", "clause_structure", "rhythm", "paragraph_length"],
+      "additionalProperties": false,
+      "properties": {
+        "sentence_length": {
+          "type": "string",
+          "enum": ["short", "medium", "long", "varied"]
+        },
+        "clause_structure": {
+          "type": "string",
+          "enum": ["simple", "compound", "complex", "mixed"]
+        },
+        "rhythm": {
+          "type": "string",
+          "enum": ["staccato", "flowing", "mixed"]
+        },
+        "paragraph_length": {
+          "type": "string",
+          "enum": ["short", "medium", "long"]
+        }
+      }
+    },
+    "punctuation_fingerprint": {
+      "type": "object",
+      "description": "Em-dash frequency, semicolon use, parenthetical habits, list vs. prose preference.",
+      "required": [
+        "em_dash_frequency",
+        "semicolon_use",
+        "parenthetical_habits",
+        "list_vs_prose"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "em_dash_frequency": {
+          "type": "string",
+          "enum": ["none", "low", "moderate", "high"]
+        },
+        "semicolon_use": {
+          "type": "string",
+          "enum": ["none", "rare", "occasional", "frequent"]
+        },
+        "parenthetical_habits": {
+          "type": "string",
+          "enum": ["none", "rare", "frequent"]
+        },
+        "list_vs_prose": {
+          "type": "string",
+          "enum": ["list-preferring", "prose-preferring", "balanced"]
+        }
+      }
+    },
+    "lexicon": {
+      "type": "object",
+      "description": "Words/phrases this person actually uses, plus a personalized forbidden-vocabulary list.",
+      "required": ["characteristic_phrases", "forbidden_vocabulary"],
+      "additionalProperties": false,
+      "properties": {
+        "characteristic_phrases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_vocabulary": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "structure_mechanics": {
+      "type": "object",
+      "description": "Heading habits, bullet vs. prose ratio, how they open/close a note, formatting quirks.",
+      "required": ["heading_habits", "bullet_vs_prose", "opening_style", "formatting_quirks"],
+      "additionalProperties": false,
+      "properties": {
+        "heading_habits": {
+          "type": "string",
+          "enum": ["frequent", "occasional", "rare"]
+        },
+        "bullet_vs_prose": {
+          "type": "string",
+          "enum": ["bullet-heavy", "prose-heavy", "balanced"]
+        },
+        "opening_style": { "type": "string" },
+        "formatting_quirks": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "stance": {
+      "type": "object",
+      "description": "First person or third, how directly they state opinions, how much they signpost their own reasoning.",
+      "required": ["person", "opinion_directness", "signposting", "voice_tendency"],
+      "additionalProperties": false,
+      "properties": {
+        "person": {
+          "type": "string",
+          "enum": ["first", "third"]
+        },
+        "opinion_directness": {
+          "type": "string",
+          "enum": ["direct", "hedged", "mixed"]
+        },
+        "signposting": {
+          "type": "string",
+          "enum": ["heavy", "light", "none"]
+        },
+        "voice_tendency": {
+          "type": "string",
+          "enum": ["active", "passive", "mixed"]
+        }
+      }
+    },
+    "language": {
+      "type": "object",
+      "description": "Primary/additional languages present in the corpus and code-switching behavior.",
+      "required": ["primary", "additional", "code_switching"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": {
+          "type": "string",
+          "description": "Language code, e.g. en."
+        },
+        "additional": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "code_switching": {
+          "type": "string",
+          "enum": ["none", "register-gated", "free-mixing"]
+        }
+      }
+    },
+    "exemplar_snippets": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 5,
+      "description": "Verbatim snippets pulled directly from the corpus, unedited, illustrating the above.",
+      "items": { "type": "string" }
+    }
+  },
+  "definitions": {
+    "funny_serious": {
+      "type": "string",
+      "enum": ["very-funny", "somewhat-funny", "somewhat-serious", "very-serious"]
+    },
+    "formal_casual": {
+      "type": "string",
+      "enum": ["very-formal", "somewhat-formal", "somewhat-casual", "very-casual"]
+    },
+    "respectful_irreverent": {
+      "type": "string",
+      "enum": ["very-respectful", "somewhat-respectful", "somewhat-irreverent", "very-irreverent"]
+    },
+    "matter_of_fact_enthusiastic": {
+      "type": "string",
+      "enum": [
+        "matter-of-fact",
+        "somewhat-matter-of-fact",
+        "somewhat-enthusiastic",
+        "very-enthusiastic"
+      ]
+    }
+  }
+}

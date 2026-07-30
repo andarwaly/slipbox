@@ -1,6 +1,6 @@
 ---
 name: ground-my-take
-description: Ground a hunch into a Take — your own synthesized position, checked
+description: Ground a hunch into a Take — the user's own synthesized position, checked
   against existing notes it connects, then written as an evergreen note.
 disable-model-invocation: true
 license: MIT
@@ -12,7 +12,7 @@ metadata:
 
 ## What these words mean
 
-- **Take** — your own position on an idea, requiring synthesis across sources or
+- **Take** — the user's own position on an idea, requiring synthesis across sources or
   experience. Lives only in an evergreen note — never restates a single cited note
   unchanged.
 - **Evergreen note** — the file a confirmed Take gets written into. Unlike a Claim,
@@ -30,6 +30,14 @@ stop and say so.
 - **Bare, just a hunch** → search for anything related before starting; a hunch with
   nothing to check against is still a valid, complete session — see /grounding's own
   handling of "neither present."
+- **From the backlog** → query the pending queue:
+
+  ```bash
+  idea-db evergreen find --status to-discuss
+  ```
+
+  Offer these; let the user choose one. This is how a flagged tension from
+  ground-claim or ground-term eventually gets picked up and turned into a real Take.
 
 ## Ground it
 
@@ -51,7 +59,15 @@ Reach for these as the conversation calls for them, no fixed order:
   `references/distil.md`.
 
 /grounding hands back the confirmed Take, and — only if the user opted in — a flagged
-tension. Log any flagged tension as its own backlog entry before writing.
+tension. If a tension came back, insert it into the same evergreen backlog this skill
+itself reads from — ground-my-take, mid-synthesis, might notice its own tension needing
+yet more grounding later:
+
+```bash
+idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+```
+
+before moving on to writing.
 
 ## Purity check, before writing
 
@@ -61,12 +77,32 @@ the Take states something none of the individual notes said on their own.
 
 ## Write
 
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the evergreen
-  type.
+- Filename per `.slipbox/config.json`'s casing convention for the evergreen type.
+- For each evergreen field (`type`, `created`, `derived-from`), look up its mapping in
+  `.slipbox/config.json`'s `frontmatter.evergreen`: write it under whichever existing
+  property that field maps onto, or under the standard name if newly created — skip the
+  field entirely if it's mapped to `false`. Never assume the field name is the mapping.
+  Format the value per the entry's recorded `type` (e.g. a `list` type is a YAML array,
+  a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap each value per
+  `config.json`'s top-level `links.style` (wikilink or markdown link — don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 - Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
   doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.
+- Every citation also gets written as a links row:
+
+  ```bash
+  idea-db links add --source <this-evergreen-slug> --target <cited-note-slug> --rel cites
+  ```
+
+  one call per cited note.
+- Whether a citation is also rendered as an inline `[[wikilink]]` in the note's prose
+  depends on a two-part test: (a) it has this links row (the mechanical baseline — only
+  cited notes are ever eligible), and (b) the specific sentence containing the mention
+  is actually asserting something about that note's subject, not just incidentally
+  naming it while the sentence is really about something else.
 - Filename collision → stop and ask, never auto-disambiguate.
 
 ## Sign-off, shown to the user before finishing
@@ -83,3 +119,16 @@ the Take states something none of the individual notes said on their own.
 The Take note exists on disk (or is updated, if revisiting), every cited note is linked
 with a reason, any flagged tension is logged as its own backlog entry, and the user is
 told the file path.
+
+If this session's material came from the evergreen backlog rather than being freshly
+named or a bare hunch, close out the row it drew from:
+
+```bash
+idea-db evergreen update <slug> --status discussed --note-path <path>
+```
+
+Rename the slug too if this was a first write — same pattern as ground-term's own
+"Write — new term" step. Bump `--iteration` instead if this is a revisit to an existing
+evergreen note rather than a first write. On a revisit, also refresh `updated-at` to the
+current time — `created` already covers the first-write case, so `updated-at` only
+changes when an existing evergreen note is being rewritten.

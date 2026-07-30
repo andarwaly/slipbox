@@ -30,6 +30,7 @@ CREATE INDEX idx_seeds_target_status ON seeds(target_type, status);
 CREATE TABLE evergreen (
   slug            TEXT PRIMARY KEY,      -- provisional draft-prefixed slug renamed at write time
   status          TEXT NOT NULL CHECK (status IN ('to-discuss','discussing','discussed','dismissed')),
+  reason          TEXT NOT NULL,         -- shown per to-discuss candidate in ground-my-take's backlog read
   discussion_path TEXT,
   note_path       TEXT,                  -- nullable: placeholder row exists before anything is written
   iteration       INTEGER NOT NULL DEFAULT 1,

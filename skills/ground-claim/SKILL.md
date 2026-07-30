@@ -1,7 +1,7 @@
 ---
 name: ground-claim
 description: Ground a surfaced idea into a Claim — the source's own position, restated
-  in your own words and checked against the source, then written as a literature note.
+  in the user's own words and checked against the source, then written as a literature note.
 disable-model-invocation: true
 license: MIT
 metadata:
@@ -46,16 +46,30 @@ a one-line reason — the user accepts or rejects each one individually, never l
 silently.
 
 /grounding hands back two things when it finishes: the confirmed Claim, and — only if
-the user opted in — a flagged tension. If a tension came back, insert it as its own
-`seeds` row (`target_type: 'evergreen'`) before moving on to writing.
+the user opted in — a flagged tension. If a tension came back, insert it into the
+evergreen backlog:
+
+```bash
+idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+```
+
+before moving on to writing.
 
 ## Write
 
 Once confirmed:
 
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the literature
-  type.
+- Filename per `.slipbox/config.json`'s casing convention for the literature type.
+- For each literature field (`type`, `created`, `source`), look up its mapping in
+  `.slipbox/config.json`'s `frontmatter.literature`: write it under whichever existing
+  property that field maps onto, or under the standard name if newly created — skip the
+  field entirely if it's mapped to `false`. Never assume the field name is the mapping.
+  Format the value per the entry's recorded `type` (e.g. a `list` type is a YAML array,
+  a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap each value per
+  `config.json`'s top-level `links.style` (wikilink or markdown link — don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 - One-shot — write once, never revisit.
 - Filename collision → stop and ask, never auto-disambiguate.
 
@@ -66,4 +80,4 @@ Flip the original `seeds` row: `status` → `'discussed'`, note path attached.
 ## Done
 
 The Claim note exists on disk, the backlog row is closed, any flagged tension is logged
-as its own `seeds` row, and the user is told the file path.
+in the evergreen backlog, and the user is told the file path.

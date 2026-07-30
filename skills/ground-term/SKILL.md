@@ -30,8 +30,8 @@ stop and say so.
 - **Named directly** → the user says which term they want grounded.
 - **From the backlog** → query the pending queue:
 
-  ```sql
-  SELECT * FROM seeds WHERE target_type='term' AND status='to-discuss';
+  ```bash
+  idea-db seeds find --target-type term --status to-discuss
   ```
 
   Offer these; let the user choose one.
@@ -55,24 +55,34 @@ what's already recorded, not contradict it silently.
 /grounding hands back the confirmed definition, and — only if the user opted in — a
 flagged tension. If a tension came back, insert it as its own `seeds` row
 (`target_type: 'literature'`, since a term-grounding tension is source-facing, not a
-personal synthesis) before moving on to writing.
+personal synthesis) before moving on to writing:
+
+```bash
+idea-db seeds add --resource <resource> --type raw --target-type literature --reason "<tension description>"
+```
 
 ## Write — new term
 
 Write fresh:
 
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the Term type:
-  `type: term`, `created`, `sources: [[resource]]`, plus `aliases: [...]` if any were
-  given.
+- Filename per `.slipbox/config.json`'s casing convention for the Term type.
+- For each Term field (`type`, `created`, `sources`, plus `alt_names` if any were given),
+  look up its mapping in `.slipbox/config.json`'s `frontmatter.term`: write it under
+  whichever existing property that field maps onto, or under the standard name if newly
+  created — skip the field entirely if it's mapped to `false`. Never assume the field
+  name is the mapping. Format the value per the entry's recorded `type` (e.g. a `list`
+  type is a YAML array, a `date` type is `YYYY-MM-DD`), and if `wikilink: true`, wrap
+  each value per `config.json`'s top-level `links.style` (wikilink or markdown link —
+  don't hardcode).
+- Only fields being newly created get placed by zone — a field mapped onto an existing property stays exactly where that property already sits in the user's template. For newly-created fields: `zone: top` goes immediately after the frontmatter's opening `---`, before the user's own template-driven properties; `zone: bottom` goes at the very end of the frontmatter block, immediately before the closing `---`.
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
 
-```sql
-UPDATE seeds
-SET type = 'term', status = 'discussed', note_path = '<new-path>', slug = '<final-slug>'
-WHERE slug = '<original-slug>';
+```bash
+idea-db seeds update <original-slug> --type term --status discussed --note-path <new-path> --slug <final-slug>
 ```
 
 ## Write — extending an existing term
@@ -86,31 +96,28 @@ that existing row. So this row keeps its own original slug, permanently.
 
 1. **Update this row in place — do not touch its slug:**
 
-   ```sql
-   UPDATE seeds
-   SET type = 'term', status = 'discussed', note_path = '<the EXISTING note''s path>'
-   WHERE slug = '<this row's original, unchanged slug>';
+   ```bash
+   idea-db seeds update <this-row-original-slug> --type term --status discussed --note-path <existing-note-path>
    ```
 
 2. **Insert a `links` row recording the relationship** — this row's own (unchanged)
    slug is the source, the existing term row's slug is the target:
 
-   ```sql
-   INSERT INTO links (source_id, target_id, rel_type)
-   VALUES ('<this row's slug>', '<existing term row's slug>', 'extends');
+   ```bash
+   idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
    ```
 
-3. **Fold the new resource's contribution into the existing file.** Re-read the file
-   from disk immediately before writing (state can have changed since the read in
-   "Take the term"). Append/extend only — add the new resource to the `sources`
-   frontmatter array, and fold in whatever the new resource adds or complicates about
-   the term. Never overwrite the file wholesale.
-
-Why this is correct: exactly one `seeds` row per term ever holds the term's
-"canonical" final slug (the first occurrence). Every subsequent extending resource
-keeps its own distinct, never-renamed slug, connected to the canonical row purely
-through the `links` table (`rel_type: 'extends'`) — never by sharing or reassigning the
-primary key.
+3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
+   session on the draft before writing. Re-read the file from disk immediately before
+   writing (state can have changed since the read in "Take the term"). Append/extend
+   only — add the new resource to the `sources` frontmatter array, formatted per its
+   field_map entry's recorded `type` (list) and `wikilink` flag (per `links.style`, same
+   as "Write — new term"), and fold in whatever the new resource adds or complicates
+   about the term. Never overwrite the file wholesale. `sources` is zone `bottom` — since
+   the field already exists in the file from the term's first write, this extension
+   simply appends within the frontmatter block wherever that property already sits; the
+   zone rule only places a field the first time it's newly created, which already
+   happened at "Write — new term".
 
 ## Done
 

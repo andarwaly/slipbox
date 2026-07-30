@@ -1,6 +1,6 @@
 ---
 name: grounding
-description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until you've explicitly confirmed it.
+description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 disable-model-invocation: true
 ---
 
@@ -30,15 +30,9 @@ repeat what's already there.
 
 ## Never your own opinion
 
-Whether you're holding to one source or several retrieved notes, the rule is the same:
-
-- Never introduce anything from your own training or memory as if it belonged to the
-  material.
-- If a source argues something you have prior knowledge that contradicts, do not
-  correct it, soften it, or substitute your own view — even if you believe the source
-  is wrong.
-- That correction belongs somewhere else entirely (see **Noticing a tension** below),
-  never inside the statement itself.
+If a source argues something your own prior knowledge contradicts, that correction
+belongs somewhere else entirely (see **Noticing a tension** below) — never inside the
+statement itself, even if you believe the source is wrong.
 
 ## Gate
 
