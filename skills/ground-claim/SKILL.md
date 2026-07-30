@@ -59,7 +59,7 @@ before moving on to writing.
 
 Once confirmed:
 
-- Apply `../grounding/references/write-checks.md`'s style and humanize checks before writing.
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the literature
   type.

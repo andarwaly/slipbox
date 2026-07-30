@@ -77,7 +77,7 @@ the Take states something none of the individual notes said on their own.
 
 ## Write
 
-- Apply `../grounding/references/write-checks.md`'s style and humanize checks before writing.
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the evergreen
   type.

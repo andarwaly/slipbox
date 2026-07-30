@@ -65,7 +65,7 @@ idea-db seeds add --resource <resource> --type raw --target-type literature --re
 
 Write fresh:
 
-- Apply `../grounding/references/write-checks.md`'s style and humanize checks before writing.
+- Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
 - Filename and frontmatter per `.slipbox/config.json`'s conventions for the Term type:
   `type: term`, `created`, `sources: [[resource]]`, plus `aliases: [...]` if any were
@@ -100,12 +100,12 @@ that existing row. So this row keeps its own original slug, permanently.
    idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
    ```
 
-3. **Fold the new resource's contribution into the existing file.** Apply
-   `../grounding/references/write-checks.md`'s style and humanize checks before writing.
-   Re-read the file from disk immediately before writing (state can have changed since
-   the read in "Take the term"). Append/extend only — add the new resource to the
-   `sources` frontmatter array, and fold in whatever the new resource adds or complicates
-   about the term. Never overwrite the file wholesale.
+3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
+   session on the draft before writing. Re-read the file from disk immediately before
+   writing (state can have changed since the read in "Take the term"). Append/extend
+   only — add the new resource to the `sources` frontmatter array, and fold in whatever
+   the new resource adds or complicates about the term. Never overwrite the file
+   wholesale.
 
 ## Done
 
