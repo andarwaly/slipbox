@@ -1,5 +1,5 @@
--- idea.db — every note is an idea: extracted (raw), literature, reference, or evergreen.
--- Two tables, not three, not one: `seeds` holds raw+literature+reference (same row across
+-- idea.db — every note is an idea: extracted (raw), literature, term, or evergreen.
+-- Two tables, not three, not one: `seeds` holds raw+literature+term (same row across
 -- its lifecycle); `evergreen` is its own table (no seed precursor, plural citations).
 -- See discussion/note-taking-skills/grill-decisions-2026-07-23.md for full rationale.
 
@@ -10,7 +10,7 @@ PRAGMA busy_timeout = 5000;
 CREATE TABLE seeds (
   slug            TEXT PRIMARY KEY,      -- renamed at write time: question-slug -> confirmed-claim-slug
   resource        TEXT NOT NULL,         -- first-seen resource; additional resources touching a
-                                          -- reference term go through `links` (rel_type: 'extends'),
+                                          -- term go through `links` (rel_type: 'extends'),
                                           -- not a second resource column
   type            TEXT NOT NULL CHECK (type IN ('raw','literature','term')),
   target_type     TEXT NOT NULL CHECK (target_type IN ('literature','term')),

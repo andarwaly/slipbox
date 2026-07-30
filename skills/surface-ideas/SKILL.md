@@ -1,6 +1,6 @@
 ---
 name: surface-ideas
-description: Surface 5-10 discussion-worthy candidate ideas from a clipped Resource, and detect recurring reference-worthy terms — explore, no structure committed yet. Does not write a literature or reference note itself; that's write-literature-note's or write-reference-note's job, run separately.
+description: Surface 5-10 discussion-worthy candidate ideas from a clipped Resource, and detect recurring terms worth their own note — explore, no structure committed yet. Does not write a literature note or Term note itself; that's write-literature-note's or write-reference-note's job, run separately.
 disable-model-invocation: true
 license: MIT
 metadata:
@@ -9,7 +9,7 @@ metadata:
 
 # Surface Ideas
 
-This skill takes a Resource file and surfaces candidate ideas from it, and separately flags any reference-worthy terms it names. It does not decide which candidate is worth writing up, and it does not write the literature note or reference note itself: that's `write-literature-note`'s or `write-reference-note`'s job, run separately, possibly in a different session.
+This skill takes a Resource file and surfaces candidate ideas from it, and separately flags any terms worth their own note. It does not decide which candidate is worth writing up, and it does not write the literature note or Term note itself: that's `write-literature-note`'s or `write-reference-note`'s job, run separately, possibly in a different session.
 
 ## 0. Prerequisite: `.slipbox/config.json` must exist
 
@@ -63,7 +63,7 @@ A smooth-but-generic one doesn't, even though it reads well:
 
 The second could sit under any candidate from any resource unchanged. If a `reason` could survive that swap, it isn't done yet.
 
-## 5. Reference-term recurrence detection
+## 5. Term recurrence detection
 
 For each candidate, also check whether it names a **term that exists and could be looked up independent of this source** — a named concept, method, tool, or bias with a stable label (e.g. "confirmation bias," "CRDT," "the Zeigarnik effect") — versus **this source's own argued organizing scheme**, even one with labeled sub-parts that only make sense inside this source's argument.
 
@@ -74,13 +74,13 @@ SELECT slug, resource, status FROM seeds WHERE target_type = 'term' AND reason L
 ```
 
 - **Not found** — insert a new `seeds` row: `type: 'raw', target_type: 'term', origin: 'surface'`.
-- **Found** (an existing row/note for this term, from another resource) — still insert a new `seeds` row for *this* resource's mention. It needs its own row so it can later `links`-extend the existing reference note (`rel_type: 'extends'`) rather than being silently dropped.
+- **Found** (an existing row/note for this term, from another resource) — still insert a new `seeds` row for *this* resource's mention. It needs its own row so it can later `links`-extend the existing Term note (`rel_type: 'extends'`) rather than being silently dropped.
 
 This lookup is cross-resource by design — it's the only place in the whole skill family that queries across resources at surface time. Contrast with literature-destined candidates (Step 6), which are never deduped across resources.
 
 ## 6. No cross-resource dedup for literature candidates
 
-This is intentional, not a gap: each literature-destined candidate is anchored to *its own* source's argument. Two similar-sounding questions surfaced from different resources each get their own `seeds` row — never merged, never deduped against each other. Noticing that two resources are actually talking about the same thing is `discussion` (evergreen mode)'s job, not this skill's. Don't reach across resources here except for the reference-term lookup in Step 5.
+This is intentional, not a gap: each literature-destined candidate is anchored to *its own* source's argument. Two similar-sounding questions surfaced from different resources each get their own `seeds` row — never merged, never deduped against each other. Noticing that two resources are actually talking about the same thing is `discussion` (evergreen mode)'s job, not this skill's. Don't reach across resources here except for the term lookup in Step 5.
 
 ## 7. Repeat-run dedup, same-resource only
 
