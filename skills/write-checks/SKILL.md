@@ -1,6 +1,6 @@
 ---
 name: write-checks
-description: Check a note draft against the vault's own style profile and its humanize checklist before writing — use when another skill in the slipbox family is about to write a note to disk.
+description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -10,9 +10,9 @@ metadata:
 
 ## Prerequisite
 
-Requires `.slipbox/style-profile.json` (or `.slipbox/stated_style.json`) and
-`.slipbox/humanize-checklist.json` — both produced by `setup-slipbox`. If either is
-missing, stop and say so.
+Requires `.slipbox/config.json`, `.slipbox/style-profile.json` (or
+`.slipbox/stated_style.json`), and `.slipbox/humanize-checklist.json` — all produced by
+`setup-slipbox`. If any is missing, stop and say so.
 
 ## Style
 
@@ -27,7 +27,26 @@ comprehension, no tool needed — and run its `mechanical` section via
 `idea-db humanize check <draft-path>`. If either surfaces a flagged cluster, revise
 before writing the file — never write first and check after.
 
+## Frontmatter fields
+
+Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
+resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map: write
+under the mapped property, the standard name if new, or skip if `false`. The field's
+own name is never the mapping. Format the value per the entry's recorded `type` (a
+`list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
+timestamp), and wrap in wikilink or markdown-link syntax per the top-level
+`links.style` when `wikilink: true`.
+
+## Zone placement
+
+Zone only places newly-created fields — a mapped-onto-existing field stays put. New
+`top` fields sit right after the opening `---`; new `bottom` fields sit right before
+the closing `---`.
+
 ## Done
 
-Hand back nothing but a pass/revise signal: either the draft reads clean against both
-checks, or it doesn't yet and needs another pass before the calling skill writes it.
+Hand back: a pass/revise signal for style and humanize (revise before writing if
+either flags a cluster), plus each resolved field's final property name, formatted
+value, and placement (already-positioned, or the zone it belongs in) — everything the
+calling skill needs to actually write the frontmatter, without re-deriving field_map
+or zone logic itself.
