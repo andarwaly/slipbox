@@ -67,9 +67,12 @@ Write fresh:
 
 - Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the Term type:
-  `type: term`, `created`, `sources: [[resource]]`, plus `aliases: [...]` if any were
-  given.
+- Filename per `.slipbox/config.json`'s casing convention for the Term type.
+- For each Term field (`type`, `created`, `sources`, plus `aliases` if any were given),
+  look up its mapping in `.slipbox/config.json`'s `frontmatter.term`: write it under
+  whichever existing property that field maps onto, or under the standard name if newly
+  created — skip the field entirely if it's mapped to `false`. Never assume the field
+  name is the mapping.
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:

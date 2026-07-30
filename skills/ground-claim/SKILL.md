@@ -61,8 +61,11 @@ Once confirmed:
 
 - Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the literature
-  type.
+- Filename per `.slipbox/config.json`'s casing convention for the literature type.
+- For each literature field (`type`, `created`, `source`), look up its mapping in
+  `.slipbox/config.json`'s `frontmatter.literature`: write it under whichever existing
+  property that field maps onto, or under the standard name if newly created — skip the
+  field entirely if it's mapped to `false`. Never assume the field name is the mapping.
 - One-shot — write once, never revisit.
 - Filename collision → stop and ask, never auto-disambiguate.
 

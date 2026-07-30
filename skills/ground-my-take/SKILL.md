@@ -79,8 +79,11 @@ the Take states something none of the individual notes said on their own.
 
 - Run a /write-checks session on the draft before writing.
 - Re-read the target path from disk right before writing.
-- Filename and frontmatter per `.slipbox/config.json`'s conventions for the evergreen
-  type.
+- Filename per `.slipbox/config.json`'s casing convention for the evergreen type.
+- For each evergreen field (`type`, `created`, `derived-from`), look up its mapping in
+  `.slipbox/config.json`'s `frontmatter.evergreen`: write it under whichever existing
+  property that field maps onto, or under the standard name if newly created — skip the
+  field entirely if it's mapped to `false`. Never assume the field name is the mapping.
 - Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
   doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.
