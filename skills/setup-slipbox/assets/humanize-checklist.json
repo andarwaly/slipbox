@@ -1,0 +1,86 @@
+{
+  "description": "Fixed, skill-package-versioned. Copied verbatim into every vault by setup-slipbox — never edited per-vault, never register-matched to an individual user's corpus. This file only flags; it never auto-rewrites.",
+  "before_applying": "Read style-profile.json (or stated_style.json fallback if no corpus exists) for this vault's own punctuation fingerprint, lexicon, and forbidden-vocabulary list. Signals below are generic; that file is what makes a flag specific to this user's actual voice.",
+  "mechanical": {
+    "description": "Signals a CLI can pattern-match automatically: literal word/phrase lists and measurable properties compared against style-profile.json baselines.",
+    "clustering_rule": "require 2+ distinct mechanical signals firing in the same passage before flagging it — a single hit is not enough",
+    "language_gating": "the mechanical word/phrase lists below are English-specific and must NOT be applied to passages outside the vault's own style-profile.json language.primary / language.additional",
+    "signals": [
+      {
+        "id": "significance_inflation_words",
+        "tier": "T1",
+        "type": "word_list",
+        "words": ["crucial", "pivotal", "profound", "game-changing"]
+      },
+      {
+        "id": "vague_attribution_phrases",
+        "tier": "T1",
+        "type": "phrase_list",
+        "phrases": ["many believe", "some argue", "it is often said"],
+        "condition": "no traceable source"
+      },
+      {
+        "id": "filler_hedges",
+        "tier": "T1",
+        "type": "phrase_list",
+        "phrases": ["it's worth noting that", "it's important to remember that"]
+      },
+      {
+        "id": "em_dash_density",
+        "tier": "T2",
+        "type": "measurable_property",
+        "baseline_field": "punctuation_fingerprint.em_dash_frequency",
+        "comparison": "compare against the vault's own style-profile.json baseline field, not a fixed threshold — read that field at check time"
+      },
+      {
+        "id": "ai_vocabulary_words",
+        "tier": "T2",
+        "type": "word_list",
+        "words": ["delve", "leverage", "robust", "seamless", "tapestry", "testament", "underscore", "elevate", "unlock", "unpack", "navigate"],
+        "note": "\"navigate\" only counts as a metaphor for handling a topic"
+      },
+      {
+        "id": "passive_voice_density",
+        "tier": "T2",
+        "type": "measurable_property",
+        "baseline_field": "stance.voice_tendency",
+        "comparison": "compare against the vault's own style-profile.json baseline field, not a fixed threshold — read that field at check time"
+      },
+      {
+        "id": "decaying_watchlist_phrases",
+        "tier": "T3",
+        "type": "phrase_list",
+        "phrases": ["boils down to", "at the end of the day", "in today's fast-paced world", "it's not just about x, it's about y"],
+        "notes": {
+          "at the end of the day": "only counts as a throwaway transition"
+        },
+        "versioning": "gets updated centrally as AI-vocabulary trends shift and ships with skill releases, never edited per-vault; setup-slipbox re-copies this file on every re-run, so a vault picks up package-level updates rather than staying frozen at first-setup content",
+        "version": "v1",
+        "version_date": "2026-07-27"
+      }
+    ]
+  },
+  "judgment": {
+    "description": "Stays prose. Applied by whichever ground-* skill uses this file — an LLM reading the passage — because it requires reading-comprehension judgment a literal pattern-match can't do. Never mechanized.",
+    "signals": [
+      {
+        "id": "negative_parallelism",
+        "tier": "T1",
+        "name": "Negative parallelism (\"not x, but y\")",
+        "description": "The construction itself is legitimate; what's flagged is using it as a rhetorical crutch, which requires reading the actual content."
+      },
+      {
+        "id": "rule_of_three_crutch",
+        "tier": "T1",
+        "name": "Rule-of-three constructions used as a rhetorical crutch",
+        "description": "Flagged when the construction is used as a rhetorical crutch rather than because the content actually has three parts."
+      },
+      {
+        "id": "superficial_ing_analysis",
+        "tier": "T1",
+        "name": "Superficial \"-ing\" analysis clauses",
+        "description": "Clauses that restate the sentence's own claim instead of adding information."
+      }
+    ]
+  }
+}
