@@ -9,9 +9,9 @@
     },
     {
       "prompt": "surface ideas from a resource that mentions 'LLM' as a term, a term this vault hasn't seen before",
-      "expected_output": "In addition to literature candidates, inserts one seeds row with target_type='reference' for the term 'LLM'.",
+      "expected_output": "In addition to literature candidates, inserts one seeds row with target_type='term' for the term 'LLM'.",
       "assertions": [
-        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE target_type='reference' AND reason LIKE '%LLM%'", "min": 1}
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE target_type='term' AND reason LIKE '%LLM%'", "min": 1}
       ]
     },
     {

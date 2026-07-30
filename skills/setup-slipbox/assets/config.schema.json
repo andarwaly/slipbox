@@ -8,32 +8,32 @@
   "properties": {
     "paths": {
       "type": "object",
-      "required": ["resources", "literature", "evergreen", "reference"],
+      "required": ["resources", "literature", "evergreen", "term"],
       "additionalProperties": false,
       "properties": {
         "resources": { "type": "string" },
         "literature": { "type": "string" },
         "evergreen": { "type": "string" },
-        "reference": { "type": "string" }
+        "term": { "type": "string" }
       }
     },
     "filenames": {
       "type": "object",
-      "required": ["literature", "reference", "evergreen"],
+      "required": ["literature", "term", "evergreen"],
       "additionalProperties": false,
       "properties": {
         "literature": { "$ref": "#/definitions/casing" },
-        "reference": { "$ref": "#/definitions/casing" },
+        "term": { "$ref": "#/definitions/casing" },
         "evergreen": { "$ref": "#/definitions/casing" }
       }
     },
     "frontmatter": {
       "type": "object",
-      "required": ["literature", "reference", "evergreen"],
+      "required": ["literature", "term", "evergreen"],
       "additionalProperties": false,
       "properties": {
         "literature": { "$ref": "#/definitions/field_map" },
-        "reference": { "$ref": "#/definitions/field_map" },
+        "term": { "$ref": "#/definitions/field_map" },
         "evergreen": { "$ref": "#/definitions/field_map" }
       }
     },
@@ -52,7 +52,7 @@
       "type": "object",
       "required": [
         "literature_path",
-        "reference_path",
+        "term_path",
         "evergreen_path",
         "article_path",
         "news_path",
@@ -62,7 +62,7 @@
       "additionalProperties": false,
       "properties": {
         "literature_path": { "type": "string" },
-        "reference_path": { "type": "string" },
+        "term_path": { "type": "string" },
         "evergreen_path": { "type": "string" },
         "article_path": { "type": "string" },
         "news_path": { "type": "string" },

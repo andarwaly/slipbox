@@ -6,7 +6,7 @@
 
 Skills for a Zettelkasten-inspired, conversational note-taking pipeline: clip a source, surface discussable ideas from it, discuss one into a literature note, optionally spin off a reference note, optionally connect notes into an evergreen note.
 
-Domain vocabulary (Resource, Literature note, Reference note, Evergreen note, Claim, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
+Domain vocabulary (Resource, Literature note, Term note, Evergreen note, Claim, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
 
 ## Structure
 

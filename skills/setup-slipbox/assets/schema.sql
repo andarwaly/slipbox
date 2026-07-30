@@ -12,8 +12,8 @@ CREATE TABLE seeds (
   resource        TEXT NOT NULL,         -- first-seen resource; additional resources touching a
                                           -- reference term go through `links` (rel_type: 'extends'),
                                           -- not a second resource column
-  type            TEXT NOT NULL CHECK (type IN ('raw','literature','reference')),
-  target_type     TEXT NOT NULL CHECK (target_type IN ('literature','reference')),
+  type            TEXT NOT NULL CHECK (type IN ('raw','literature','term')),
+  target_type     TEXT NOT NULL CHECK (target_type IN ('literature','term')),
                                           -- set at surface time; distinct from `type`, which stays
                                           -- 'raw' until discussion resolves it
   status          TEXT NOT NULL CHECK (status IN ('to-discuss','discussing','discussed','dismissed')),

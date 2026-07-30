@@ -70,10 +70,10 @@ For each candidate, also check whether it names a **term that exists and could b
 If a candidate names an independently-existing term, query `seeds` for whether that term has already surfaced from a *different* resource:
 
 ```sql
-SELECT slug, resource, status FROM seeds WHERE target_type = 'reference' AND reason LIKE '%<term>%';
+SELECT slug, resource, status FROM seeds WHERE target_type = 'term' AND reason LIKE '%<term>%';
 ```
 
-- **Not found** — insert a new `seeds` row: `type: 'raw', target_type: 'reference', origin: 'surface'`.
+- **Not found** — insert a new `seeds` row: `type: 'raw', target_type: 'term', origin: 'surface'`.
 - **Found** (an existing row/note for this term, from another resource) — still insert a new `seeds` row for *this* resource's mention. It needs its own row so it can later `links`-extend the existing reference note (`rel_type: 'extends'`) rather than being silently dropped.
 
 This lookup is cross-resource by design — it's the only place in the whole skill family that queries across resources at surface time. Contrast with literature-destined candidates (Step 6), which are never deduped across resources.
@@ -97,7 +97,7 @@ Insert one `seeds` row per surviving candidate:
 - `slug`: a fresh question-slug (renamed later at write time to a confirmed-claim-slug)
 - `resource`: this resource's slug
 - `type`: `'raw'`
-- `target_type`: `'literature'` by default, or `'reference'` when Step 5's check applies
+- `target_type`: `'literature'` by default, or `'term'` when Step 5's check applies
 - `status`: `'to-discuss'`
 - `origin`: `'surface'`
 - `reason`: the question and motivation from Step 2 (or the term-focused reason from Step 5)
