@@ -1,0 +1,25 @@
+{
+  "test_cases": [
+    {
+      "prompt": "ground this statement against a source: [source text] says X — is that right?",
+      "expected_output": "Holds the user to the source; if the user's phrasing drifts into their own opinion, asks whether that's the source's view or their own read, and does not fix the statement until explicitly confirmed.",
+      "assertions": [
+        {"type": "contains", "text": "source"}
+      ]
+    },
+    {
+      "prompt": "ground this with no source and no retrieved notes, just a raw hunch",
+      "expected_output": "Says plainly that neither a source nor retrieved notes are present, and continues the session anyway — an ungrounded hunch is treated as a valid, complete outcome, not a failure.",
+      "assertions": [
+        {"type": "not_contains", "text": "cannot proceed"}
+      ]
+    },
+    {
+      "prompt": "the user says 'yeah sounds about right' without engaging with the proposed statement",
+      "expected_output": "Does not treat this as a confirmation gate pass — probes once more before accepting, since a rubber-stamp without engagement doesn't count as an explicit fix.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    }
+  ]
+}

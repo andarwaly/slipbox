@@ -1,0 +1,25 @@
+{
+  "test_cases": [
+    {
+      "prompt": "ground-term \"confirmation bias\" — this term has never been recorded before",
+      "expected_output": "Writes a fresh Term note and renames the seeds row to the term's final slug, type='term', status='discussed'.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE type='term' AND status='discussed' AND slug LIKE '%confirmation-bias%'", "min": 1}
+      ]
+    },
+    {
+      "prompt": "ground-term \"confirmation bias\" again, from a second resource that also mentions it",
+      "expected_output": "Does not rename the second row's slug (would collide with the canonical row's primary key). Instead updates the second row in place and inserts a links row with rel_type='extends' pointing at the canonical row, then appends the new resource's contribution to the existing file rather than overwriting it.",
+      "assertions": [
+        {"type": "sql_query", "query": "SELECT count(*) FROM links WHERE rel_type='extends'", "min": 1}
+      ]
+    },
+    {
+      "prompt": "ground-term with no term named and an empty backlog",
+      "expected_output": "Asks the user which term they want grounded rather than guessing.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    }
+  ]
+}
