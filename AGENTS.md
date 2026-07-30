@@ -38,7 +38,7 @@ slipbox/                    ← repo root, this file's location
 
 ## Workflow
 
-- **Skill format**: follow the [agentskills.io](https://agentskills.io) spec — a directory with `SKILL.md` (`name`, `description` frontmatter; optional `license`, `metadata`, and `scripts/`/`references/`/`assets/` subdirs). Skip Claude Code body-syntax extensions (`$ARGUMENTS`, `context: fork`, `allowed-tools`) unless a skill is intentionally Claude-Code-only — they fail outright on other harnesses. Frontmatter extensions (e.g. `disable-model-invocation`) are fine anywhere; an unrecognized key degrades gracefully.
+- **Skill format**: follow the [agentskills.io](https://agentskills.io) spec — a directory with `SKILL.md` (`name`, `description` frontmatter; optional `license`, `metadata`, and `scripts/`/`references/`/`assets/` subdirs). Frontmatter extensions (e.g. `disable-model-invocation`) are fine anywhere; an unrecognized key degrades gracefully. Heading/prose style (no numbered step-headings, etc.) is governed workspace-wide by the root `AGENTS.md`'s "Skill-writing conventions" section — not restated here.
 - **Docs**: every skill gets a human-facing page at `docs/{{skill-name}}.md`.
 - **Distribution**: published to a public GitHub repo. Users install with `npx skills add andarwaly/slipbox` (or a specific skill within it).
 - **Writing a skill or a change to one**: two phases, don't skip the second.
