@@ -30,6 +30,14 @@ stop and say so.
 - **Bare, just a hunch** → search for anything related before starting; a hunch with
   nothing to check against is still a valid, complete session — see /grounding's own
   handling of "neither present."
+- **From the backlog** → query the pending queue:
+
+  ```bash
+  idea-db evergreen find --status to-discuss
+  ```
+
+  Offer these; let the user choose one. This is how a flagged tension from
+  ground-claim or ground-term eventually gets picked up and turned into a real Take.
 
 ## Ground it
 
@@ -51,7 +59,15 @@ Reach for these as the conversation calls for them, no fixed order:
   `references/distil.md`.
 
 /grounding hands back the confirmed Take, and — only if the user opted in — a flagged
-tension. Log any flagged tension as its own backlog entry before writing.
+tension. If a tension came back, insert it into the same evergreen backlog this skill
+itself reads from — ground-my-take, mid-synthesis, might notice its own tension needing
+yet more grounding later:
+
+```bash
+idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+```
+
+before moving on to writing.
 
 ## Purity check, before writing
 
@@ -67,6 +83,18 @@ the Take states something none of the individual notes said on their own.
 - Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
   doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.
+- Every citation also gets written as a links row:
+
+  ```bash
+  idea-db links add --source <this-evergreen-slug> --target <cited-note-slug> --rel cites
+  ```
+
+  one call per cited note.
+- Whether a citation is also rendered as an inline `[[wikilink]]` in the note's prose
+  depends on a two-part test: (a) it has this links row (the mechanical baseline — only
+  cited notes are ever eligible), and (b) the specific sentence containing the mention
+  is actually asserting something about that note's subject, not just incidentally
+  naming it while the sentence is really about something else.
 - Filename collision → stop and ask, never auto-disambiguate.
 
 ## Sign-off, shown to the user before finishing
@@ -83,3 +111,14 @@ the Take states something none of the individual notes said on their own.
 The Take note exists on disk (or is updated, if revisiting), every cited note is linked
 with a reason, any flagged tension is logged as its own backlog entry, and the user is
 told the file path.
+
+If this session's material came from the evergreen backlog rather than being freshly
+named or a bare hunch, close out the row it drew from:
+
+```bash
+idea-db evergreen update <slug> --status discussed --note-path <path>
+```
+
+Rename the slug too if this was a first write — same pattern as ground-term's own
+"Write — new term" step. Bump `--iteration` instead if this is a revisit to an existing
+evergreen note rather than a first write.
