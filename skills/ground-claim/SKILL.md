@@ -62,8 +62,9 @@ Once confirmed:
 - Run a /write-checks session on the draft, passing the literature field list
   (`type`, `created`, `source`) — it resolves each field's mapping, formatting, and
   zone placement, and checks the draft's style and humanize signals.
-- Re-read the target path from disk right before writing.
 - Filename per `.slipbox/config.json`'s casing convention for the literature type.
+- Re-read the target path from disk right before writing.
+- Assemble the frontmatter from write-checks' returned fields and write the file.
 - One-shot — write once, never revisit.
 - Filename collision → stop and ask, never auto-disambiguate.
 

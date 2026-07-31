@@ -76,10 +76,13 @@ the Take states something none of the individual notes said on their own.
 - Run a /write-checks session on the draft, passing the evergreen field list (`type`,
   `created`, `derived-from`, `updated-at`) — it resolves each field's mapping,
   formatting, and zone placement, and checks the draft's style and humanize signals.
-- Re-read the target path from disk right before writing.
+  `updated-at` gets `created`'s own timestamp on a first write, and is refreshed to the
+  current time on a revisit.
 - Filename per `.slipbox/config.json`'s casing convention for the evergreen type.
-- Can be a full rewrite of existing content — unlike a Claim, revisiting this note later
-  doesn't mean starting a new file.
+- Re-read the target path from disk right before writing.
+- Assemble the frontmatter from write-checks' returned fields and write the file — a
+  full rewrite of existing content on a revisit, since unlike a Claim this doesn't mean
+  starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link silently.
 - Every citation also gets written as a links row:
 
@@ -93,7 +96,8 @@ the Take states something none of the individual notes said on their own.
   cited notes are ever eligible), and (b) the specific sentence containing the mention
   is actually asserting something about that note's subject, not just incidentally
   naming it while the sentence is really about something else.
-- Filename collision → stop and ask, never auto-disambiguate.
+- Filename collision on a first write → stop and ask, never auto-disambiguate. On a
+  revisit, the existing file is expected — not a collision.
 
 ## Sign-off, shown to the user before finishing
 
@@ -119,6 +123,6 @@ idea-db evergreen update <slug> --status discussed --note-path <path>
 
 Rename the slug too if this was a first write — same pattern as ground-term's own
 "Write — new term" step. Bump `--iteration` instead if this is a revisit to an existing
-evergreen note rather than a first write. On a revisit, also refresh `updated-at` to the
-current time — `created` already covers the first-write case, so `updated-at` only
-changes when an existing evergreen note is being rewritten.
+evergreen note rather than a first write. The note's own `updated-at` frontmatter field
+was already set in the Write section above — `created`'s timestamp on a first write,
+refreshed to current time on a revisit.

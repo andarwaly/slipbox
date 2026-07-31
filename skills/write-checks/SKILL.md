@@ -27,6 +27,13 @@ comprehension, no tool needed — and run its `mechanical` section via
 `idea-db humanize check <draft-path>`. If either surfaces a flagged cluster, revise
 before writing the file — never write first and check after.
 
+## Invocation modes
+
+Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
+Zone placement — the full pass below. Called with no field list (already-resolved
+fields, e.g. a term extension re-using its first write's mapping), it runs Style and
+Humanize only, skipping Frontmatter fields and Zone placement entirely.
+
 ## Frontmatter fields
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
@@ -46,7 +53,7 @@ the closing `---`.
 ## Done
 
 Hand back: a pass/revise signal for style and humanize (revise before writing if
-either flags a cluster), plus each resolved field's final property name, formatted
-value, and placement (already-positioned, or the zone it belongs in) — everything the
-calling skill needs to actually write the frontmatter, without re-deriving field_map
-or zone logic itself.
+either flags a cluster), plus — on the full pass only — each resolved field's final
+property name, formatted value, and placement (already-positioned, or the zone it
+belongs in), so the calling skill never re-derives field_map or zone logic itself. The
+checks-only mode hands back the pass/revise signal alone.

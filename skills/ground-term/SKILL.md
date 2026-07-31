@@ -69,8 +69,10 @@ Write fresh:
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
   mapping, formatting, and zone placement, and checks the draft's style and humanize
   signals.
-- Re-read the target path from disk right before writing.
 - Filename per `.slipbox/config.json`'s casing convention for the Term type.
+- Re-read the target path from disk right before writing.
+- Assemble the frontmatter from write-checks' returned fields and write the file.
+- Filename collision → stop and ask, never auto-disambiguate.
 
 Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
 can be renamed:
@@ -102,12 +104,12 @@ that existing row. So this row keeps its own original slug, permanently.
    ```
 
 3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
-   session on the draft for style and humanize checks only — `sources` already has its
-   resolved mapping and formatting from the term's first write, no field resolution
+   session on the draft in its checks-only mode (no field list) — `sources` already has
+   its resolved mapping and formatting from the term's first write, no field resolution
    needed here. Re-read the file from disk immediately before writing (state can have
-   changed since the read in "Take the term"). Append/extend only — add the new
-   resource to the `sources` frontmatter array, formatted per its existing recorded
-   `type` (list) and `wikilink` flag. Never overwrite the file wholesale.
+   changed since the read in "Take the term"). Append the new resource to the `sources`
+   frontmatter array, formatted per its existing recorded `type` (list) and `wikilink`
+   flag, and write the file. Never overwrite the file wholesale.
 
 ## Done
 
