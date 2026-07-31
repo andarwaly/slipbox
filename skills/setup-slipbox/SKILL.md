@@ -100,18 +100,20 @@ Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-
 
 **Done when:** `.slipbox/humanize-checklist.json` matches `assets/humanize-checklist.json` exactly.
 
-## 5. Initialize `idea.db`
+## 5. Install `idea-db` and initialize `idea.db`
 
-Only if `.slipbox/idea.db` does not already exist:
+Runs identically on every invocation, first run or re-run — no conditional branch:
 
 ```bash
-mkdir -p .slipbox
-sqlite3 .slipbox/idea.db < skills/setup-slipbox/assets/schema.sql
+mkdir -p .slipbox/bin
+cp skills/setup-slipbox/scripts/idea-db .slipbox/bin/idea-db
+chmod +x .slipbox/bin/idea-db
+.slipbox/bin/idea-db init
 ```
 
-Never overwrite an existing `idea.db` — if it's already there, leave it untouched and say so.
+The script copy is always overwritten (versioned code, not user data — distinct from `idea.db`/`config.json`, which are never overwritten). `idea-db init` owns the "does `idea.db` already exist" decision itself: it creates the db fresh if absent, succeeds as a no-op if already at the current schema version, and refuses with a pointer to `idea-db migrate` if the existing db is at an older schema version — never silently overwriting or self-healing. `setup-slipbox` never touches `sqlite3` directly.
 
-**Done when:** `.slipbox/idea.db` exists and contains the schema's tables.
+**Done when:** `.slipbox/bin/idea-db` is installed and executable, and `.slipbox/idea.db` exists at the current schema version.
 
 ## 6. Write `.slipbox/config.json`
 

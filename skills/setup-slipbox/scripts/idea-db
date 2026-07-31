@@ -1,0 +1,505 @@
+#!/usr/bin/env bash
+# idea-db — CLI wrapping .slipbox/idea.db (sqlite3) and .slipbox/config.json.
+# Canonical source; setup-slipbox copies this file verbatim to .slipbox/bin/idea-db
+# on every run (always overwritten — versioned code, not user data).
+# See docs/adr/0001-idea-db-cli.md for the design decisions behind this file's shape.
+#
+# Portability note: macOS ships bash 3.2 by default (GPL licensing) — this file
+# deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
+set -euo pipefail
+
+CLI_VERSION="1.0.0"
+SCHEMA_VERSION=1
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DB="$SELF_DIR/idea.db"
+CONFIG="$SELF_DIR/config.json"
+
+# ---- schema (embedded — the copied script is the only file that ships) ----
+read -r -d '' SCHEMA_SQL <<'SCHEMA_EOF' || true
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+
+CREATE TABLE seeds (
+  slug            TEXT PRIMARY KEY,
+  resource        TEXT NOT NULL,
+  type            TEXT NOT NULL CHECK (type IN ('raw','literature','term')),
+  target_type     TEXT NOT NULL CHECK (target_type IN ('literature','term')),
+  status          TEXT NOT NULL CHECK (status IN ('to-discuss','discussing','discussed','dismissed')),
+  discussion_path TEXT,
+  origin          TEXT NOT NULL CHECK (origin IN ('surface','discussion')),
+  reason          TEXT NOT NULL,
+  note_path       TEXT,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_seeds_resource      ON seeds(resource);
+CREATE INDEX idx_seeds_target_status ON seeds(target_type, status);
+
+CREATE TABLE evergreen (
+  slug            TEXT PRIMARY KEY,
+  status          TEXT NOT NULL CHECK (status IN ('to-discuss','discussing','discussed','dismissed')),
+  reason          TEXT NOT NULL,
+  discussion_path TEXT,
+  note_path       TEXT,
+  iteration       INTEGER NOT NULL DEFAULT 1,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX idx_evergreen_status ON evergreen(status);
+
+CREATE TABLE links (
+  source_id  TEXT NOT NULL,
+  target_id  TEXT NOT NULL,
+  rel_type   TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (source_id, target_id, rel_type)
+);
+CREATE INDEX idx_links_source ON links(source_id, rel_type);
+CREATE INDEX idx_links_target ON links(target_id, rel_type);
+
+CREATE VIEW stale_seeds AS
+SELECT slug, resource, reason, created_at,
+       CAST(julianday('now') - julianday(created_at) AS INTEGER) AS days_stale
+FROM seeds
+WHERE status = 'to-discuss'
+ORDER BY days_stale DESC;
+
+CREATE VIRTUAL TABLE seeds_fts USING fts5(
+  slug UNINDEXED, reason, content='seeds', content_rowid='rowid'
+);
+CREATE TRIGGER trg_seeds_fts_insert AFTER INSERT ON seeds BEGIN
+  INSERT INTO seeds_fts(rowid, slug, reason) VALUES (NEW.rowid, NEW.slug, NEW.reason);
+END;
+CREATE TRIGGER trg_seeds_fts_update AFTER UPDATE ON seeds BEGIN
+  UPDATE seeds_fts SET reason = NEW.reason WHERE rowid = OLD.rowid;
+END;
+CREATE TRIGGER trg_seeds_fts_delete AFTER DELETE ON seeds BEGIN
+  DELETE FROM seeds_fts WHERE rowid = OLD.rowid;
+END;
+
+CREATE TRIGGER trg_seeds_updated_at
+AFTER UPDATE ON seeds
+FOR EACH ROW
+BEGIN
+  UPDATE seeds SET updated_at = datetime('now') WHERE slug = OLD.slug;
+END;
+
+CREATE TRIGGER trg_evergreen_updated_at
+AFTER UPDATE ON evergreen
+FOR EACH ROW
+BEGIN
+  UPDATE evergreen SET updated_at = datetime('now') WHERE slug = OLD.slug;
+END;
+SCHEMA_EOF
+
+# ---- helpers ----
+usage_err() { echo "{\"error\":\"$1\"}" >&2; exit 2; }
+runtime_err() { echo "{\"error\":\"$1\"}" >&2; exit 1; }
+sql_escape() { printf '%s' "$1" | sed "s/'/''/g"; }
+require_db() { [ -f "$DB" ] || runtime_err "idea.db not found at $DB — run setup-slipbox first"; }
+require_config() { [ -f "$CONFIG" ] || runtime_err "config.json not found at $CONFIG — run setup-slipbox first"; }
+
+# get_flag <name> "$@" — scans args for "--<name> <value>", echoes value, exits 1 if absent.
+# Plain positional scan, not an associative array — keeps this file bash-3.2-safe.
+get_flag() {
+  local name="--$1"; shift
+  while [ $# -gt 0 ]; do
+    if [ "$1" = "$name" ]; then
+      [ $# -ge 2 ] || usage_err "flag $name needs a value"
+      printf '%s' "$2"
+      return 0
+    fi
+    shift
+  done
+  return 1
+}
+
+print_help() {
+  cat <<'EOF'
+idea-db — CLI for .slipbox/idea.db and .slipbox/config.json
+
+Usage:
+  idea-db init
+  idea-db migrate
+  idea-db seeds find     [--target-type T] [--status S] [--resource R] [--query Q]
+  idea-db seeds add      --resource R --type T --target-type TT --reason "..."
+  idea-db seeds update   <slug> [--status S] [--note-path P] [--slug NEW] [--discussion-path P] [--type T]
+  idea-db evergreen add    --slug SLUG --reason "..."
+  idea-db evergreen find   [--status S]
+  idea-db evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
+  idea-db links add        --source S --target T --rel cites|extends
+  idea-db config get       [<dotted.path>]
+  idea-db config set       <dotted.path> <value>
+  idea-db humanize check    <file>
+  idea-db --help | --version
+
+Output is JSON by default (--format table optional on find/get commands).
+Exit 2 on usage errors, exit 1 on runtime failures.
+EOF
+}
+
+run_query() {
+  local format="$1" sql="$2"
+  if [ "$format" = "table" ]; then
+    sqlite3 -header -column "$DB" "$sql"
+  else
+    sqlite3 -json "$DB" "$sql"
+  fi
+}
+
+# ---- init / migrate ----
+cmd_init() {
+  mkdir -p "$SELF_DIR"
+  if [ -f "$DB" ]; then
+    local v
+    v=$(sqlite3 "$DB" "PRAGMA user_version;")
+    if [ "$v" = "$SCHEMA_VERSION" ]; then
+      echo "{\"status\":\"ok\",\"message\":\"idea.db already at schema version $SCHEMA_VERSION\"}"
+      exit 0
+    fi
+    runtime_err "idea.db is at schema version $v, expected $SCHEMA_VERSION — run 'idea-db migrate' first"
+  fi
+  printf '%s\n' "$SCHEMA_SQL" | sqlite3 "$DB"
+  sqlite3 "$DB" "PRAGMA user_version = $SCHEMA_VERSION;"
+  echo "{\"status\":\"ok\",\"message\":\"idea.db created at schema version $SCHEMA_VERSION\"}"
+}
+
+cmd_migrate() {
+  require_db
+  local v
+  v=$(sqlite3 "$DB" "PRAGMA user_version;")
+  if [ "$v" = "$SCHEMA_VERSION" ]; then
+    echo "{\"status\":\"ok\",\"message\":\"already at schema version $SCHEMA_VERSION, nothing to migrate\"}"
+    exit 0
+  fi
+  # No migration steps registered yet — nothing has ever shipped at a schema
+  # version below SCHEMA_VERSION, so there is no real N->N+1 step to run.
+  runtime_err "no migration path registered from schema version $v to $SCHEMA_VERSION"
+}
+
+# ---- seeds ----
+cmd_seeds_find() {
+  require_db
+  local target_type status resource query format
+  target_type=$(get_flag target-type "$@") || target_type=""
+  status=$(get_flag status "$@") || status=""
+  resource=$(get_flag resource "$@") || resource=""
+  query=$(get_flag query "$@") || query=""
+  format=$(get_flag format "$@") || format="json"
+  local where="1=1"
+  [ -n "$target_type" ] && where="$where AND s.target_type = '$(sql_escape "$target_type")'"
+  [ -n "$status" ] && where="$where AND s.status = '$(sql_escape "$status")'"
+  [ -n "$resource" ] && where="$where AND s.resource = '$(sql_escape "$resource")'"
+  if [ -n "$query" ]; then
+    local q; q=$(sql_escape "$query")
+    run_query "$format" "SELECT s.* FROM seeds s JOIN seeds_fts f ON s.rowid = f.rowid WHERE f.reason MATCH '$q' AND $where ORDER BY rank;"
+  else
+    run_query "$format" "SELECT s.* FROM seeds s WHERE $where ORDER BY s.created_at DESC;"
+  fi
+}
+
+cmd_seeds_add() {
+  require_db
+  local resource type target_type reason format
+  resource=$(get_flag resource "$@") || resource=""
+  type=$(get_flag type "$@") || type=""
+  target_type=$(get_flag target-type "$@") || target_type=""
+  reason=$(get_flag reason "$@") || reason=""
+  format=$(get_flag format "$@") || format="json"
+  [ -n "$resource" ] || usage_err "seeds add requires --resource"
+  [ -n "$type" ] || usage_err "seeds add requires --type"
+  [ -n "$target_type" ] || usage_err "seeds add requires --target-type"
+  [ -n "$reason" ] || usage_err "seeds add requires --reason"
+  case "$type" in raw|literature|term) ;; *) usage_err "--type must be one of raw, literature, term" ;; esac
+  case "$target_type" in literature|term) ;; *) usage_err "--target-type must be one of literature, term" ;; esac
+  local slug="raw-$(date +%s)-$$"
+  sqlite3 "$DB" "INSERT INTO seeds (slug, resource, type, target_type, status, origin, reason)
+    VALUES ('$(sql_escape "$slug")', '$(sql_escape "$resource")', '$(sql_escape "$type")',
+            '$(sql_escape "$target_type")', 'to-discuss', 'surface', '$(sql_escape "$reason")');"
+  run_query "$format" "SELECT * FROM seeds WHERE slug = '$(sql_escape "$slug")';"
+}
+
+cmd_seeds_update() {
+  require_db
+  [ $# -ge 1 ] || usage_err "seeds update requires <slug>"
+  local slug="$1"; shift
+  local status note_path discussion_path type new_slug format
+  status=$(get_flag status "$@") || status=""
+  note_path=$(get_flag note-path "$@") || note_path=""
+  discussion_path=$(get_flag discussion-path "$@") || discussion_path=""
+  type=$(get_flag type "$@") || type=""
+  new_slug=$(get_flag slug "$@") || new_slug=""
+  format=$(get_flag format "$@") || format="json"
+  local sets=()
+  [ -n "$status" ] && sets+=("status = '$(sql_escape "$status")'")
+  [ -n "$note_path" ] && sets+=("note_path = '$(sql_escape "$note_path")'")
+  [ -n "$discussion_path" ] && sets+=("discussion_path = '$(sql_escape "$discussion_path")'")
+  [ -n "$type" ] && sets+=("type = '$(sql_escape "$type")'")
+  [ -n "$new_slug" ] && sets+=("slug = '$(sql_escape "$new_slug")'")
+  [ ${#sets[@]} -gt 0 ] || usage_err "seeds update requires at least one of --status, --note-path, --slug, --discussion-path, --type"
+  local set_clause; set_clause=$(IFS=,; echo "${sets[*]}")
+  sqlite3 "$DB" "UPDATE seeds SET $set_clause WHERE slug = '$(sql_escape "$slug")';"
+  local final_slug="${new_slug:-$slug}"
+  run_query "${format:-json}" "SELECT * FROM seeds WHERE slug = '$(sql_escape "$final_slug")';"
+}
+
+# ---- evergreen ----
+cmd_evergreen_add() {
+  require_db
+  local slug reason format
+  slug=$(get_flag slug "$@") || slug=""
+  reason=$(get_flag reason "$@") || reason=""
+  format=$(get_flag format "$@") || format="json"
+  [ -n "$slug" ] || usage_err "evergreen add requires --slug"
+  [ -n "$reason" ] || usage_err "evergreen add requires --reason"
+  sqlite3 "$DB" "INSERT INTO evergreen (slug, status, reason) VALUES ('$(sql_escape "$slug")', 'to-discuss', '$(sql_escape "$reason")');"
+  run_query "$format" "SELECT * FROM evergreen WHERE slug = '$(sql_escape "$slug")';"
+}
+
+cmd_evergreen_find() {
+  require_db
+  local status format
+  status=$(get_flag status "$@") || status=""
+  format=$(get_flag format "$@") || format="json"
+  local where="1=1"
+  [ -n "$status" ] && where="$where AND status = '$(sql_escape "$status")'"
+  run_query "$format" "SELECT * FROM evergreen WHERE $where ORDER BY created_at DESC;"
+}
+
+cmd_evergreen_update() {
+  require_db
+  [ $# -ge 1 ] || usage_err "evergreen update requires <slug>"
+  local slug="$1"; shift
+  local status note_path iteration new_slug format
+  status=$(get_flag status "$@") || status=""
+  note_path=$(get_flag note-path "$@") || note_path=""
+  iteration=$(get_flag iteration "$@") || iteration=""
+  new_slug=$(get_flag slug "$@") || new_slug=""
+  format=$(get_flag format "$@") || format="json"
+  local sets=()
+  [ -n "$status" ] && sets+=("status = '$(sql_escape "$status")'")
+  [ -n "$note_path" ] && sets+=("note_path = '$(sql_escape "$note_path")'")
+  [ -n "$iteration" ] && sets+=("iteration = $(sql_escape "$iteration")")
+  [ -n "$new_slug" ] && sets+=("slug = '$(sql_escape "$new_slug")'")
+  [ ${#sets[@]} -gt 0 ] || usage_err "evergreen update requires at least one of --status, --note-path, --slug, --iteration"
+  local set_clause; set_clause=$(IFS=,; echo "${sets[*]}")
+  sqlite3 "$DB" "UPDATE evergreen SET $set_clause WHERE slug = '$(sql_escape "$slug")';"
+  local final_slug="${new_slug:-$slug}"
+  run_query "${format:-json}" "SELECT * FROM evergreen WHERE slug = '$(sql_escape "$final_slug")';"
+}
+
+# ---- links ----
+cmd_links_add() {
+  require_db
+  local source target rel
+  source=$(get_flag source "$@") || source=""
+  target=$(get_flag target "$@") || target=""
+  rel=$(get_flag rel "$@") || rel=""
+  [ -n "$source" ] || usage_err "links add requires --source"
+  [ -n "$target" ] || usage_err "links add requires --target"
+  [ -n "$rel" ] || usage_err "links add requires --rel"
+  case "$rel" in cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
+  sqlite3 "$DB" "INSERT INTO links (source_id, target_id, rel_type) VALUES ('$(sql_escape "$source")', '$(sql_escape "$target")', '$(sql_escape "$rel")');"
+  echo "{\"status\":\"ok\",\"source\":\"$source\",\"target\":\"$target\",\"rel\":\"$rel\"}"
+}
+
+# ---- config (dotted-path get/set over config.json, via python3's stdlib json) ----
+cmd_config_get() {
+  require_config
+  local path="${1:-}"
+  CONFIG_PATH="$CONFIG" DOTTED="$path" python3 - <<'PYEOF'
+import json, os, sys
+with open(os.environ["CONFIG_PATH"]) as f:
+    data = json.load(f)
+dotted = os.environ.get("DOTTED", "")
+node = data
+if dotted:
+    for part in dotted.split("."):
+        if not isinstance(node, dict) or part not in node:
+            print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+            sys.exit(2)
+        node = node[part]
+print(json.dumps(node, indent=2))
+PYEOF
+}
+
+cmd_config_set() {
+  require_config
+  [ $# -ge 2 ] || usage_err "config set requires <dotted.path> <value>"
+  local dotted="$1" value="$2"
+  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" python3 - <<'PYEOF'
+import json, os, sys
+
+config_path = os.environ["CONFIG_PATH"]
+dotted = os.environ["DOTTED"]
+raw = os.environ["VALUE"]
+
+with open(config_path) as f:
+    data = json.load(f)
+
+try:
+    value = json.loads(raw)
+except json.JSONDecodeError:
+    value = raw
+
+parts = dotted.split(".")
+node = data
+for part in parts[:-1]:
+    if not isinstance(node, dict) or part not in node:
+        print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+        sys.exit(2)
+    node = node[part]
+leaf = parts[-1]
+if not isinstance(node, dict) or leaf not in node:
+    print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+    sys.exit(2)
+node[leaf] = value
+
+with open(config_path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+
+print(json.dumps({"status": "ok", "path": dotted, "value": value}))
+PYEOF
+}
+
+# ---- humanize check (mechanical signals only; judgment tier stays with the calling skill) ----
+cmd_humanize_check() {
+  [ $# -ge 1 ] || usage_err "humanize check requires <file>"
+  local file="$1"
+  [ -f "$file" ] || runtime_err "file not found: $file"
+  require_config
+  local checklist="$SELF_DIR/humanize-checklist.json"
+  [ -f "$checklist" ] || runtime_err "humanize-checklist.json not found at $checklist — run setup-slipbox first"
+  local style="$SELF_DIR/style-profile.json"
+  [ -f "$style" ] || style="$SELF_DIR/stated_style.json"
+  [ -f "$style" ] || runtime_err "no style-profile.json or stated_style.json found — run setup-slipbox first"
+
+  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" python3 - <<'PYEOF'
+import json, os, re, sys
+
+with open(os.environ["FILE_PATH"]) as f:
+    text = f.read()
+with open(os.environ["CHECKLIST_PATH"]) as f:
+    checklist = json.load(f)
+with open(os.environ["STYLE_PATH"]) as f:
+    style = json.load(f)
+
+language = style.get("language", {})
+allowed_langs = {language.get("primary", "en")} | set(language.get("additional", []))
+english_ok = bool({"en", "english"} & {l.lower() for l in allowed_langs}) or not language
+
+signals_hit = []
+
+def get_field(obj, dotted):
+    node = obj
+    for part in dotted.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
+
+for sig in checklist.get("mechanical", {}).get("signals", []):
+    sid = sig["id"]
+    stype = sig["type"]
+
+    if stype == "word_list" and english_ok:
+        for w in sig.get("words", []):
+            if re.search(r"\b" + re.escape(w) + r"\b", text, re.IGNORECASE):
+                signals_hit.append({"id": sid, "tier": sig["tier"], "match": w})
+
+    elif stype == "phrase_list" and english_ok:
+        for p in sig.get("phrases", []):
+            if p.lower() in text.lower():
+                signals_hit.append({"id": sid, "tier": sig["tier"], "match": p})
+
+    elif stype == "measurable_property":
+        baseline_field = sig.get("baseline_field")
+        baseline = get_field(style, baseline_field)
+        if sid == "em_dash_density":
+            count = text.count("—") + text.count("--")
+            words = max(len(text.split()), 1)
+            density = count / words
+            threshold = {"none": 0.0, "low": 0.01, "moderate": 0.02, "high": 0.04}.get(baseline, 0.02)
+            if density > threshold:
+                signals_hit.append({"id": sid, "tier": sig["tier"], "density": round(density, 4), "baseline": baseline})
+        elif sid == "passive_voice_density":
+            passive_hits = len(re.findall(r"\b(is|are|was|were|been|being|be)\s+\w+ed\b", text, re.IGNORECASE))
+            if baseline == "active" and passive_hits >= 3:
+                signals_hit.append({"id": sid, "tier": sig["tier"], "count": passive_hits, "baseline": baseline})
+
+clustering_ok = len(signals_hit) >= 2
+result = {
+    "flagged": clustering_ok,
+    "clustering_rule": "2+ distinct mechanical signals required",
+    "signals_hit": signals_hit,
+    "judgment_tier_reminder": "negative_parallelism, rule_of_three_crutch, superficial_ing_analysis stay judgment-only — apply reading-comprehension check separately",
+}
+print(json.dumps(result, indent=2))
+PYEOF
+}
+
+# ---- dispatch ----
+[ $# -ge 1 ] || { print_help; exit 2; }
+
+case "$1" in
+  --help|-h) print_help; exit 0 ;;
+  --version|-v) echo "idea-db $CLI_VERSION (schema version $SCHEMA_VERSION)"; exit 0 ;;
+  init) cmd_init ;;
+  migrate) cmd_migrate ;;
+  seeds)
+    shift
+    [ $# -ge 1 ] || usage_err "seeds requires an action: find, add, update"
+    action="$1"; shift
+    case "$action" in
+      find) cmd_seeds_find "$@" ;;
+      add) cmd_seeds_add "$@" ;;
+      update) cmd_seeds_update "$@" ;;
+      *) usage_err "unknown seeds action: $action" ;;
+    esac
+    ;;
+  evergreen)
+    shift
+    [ $# -ge 1 ] || usage_err "evergreen requires an action: find, add, update"
+    action="$1"; shift
+    case "$action" in
+      find) cmd_evergreen_find "$@" ;;
+      add) cmd_evergreen_add "$@" ;;
+      update) cmd_evergreen_update "$@" ;;
+      *) usage_err "unknown evergreen action: $action" ;;
+    esac
+    ;;
+  links)
+    shift
+    [ $# -ge 1 ] || usage_err "links requires an action: add"
+    action="$1"; shift
+    case "$action" in
+      add) cmd_links_add "$@" ;;
+      *) usage_err "unknown links action: $action" ;;
+    esac
+    ;;
+  config)
+    shift
+    [ $# -ge 1 ] || usage_err "config requires an action: get, set"
+    action="$1"; shift
+    case "$action" in
+      get) cmd_config_get "$@" ;;
+      set) cmd_config_set "$@" ;;
+      *) usage_err "unknown config action: $action" ;;
+    esac
+    ;;
+  humanize)
+    shift
+    [ $# -ge 1 ] || usage_err "humanize requires an action: check"
+    action="$1"; shift
+    case "$action" in
+      check) cmd_humanize_check "$@" ;;
+      *) usage_err "unknown humanize action: $action" ;;
+    esac
+    ;;
+  *)
+    usage_err "unknown command: $1"
+    ;;
+esac
