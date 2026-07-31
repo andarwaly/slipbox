@@ -161,8 +161,8 @@ cmd_init() {
     fi
     runtime_err "idea.db is at schema version $v, expected $SCHEMA_VERSION — run 'idea-db migrate' first"
   fi
-  printf '%s\n' "$SCHEMA_SQL" | sqlite3 "$DB"
-  sqlite3 "$DB" "PRAGMA user_version = $SCHEMA_VERSION;"
+  printf '%s\n' "$SCHEMA_SQL" | sqlite3 "$DB" >/dev/null
+  sqlite3 "$DB" "PRAGMA user_version = $SCHEMA_VERSION;" >/dev/null
   echo "{\"status\":\"ok\",\"message\":\"idea.db created at schema version $SCHEMA_VERSION\"}"
 }
 

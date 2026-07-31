@@ -44,6 +44,15 @@ check "init creates idea.db" "$IDEA_DB" init
 [ -f "$SCRATCH/idea.db" ] && echo "ok   - idea.db file exists" || { echo "FAIL - idea.db missing"; fail=1; }
 check "second init is a no-op success" "$IDEA_DB" init
 
+echo "--- init output is pure JSON (regression: PRAGMA result rows leaking to stdout) ---"
+rm -f "$SCRATCH/idea.db"
+if "$IDEA_DB" init | python3 -c "import json,sys; json.load(sys.stdin)" >/dev/null 2>&1; then
+  echo "ok   - init stdout is valid JSON, no leaked PRAGMA output"
+else
+  echo "FAIL - init stdout is not pure JSON"
+  fail=1
+fi
+
 echo "--- seeds ---"
 check "seeds add" "$IDEA_DB" seeds add --resource "https://example.com" --type raw --target-type term --reason "test tension"
 SLUG=$("$IDEA_DB" seeds find --target-type term --status to-discuss | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['slug'])")
