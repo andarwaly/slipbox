@@ -48,15 +48,11 @@ side of the conversation — your questions and reflections trace to what the re
 notes actually establish, never to your own training or memory (same rule as always,
 just aimed at yourself instead of the user this time).
 
-Reach for these as the conversation calls for them, no fixed order:
-
-- **Connect** — what else does this touch; climb the abstraction ladder. See
-  `references/connect.md` for a worked example.
-- **Challenge** — when would this connection break down? See `references/challenge.md`.
-- **Compass** — what competes with this? where does it lead if taken seriously? See
-  `references/compass.md`.
-- **Distil** — reflect the emerging connection back for the user to correct. See
-  `references/distil.md`.
+Orient the take with Compass (`references/compass.md`) — reach for whichever
+direction the conversation calls for, no fixed order. If West (Connect) and East
+(Challenge) both turn up something, run Distil (`references/distil.md`) next to
+combine the two into a new position — never before both directions have produced
+something to combine.
 
 /grounding hands back the confirmed Take, and — only if the user opted in — a flagged
 tension. If a tension came back, insert it into the same evergreen backlog this skill

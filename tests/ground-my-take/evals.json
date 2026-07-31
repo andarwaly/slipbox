@@ -2,7 +2,7 @@
   "test_cases": [
     {
       "prompt": "ground-my-take: does note A on spaced repetition connect to note B on compound interest?",
-      "expected_output": "Runs a /grounding session using Connect/Challenge/Compass/Distil as needed, applies the purity check before writing (rejects a draft sentence that merely restates one cited note unchanged), writes an evergreen note citing both notes with stated reasons, and runs the five-item sign-off before finishing.",
+      "expected_output": "Runs a /grounding session, orienting the take with Compass (West/Connect and East/Challenge as needed, North/South as plain questions) and running Distil once West and East both produce something, applies the purity check before writing (rejects a draft sentence that merely restates one cited note unchanged), writes an evergreen note citing both notes with stated reasons, and runs the five-item sign-off before finishing.",
       "assertions": [
         {"type": "contains", "text": "cites"}
       ]
