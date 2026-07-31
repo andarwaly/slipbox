@@ -69,9 +69,11 @@ For each candidate, also check whether it names a **term that exists and could b
 
 If a candidate names an independently-existing term, query `seeds` for whether that term has already surfaced from a *different* resource:
 
-```sql
-SELECT slug, resource, status FROM seeds WHERE target_type = 'term' AND reason LIKE '%<term>%';
+```bash
+idea-db seeds find --target-type term --query "<term>"
 ```
+
+`--query` matches on the term's own FTS index — exact-token, case-insensitive, not a substring match. Pass the term's plain name as recorded; don't add wildcards.
 
 - **Not found** — insert a new `seeds` row: `type: 'raw', target_type: 'term', origin: 'surface'`.
 - **Found** (an existing row/note for this term, from another resource) — still insert a new `seeds` row for *this* resource's mention. It needs its own row so it can later `links`-extend the existing Term note (`rel_type: 'extends'`) rather than being silently dropped.
@@ -84,7 +86,13 @@ This is intentional, not a gap: each literature-destined candidate is anchored t
 
 ## 7. Repeat-run dedup, same-resource only
 
-Before writing, check for a natural-key collision against existing rows *for this resource only* (`resource = '<slug>'`): same slug, or a fuzzy match on question text. A near-duplicate found this way is not auto-merged and not silently skipped — ask the user whether to surface it anyway or skip it. This check never looks at other resources; that would conflict with Step 6.
+Before writing, pull every existing row for this resource only:
+
+```bash
+idea-db seeds find --resource <resource>
+```
+
+Check the returned rows for a natural-key collision: same slug, or a fuzzy match on question text. This judgment stays in-skill, not the CLI — `--query`'s exact-token FTS match could silently miss a near-duplicate phrased differently, so don't pre-filter with it here. A near-duplicate found this way is not auto-merged and not silently skipped — ask the user whether to surface it anyway or skip it. This check never looks at other resources; that would conflict with Step 6.
 
 ## 8. Dismiss at surface time
 
@@ -94,13 +102,15 @@ Some candidates that come up during the pass aren't worth keeping at all: too th
 
 Insert one `seeds` row per surviving candidate:
 
-- `slug`: a fresh question-slug (renamed later at write time to a confirmed-claim-slug)
+```bash
+idea-db seeds add --resource <resource> --type raw --target-type <literature|term> --reason "<reason>"
+```
+
 - `resource`: this resource's slug
-- `type`: `'raw'`
-- `target_type`: `'literature'` by default, or `'term'` when Step 5's check applies
-- `status`: `'to-discuss'`
-- `origin`: `'surface'`
+- `type`: `raw`
+- `target_type`: `literature` by default, or `term` when Step 5's check applies
 - `reason`: the question and motivation from Step 2 (or the term-focused reason from Step 5)
-- `created_at` / `updated_at`: leave unset — the schema's `DEFAULT (datetime('now'))` fills them in
+
+`status` (`to-discuss`), `origin` (`surface`), the row's own slug, and `created_at`/`updated_at` are all filled in by `idea-db` itself — nothing else to pass.
 
 **Done when:** every surviving candidate is a `seeds` row, or, if none survived Step 8, zero rows were written. A null result is a complete run, not a failure; report the count either way.

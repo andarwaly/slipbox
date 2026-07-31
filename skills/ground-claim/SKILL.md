@@ -71,6 +71,10 @@ Once confirmed:
 
 Flip the original `seeds` row: `status` → `'discussed'`, note path attached.
 
+```bash
+idea-db seeds update <slug> --status discussed --note-path <path>
+```
+
 ## Done
 
 The Claim note exists on disk, the backlog row is closed, any flagged tension is logged
