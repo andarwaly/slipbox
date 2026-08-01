@@ -23,7 +23,9 @@ metadata:
 ## Prerequisite
 
 Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so.
+stop and say so. Same check for `.slipbox/bin/idea-db` — if it doesn't exist or isn't
+executable, stop and say so too. Every `idea-db` call below uses this same path,
+`.slipbox/bin/idea-db` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
 
 ## Take the idea
 
@@ -50,7 +52,7 @@ the user opted in — a flagged tension. If a tension came back, insert it into 
 evergreen backlog:
 
 ```bash
-idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+.slipbox/bin/idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
 before moving on to writing.
@@ -73,7 +75,7 @@ Once confirmed:
 Flip the original `seeds` row: `status` → `'discussed'`, note path attached.
 
 ```bash
-idea-db seeds update <slug> --status discussed --note-path <path>
+.slipbox/bin/idea-db seeds update <slug> --status discussed --note-path <path>
 ```
 
 ## Done

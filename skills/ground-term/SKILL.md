@@ -23,7 +23,9 @@ metadata:
 ## Prerequisite
 
 Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so.
+stop and say so. Same check for `.slipbox/bin/idea-db` — if it doesn't exist or isn't
+executable, stop and say so too. Every `idea-db` call below uses this same path,
+`.slipbox/bin/idea-db` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
 
 ## Take the term
 
@@ -31,7 +33,7 @@ stop and say so.
 - **From the backlog** → query the pending queue:
 
   ```bash
-  idea-db seeds find --target-type term --status to-discuss
+  .slipbox/bin/idea-db seeds find --target-type term --status to-discuss
   ```
 
   Offer these; let the user choose one.
@@ -58,7 +60,7 @@ flagged tension. If a tension came back, insert it as its own `seeds` row
 personal synthesis) before moving on to writing:
 
 ```bash
-idea-db seeds add --resource <resource> --type raw --target-type literature --reason "<tension description>"
+.slipbox/bin/idea-db seeds add --resource <resource> --type raw --target-type literature --reason "<tension description>"
 ```
 
 ## Write — new term
@@ -78,7 +80,7 @@ Flip the `seeds` row in place — this really is the term's first occurrence, so
 can be renamed:
 
 ```bash
-idea-db seeds update <original-slug> --type term --status discussed --note-path <new-path> --slug <final-slug>
+.slipbox/bin/idea-db seeds update <original-slug> --type term --status discussed --note-path <new-path> --slug <final-slug>
 ```
 
 ## Write — extending an existing term
@@ -93,14 +95,14 @@ that existing row. So this row keeps its own original slug, permanently.
 1. **Update this row in place — do not touch its slug:**
 
    ```bash
-   idea-db seeds update <this-row-original-slug> --type term --status discussed --note-path <existing-note-path>
+   .slipbox/bin/idea-db seeds update <this-row-original-slug> --type term --status discussed --note-path <existing-note-path>
    ```
 
 2. **Insert a `links` row recording the relationship** — this row's own (unchanged)
    slug is the source, the existing term row's slug is the target:
 
    ```bash
-   idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
+   .slipbox/bin/idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
    ```
 
 3. **Fold the new resource's contribution into the existing file.** Run a /write-checks

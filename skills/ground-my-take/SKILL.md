@@ -22,7 +22,9 @@ metadata:
 ## Prerequisite
 
 Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so.
+stop and say so. Same check for `.slipbox/bin/idea-db` — if it doesn't exist or isn't
+executable, stop and say so too. Every `idea-db` call below uses this same path,
+`.slipbox/bin/idea-db` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
 
 ## Take the material
 
@@ -33,7 +35,7 @@ stop and say so.
 - **From the backlog** → query the pending queue:
 
   ```bash
-  idea-db evergreen find --status to-discuss
+  .slipbox/bin/idea-db evergreen find --status to-discuss
   ```
 
   Offer these; let the user choose one. This is how a flagged tension from
@@ -60,7 +62,7 @@ itself reads from — ground-my-take, mid-synthesis, might notice its own tensio
 yet more grounding later:
 
 ```bash
-idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
+.slipbox/bin/idea-db evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
 before moving on to writing.
@@ -87,7 +89,7 @@ the Take states something none of the individual notes said on their own.
 - Every citation also gets written as a links row:
 
   ```bash
-  idea-db links add --source <this-evergreen-slug> --target <cited-note-slug> --rel cites
+  .slipbox/bin/idea-db links add --source <this-evergreen-slug> --target <cited-note-slug> --rel cites
   ```
 
   one call per cited note.
@@ -118,7 +120,7 @@ If this session's material came from the evergreen backlog rather than being fre
 named or a bare hunch, close out the row it drew from:
 
 ```bash
-idea-db evergreen update <slug> --status discussed --note-path <path>
+.slipbox/bin/idea-db evergreen update <slug> --status discussed --note-path <path>
 ```
 
 Rename the slug too if this was a first write — same pattern as ground-term's own

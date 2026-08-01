@@ -15,7 +15,7 @@ This skill takes a Resource file and surfaces candidate ideas from it, and separ
 
 Check first, before anything else. This skill writes rows to `.slipbox/idea.db`, which is only created by `setup-slipbox` alongside `config.json`.
 
-If `.slipbox/config.json` is absent: stop. Do not proceed to any other step. Tell the user to run `setup-slipbox` first, then re-run this skill.
+If `.slipbox/config.json` is absent, or `.slipbox/bin/idea-db` doesn't exist/isn't executable: stop. Do not proceed to any other step. Tell the user to run `setup-slipbox` first, then re-run this skill. Every `idea-db` call below uses this same path, `.slipbox/bin/idea-db` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
 
 ## 1. Take the Resource
 
@@ -70,7 +70,7 @@ For each candidate, also check whether it names a **term that exists and could b
 If a candidate names an independently-existing term, query `seeds` for whether that term has already surfaced from a *different* resource:
 
 ```bash
-idea-db seeds find --target-type term --query "<term>"
+.slipbox/bin/idea-db seeds find --target-type term --query "<term>"
 ```
 
 `--query` matches on the term's own FTS index — exact-token, case-insensitive, not a substring match. Pass the term's plain name as recorded; don't add wildcards.
@@ -89,7 +89,7 @@ This is intentional, not a gap: each literature-destined candidate is anchored t
 Before writing, pull every existing row for this resource only:
 
 ```bash
-idea-db seeds find --resource <resource>
+.slipbox/bin/idea-db seeds find --resource <resource>
 ```
 
 Check the returned rows for a natural-key collision: same slug, or a fuzzy match on question text. This judgment stays in-skill, not the CLI — `--query`'s exact-token FTS match could silently miss a near-duplicate phrased differently, so don't pre-filter with it here. A near-duplicate found this way is not auto-merged and not silently skipped — ask the user whether to surface it anyway or skip it. This check never looks at other resources; that would conflict with Step 6.
@@ -103,7 +103,7 @@ Some candidates that come up during the pass aren't worth keeping at all: too th
 Insert one `seeds` row per surviving candidate:
 
 ```bash
-idea-db seeds add --resource <resource> --type raw --target-type <literature|term> --reason "<reason>"
+.slipbox/bin/idea-db seeds add --resource <resource> --type raw --target-type <literature|term> --reason "<reason>"
 ```
 
 - `resource`: this resource's slug

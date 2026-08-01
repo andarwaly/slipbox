@@ -54,7 +54,7 @@ Present what you found, one item at a time. Recommend a default and lead with it
 
 For each required field below, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. When mapping onto an EXISTING property, read its actual type from the note (Text/List/Number/Checkbox/Date/Date & Time) and record that discovered type in the field_map entry — don't assume a type. When creating a NEW field, assign the type that fits its semantic nature, per this table (still verify+record the discovered type instead when mapping onto an existing property), with a `zone` (top/bottom) alongside each type — zone only governs placement of fields being newly created, never fields mapped onto an existing property:
   - Literature: `type` → text, zone top; `created` → date, zone top; `source` → list + wikilink: true, zone bottom.
-  - Term: `type` → text, zone top; `created` → date, zone top; `sources` → list + wikilink: true, zone bottom; `alt_names` (optional) → list, no wikilink, zone bottom.
+  - Term: `type` → text, zone top; `created` → date, zone top; `sources` → list + wikilink: true, zone bottom; `alt_names` (optional) — default: map onto Obsidian's reserved `aliases` property (type `list`, no wikilink; record `list` directly, skip the live-read-type step since `aliases` is Obsidian-fixed, not vault-specific) — or create fresh as `alt_names` (list, no wikilink, zone bottom) if the user prefers to keep it separate from `aliases`.
   - Evergreen: `type` → text, zone top; `created` → date, zone top; `derived-from` → list + wikilink: true, zone bottom; `updated-at` → datetime (not bare date — multiple revisions can land the same day), no wikilink, zone bottom.
 
   **`type`-occupancy check**, resolving the `type` field specifically (present in all three note types' field tables): this is a 3-way branch, not a simple create-or-map choice.
@@ -71,7 +71,7 @@ For each required field below, resolve one of (a) map onto an existing user prop
   section. Offer the other two answers too: point at a different existing property, or
   override and accept the mismatch anyway (least recommended, never the silent default).
 
-  Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties. The required fields themselves, for reference:
+  Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties — with exactly one named exception: Term's optional `alt_names` may map onto `aliases`, since the two are semantically identical (both mean "other names for this thing"), and this is in fact the default recommendation for that field (see the Term row above). No other field, on any note type, gets this carve-out. The required fields themselves, for reference:
   - Literature: `type: literature`, `created`, `source: [[resource]]`.
   - Term: `type: term`, `created`, `sources: [...]` (array/multitext — grows with each extension), `alt_names: [...]` (optional).
   - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body), `updated-at` (written on first write, refreshed every time an existing evergreen note is revisited/rewritten — mirrors `schema.sql`'s own `evergreen.updated_at` column, now also surfaced into the note's own frontmatter).
@@ -134,6 +134,8 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 Tell the user what was created: `.slipbox/config.json`, `.slipbox/idea.db`, `.slipbox/style-profile.json` (or the greenfield `stated_style.json` record), `.slipbox/humanize-checklist.json`. Tell them which skills depend on this having run first: `clip-resource`, `surface-ideas`, the ground-family skills that write notes from it — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `ground-claim` (literature notes), `ground-term` (term notes), and `ground-my-take` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking style and humanize signals, and resolving each frontmatter field's mapping, formatting, and zone placement. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `idea-db config set <dotted.path> <value>` (and `idea-db config get` to inspect current values).
 
+Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/idea-db`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
+
 ## 8. Re-run semantics (drift check, manual trigger only)
 
 Triggered only when the user explicitly asks to re-run, or when Step 1 finds an existing `.slipbox/`. Never runs automatically otherwise.
@@ -146,6 +148,7 @@ Triggered only when the user explicitly asks to re-run, or when Step 1 finds an 
 6. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
 7. Refresh `.slipbox/style-profile.json` from the larger corpus (still against the fixed `assets/style-profile.schema.json` shape — the diff below depends on both versions sharing that structure), diff old vs. new, and show the user what changed before overwriting it.
 8. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical checklist since the vault was last set up.
+9. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/idea-db` pointer from Step 7. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way Step 7 does — ask before writing, skip if declined.
 
 **Never** overwrite `idea.db`, `.slipbox/discussions/`, or any existing note during a re-run.
 
