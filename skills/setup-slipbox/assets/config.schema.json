@@ -79,7 +79,7 @@
   "definitions": {
     "casing": {
       "type": "string",
-      "enum": ["kebab-case", "Title Case", "snake_case", "verbatim", "other"]
+      "enum": ["kebab-case", "Title Case", "snake_case", "Sentence case", "verbatim", "other"]
     },
     "field_map": {
       "type": "object",
