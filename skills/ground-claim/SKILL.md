@@ -18,7 +18,10 @@ metadata:
   checked for fidelity. Never the user's opinion — an object of understanding, not
   agreement.
 - **Literature note** — the file a confirmed Claim gets written into. One-shot: written
-  once, never revisited.
+  once, never revisited — except out-of-band manual fidelity corrections: fixing a
+  misreading, a transcription error, or wording that misrepresents the source. Reaction,
+  stance, or synthesis never enters; the correction must move the note closer to the
+  source. The slug stays final.
 
 ## Prerequisite
 
@@ -67,7 +70,8 @@ Once confirmed:
 - Filename per `.slipbox/config.json`'s casing convention for the literature type.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file.
-- One-shot — write once, never revisit.
+- One-shot — write once, never revisit through this skill. Out-of-band manual fidelity
+  corrections are the user's, outside this skill's write path.
 - Filename collision → stop and ask, never auto-disambiguate.
 
 ## Close the backlog row
