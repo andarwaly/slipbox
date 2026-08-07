@@ -76,6 +76,61 @@ echo "--- usage errors ---"
 check_exit "unknown command exits 2" 2 "$IDEA_DB" bogus
 check_exit "seeds add missing flags exits 2" 2 "$IDEA_DB" seeds add --resource x
 
+echo "--- humanize ---"
+printf '{}' > "$SCRATCH/config.json"
+cp "$REPO_ROOT/skills/setup-slipbox/assets/humanize-checklist.json" "$SCRATCH/humanize-checklist.json"
+cat > "$SCRATCH/style-profile.json" <<'EOF'
+{"language":{"primary":"English","secondary":"Indonesian","technical_terms":"English","code_switching":"natural"}}
+EOF
+printf 'The system uses — one dash.\n' > "$SCRATCH/one-dash.md"
+printf 'The system uses — one dash.\nAnother — two.\n' > "$SCRATCH/two-dashes.md"
+printf 'The system will delve into this robust approach.\n' > "$SCRATCH/one-ai-word.md"
+printf 'The system will delve into this pivotal approach.\n' > "$SCRATCH/two-ai-words.md"
+printf '# Strategic Negotiations And Partnerships\n' > "$SCRATCH/one-title-case.md"
+printf '# Strategic Negotiations And Partnerships\n# Another Important Heading\n' > "$SCRATCH/two-title-case.md"
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/one-title-case.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "False" ]; then
+  echo "ok   - one title-case heading stays below cluster threshold"
+else
+  echo "FAIL - one title-case heading incorrectly flagged"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/two-title-case.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "True" ]; then
+  echo "ok   - two title-case headings pass the cluster threshold"
+else
+  echo "FAIL - two title-case headings did not flag"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/one-dash.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "False" ]; then
+  echo "ok   - one em dash stays below cluster threshold"
+else
+  echo "FAIL - one em dash incorrectly flagged"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/two-dashes.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "True" ]; then
+  echo "ok   - two em dashes pass the cluster threshold"
+else
+  echo "FAIL - two em dashes did not flag"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/one-ai-word.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "False" ]; then
+  echo "ok   - one AI vocabulary hit stays below cluster threshold"
+else
+  echo "FAIL - one AI vocabulary hit incorrectly flagged"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/two-ai-words.md" | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "True" ]; then
+  echo "ok   - two AI vocabulary hits pass the cluster threshold"
+else
+  echo "FAIL - two AI vocabulary hits did not flag"
+  fail=1
+fi
+if [ "$("$IDEA_DB" humanize check "$SCRATCH/two-ai-words.md" --language id | python3 -c 'import json,sys; print(json.load(sys.stdin)["flagged"])')" = "False" ]; then
+  echo "ok   - English signals skip an explicitly non-English passage"
+else
+  echo "FAIL - English signals ignored explicit non-English override"
+  fail=1
+fi
+
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"
 else

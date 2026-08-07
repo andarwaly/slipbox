@@ -2,210 +2,100 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://slipbox.local/schemas/style-profile.schema.json",
   "title": ".slipbox/style-profile.json",
+  "description": "User-stated preferences for note shape, language, formatting, and editing. This is not a corpus-derived voice model.",
   "type": "object",
   "required": [
-    "voice_summary",
-    "tone",
-    "sentence_rhythm",
-    "punctuation_fingerprint",
-    "lexicon",
-    "structure_mechanics",
-    "stance",
+    "voice",
+    "sentence_style",
+    "tone_by_note",
     "language",
-    "exemplar_snippets"
+    "vocabulary",
+    "formatting",
+    "editing_style"
   ],
   "additionalProperties": false,
   "properties": {
-    "voice_summary": {
-      "type": "string",
-      "description": "One paragraph: how this person's writing reads at a glance."
-    },
-    "tone": {
-      "type": "array",
-      "minItems": 1,
-      "description": "Score on NN/g's four tone-of-voice axes. One entry per register if the corpus shows more than one (e.g. notes-to-self vs. notes-for-sharing).",
-      "items": {
-        "type": "object",
-        "required": [
-          "register",
-          "funny_serious",
-          "formal_casual",
-          "respectful_irreverent",
-          "matter_of_fact_enthusiastic"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "register": { "type": "string" },
-          "funny_serious": { "$ref": "#/definitions/funny_serious" },
-          "formal_casual": { "$ref": "#/definitions/formal_casual" },
-          "respectful_irreverent": { "$ref": "#/definitions/respectful_irreverent" },
-          "matter_of_fact_enthusiastic": { "$ref": "#/definitions/matter_of_fact_enthusiastic" }
-        }
-      }
-    },
-    "sentence_rhythm": {
+    "voice": {
       "type": "object",
-      "description": "Typical sentence length, clause structure, rhythm, paragraph length.",
-      "required": ["sentence_length", "clause_structure", "rhythm", "paragraph_length"],
+      "description": "The user's stated writing preferences, not an inferred voice fingerprint.",
+      "required": ["overall", "verbosity", "confidence", "hedging", "energy"],
       "additionalProperties": false,
       "properties": {
-        "sentence_length": {
-          "type": "string",
-          "enum": ["short", "medium", "long", "varied"]
-        },
-        "clause_structure": {
-          "type": "string",
-          "enum": ["simple", "compound", "complex", "mixed"]
-        },
-        "rhythm": {
-          "type": "string",
-          "enum": ["staccato", "flowing", "mixed"]
-        },
-        "paragraph_length": {
-          "type": "string",
-          "enum": ["short", "medium", "long"]
-        }
+        "overall": { "type": "string" },
+        "verbosity": { "type": "string" },
+        "confidence": { "type": "string" },
+        "hedging": { "type": "string" },
+        "energy": { "type": "string" }
       }
     },
-    "punctuation_fingerprint": {
+    "sentence_style": {
       "type": "object",
-      "description": "Em-dash frequency, semicolon use, parenthetical habits, list vs. prose preference.",
-      "required": [
-        "em_dash_frequency",
-        "semicolon_use",
-        "parenthetical_habits",
-        "list_vs_prose"
-      ],
+      "description": "Preferences for the shape and cadence of generated notes.",
+      "required": ["average_length", "structure", "prefers_lists", "paragraphs", "conclusion_first"],
       "additionalProperties": false,
       "properties": {
-        "em_dash_frequency": {
-          "type": "string",
-          "enum": ["none", "low", "moderate", "high"]
-        },
-        "semicolon_use": {
-          "type": "string",
-          "enum": ["none", "rare", "occasional", "frequent"]
-        },
-        "parenthetical_habits": {
-          "type": "string",
-          "enum": ["none", "rare", "frequent"]
-        },
-        "list_vs_prose": {
-          "type": "string",
-          "enum": ["list-preferring", "prose-preferring", "balanced"]
-        }
+        "average_length": { "type": "string" },
+        "structure": { "type": "string" },
+        "prefers_lists": { "type": "boolean" },
+        "paragraphs": { "type": "string" },
+        "conclusion_first": { "type": "boolean" }
       }
     },
-    "lexicon": {
+    "tone_by_note": {
       "type": "object",
-      "description": "Words/phrases this person actually uses, plus a personalized forbidden-vocabulary list.",
-      "required": ["characteristic_phrases", "forbidden_vocabulary"],
-      "additionalProperties": false,
-      "properties": {
-        "characteristic_phrases": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "forbidden_vocabulary": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "structure_mechanics": {
-      "type": "object",
-      "description": "Heading habits, bullet vs. prose ratio, how they open/close a note, formatting quirks.",
-      "required": ["heading_habits", "bullet_vs_prose", "opening_style", "formatting_quirks"],
-      "additionalProperties": false,
-      "properties": {
-        "heading_habits": {
-          "type": "string",
-          "enum": ["frequent", "occasional", "rare"]
-        },
-        "bullet_vs_prose": {
-          "type": "string",
-          "enum": ["bullet-heavy", "prose-heavy", "balanced"]
-        },
-        "opening_style": { "type": "string" },
-        "formatting_quirks": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "stance": {
-      "type": "object",
-      "description": "First person or third, how directly they state opinions, how much they signpost their own reasoning.",
-      "required": ["person", "opinion_directness", "signposting", "voice_tendency"],
-      "additionalProperties": false,
-      "properties": {
-        "person": {
-          "type": "string",
-          "enum": ["first", "third"]
-        },
-        "opinion_directness": {
-          "type": "string",
-          "enum": ["direct", "hedged", "mixed"]
-        },
-        "signposting": {
-          "type": "string",
-          "enum": ["heavy", "light", "none"]
-        },
-        "voice_tendency": {
-          "type": "string",
-          "enum": ["active", "passive", "mixed"]
-        }
-      }
+      "description": "Tone preferences keyed by the note types configured in config.json's frontmatter map.",
+      "additionalProperties": { "type": "string" }
     },
     "language": {
       "type": "object",
-      "description": "Primary/additional languages present in the corpus and code-switching behavior.",
-      "required": ["primary", "additional", "code_switching"],
+      "description": "Languages and terminology preferences stated by the user. Code-switching remains an open vocabulary until a later decision.",
+      "required": ["primary", "secondary", "technical_terms", "code_switching"],
       "additionalProperties": false,
       "properties": {
-        "primary": {
-          "type": "string",
-          "description": "Language code, e.g. en."
-        },
-        "additional": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
+        "primary": { "type": "string" },
+        "secondary": { "type": "string" },
+        "technical_terms": { "type": "string" },
         "code_switching": {
           "type": "string",
-          "enum": ["none", "register-gated", "free-mixing"]
+          "description": "Free string for now. A controlled vocabulary may be adopted later."
         }
       }
     },
-    "exemplar_snippets": {
-      "type": "array",
-      "minItems": 3,
-      "maxItems": 5,
-      "description": "Verbatim snippets pulled directly from the corpus, unedited, illustrating the above.",
-      "items": { "type": "string" }
-    }
-  },
-  "definitions": {
-    "funny_serious": {
-      "type": "string",
-      "enum": ["very-funny", "somewhat-funny", "somewhat-serious", "very-serious"]
+    "vocabulary": {
+      "type": "object",
+      "description": "Words and phrases the user says to prefer or avoid in notes.",
+      "required": ["often_uses", "avoids"],
+      "additionalProperties": false,
+      "properties": {
+        "often_uses": { "type": "array", "items": { "type": "string" } },
+        "avoids": { "type": "array", "items": { "type": "string" } }
+      }
     },
-    "formal_casual": {
-      "type": "string",
-      "enum": ["very-formal", "somewhat-formal", "somewhat-casual", "very-casual"]
+    "formatting": {
+      "type": "object",
+      "description": "Preferred note-shape and markup conventions.",
+      "required": ["bullet_heavy", "wikilinks", "aliases", "headings", "quotes", "citations"],
+      "additionalProperties": false,
+      "properties": {
+        "bullet_heavy": { "type": "boolean" },
+        "wikilinks": { "type": "string" },
+        "aliases": { "type": "string" },
+        "headings": { "type": "string" },
+        "quotes": { "type": "string" },
+        "citations": { "type": "string" }
+      }
     },
-    "respectful_irreverent": {
-      "type": "string",
-      "enum": ["very-respectful", "somewhat-respectful", "somewhat-irreverent", "very-irreverent"]
-    },
-    "matter_of_fact_enthusiastic": {
-      "type": "string",
-      "enum": [
-        "matter-of-fact",
-        "somewhat-matter-of-fact",
-        "somewhat-enthusiastic",
-        "very-enthusiastic"
-      ]
+    "editing_style": {
+      "type": "object",
+      "description": "Editing behaviors the note-writing skills should follow.",
+      "required": ["iterative", "renames_often", "compresses_language", "removes_redundancy"],
+      "additionalProperties": false,
+      "properties": {
+        "iterative": { "type": "boolean" },
+        "renames_often": { "type": "boolean" },
+        "compresses_language": { "type": "boolean" },
+        "removes_redundancy": { "type": "boolean" }
+      }
     }
   }
 }

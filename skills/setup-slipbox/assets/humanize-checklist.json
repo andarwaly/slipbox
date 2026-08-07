@@ -1,86 +1,223 @@
 {
-  "description": "Fixed, skill-package-versioned. Copied verbatim into every vault by setup-slipbox — never edited per-vault, never register-matched to an individual user's corpus. This file only flags; it never auto-rewrites.",
-  "before_applying": "Read style-profile.json (or stated_style.json fallback if no corpus exists) for this vault's own punctuation fingerprint, lexicon, and forbidden-vocabulary list. Signals below are generic; that file is what makes a flag specific to this user's actual voice.",
-  "mechanical": {
-    "description": "Signals a CLI can pattern-match automatically: literal word/phrase lists and measurable properties compared against style-profile.json baselines.",
-    "clustering_rule": "require 2+ distinct mechanical signals firing in the same passage before flagging it — a single hit is not enough",
-    "language_gating": "the mechanical word/phrase lists below are English-specific and must NOT be applied to passages outside the vault's own style-profile.json language.primary / language.additional",
-    "signals": [
-      {
-        "id": "significance_inflation_words",
-        "tier": "T1",
-        "type": "word_list",
-        "words": ["crucial", "pivotal", "profound", "game-changing"]
-      },
-      {
-        "id": "vague_attribution_phrases",
-        "tier": "T1",
-        "type": "phrase_list",
-        "phrases": ["many believe", "some argue", "it is often said"],
-        "condition": "no traceable source"
-      },
-      {
-        "id": "filler_hedges",
-        "tier": "T1",
-        "type": "phrase_list",
-        "phrases": ["it's worth noting that", "it's important to remember that"]
-      },
-      {
-        "id": "em_dash_density",
-        "tier": "T2",
-        "type": "measurable_property",
-        "baseline_field": "punctuation_fingerprint.em_dash_frequency",
-        "comparison": "compare against the vault's own style-profile.json baseline field, not a fixed threshold — read that field at check time"
-      },
-      {
-        "id": "ai_vocabulary_words",
-        "tier": "T2",
-        "type": "word_list",
-        "words": ["delve", "leverage", "robust", "seamless", "tapestry", "testament", "underscore", "elevate", "unlock", "unpack", "navigate"],
-        "note": "\"navigate\" only counts as a metaphor for handling a topic"
-      },
-      {
-        "id": "passive_voice_density",
-        "tier": "T2",
-        "type": "measurable_property",
-        "baseline_field": "stance.voice_tendency",
-        "comparison": "compare against the vault's own style-profile.json baseline field, not a fixed threshold — read that field at check time"
-      },
-      {
-        "id": "decaying_watchlist_phrases",
-        "tier": "T3",
-        "type": "phrase_list",
-        "phrases": ["boils down to", "at the end of the day", "in today's fast-paced world", "it's not just about x, it's about y"],
-        "notes": {
-          "at the end of the day": "only counts as a throwaway transition"
+  "description": "Versioned humanizer workflow snapshot. Identical for every vault. It detects and guides rewrites; it never rewrites a note automatically.",
+  "source": {
+    "skill": "humanizer",
+    "version": "2.8.0",
+    "reference": "Wikipedia: Signs of AI writing"
+  },
+  "workflow": {
+    "phases": ["detection", "meaning_preserving_rewrite", "final_audit"],
+    "rewrite_not_delete": true,
+    "preserve_meaning": true,
+    "preference_context": {
+      "source": ".slipbox/style-profile.json",
+      "use": "Follow stated note-shape, tone-by-note, vocabulary, formatting, and editing preferences during rewrite. Do not infer or mimic a corpus voice.",
+      "sample_voice_calibration": false
+    }
+  },
+  "detection": {
+    "language_policy": {
+      "scoped_language": "en",
+      "scoped_patterns_skip_non_english": true,
+      "universal_patterns_apply_to_all_languages": true,
+      "explicit_passage_override": "idea-db humanize check accepts --language LANG; when present, it overrides profile language for language-scoped signals"
+    },
+    "passage_rule": {
+      "mechanical_only": true,
+      "single_signal": "A single signal flags only when that signal declares flag=single.",
+      "cluster_signal": "A cluster signal flags when its own min_hits is reached.",
+      "cross_signal": "Flag when 2 or more distinct mechanical signals are present through at least one raw hit each, even if none reaches its own min_hits.",
+      "judgment_excluded": true
+    },
+    "false_positive_guidance": [
+      "Do not flag perfect grammar or consistent style by itself.",
+      "Do not flag mixed casual and formal registers by themselves.",
+      "Do not flag bland or dry prose by itself.",
+      "Do not flatten formal or academic vocabulary without a specific pattern.",
+      "Do not flag letter-style openings or closings by themselves.",
+      "Do not flag common transitions in isolation.",
+      "Do not flag curly quotes alone.",
+      "Do not flag em dashes alone.",
+      "Do not flag one short emphatic sentence.",
+      "Do not flag mid-sentence honestly or look by themselves.",
+      "Do not treat missing citations as proof of AI writing.",
+      "Do not treat clean formatting as proof of AI writing."
+    ],
+    "mechanical": {
+      "description": "CLI-detectable signals. The CLI reads only language for gating and never reads profile baselines.",
+      "signals": [
+        {
+          "id": "em_dash",
+          "source": "humanizer §14",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "regex",
+          "pattern": "—|–|--"
         },
-        "versioning": "gets updated centrally as AI-vocabulary trends shift and ships with skill releases, never edited per-vault; setup-slipbox re-copies this file on every re-run, so a vault picks up package-level updates rather than staying frozen at first-setup content",
-        "version": "v1",
-        "version_date": "2026-07-27"
-      }
+        {
+          "id": "boldface_overuse",
+          "source": "humanizer §15",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "regex",
+          "pattern": "\\*\\*[^*\\n]+\\*\\*"
+        },
+        {
+          "id": "title_case_headings",
+          "source": "humanizer §17",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "title_case_heading",
+          "description": "Headings whose main words are capitalized in title case. One deliberate heading is not enough."
+        },
+        {
+          "id": "emoji_decoration",
+          "source": "humanizer §18",
+          "language": "universal",
+          "flag": "single",
+          "type": "regex",
+          "pattern": "[\\U0001F300-\\U0001FAFF]"
+        },
+        {
+          "id": "curly_quotes",
+          "source": "humanizer §19",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "regex",
+          "pattern": "[“”‘’]"
+        },
+        {
+          "id": "cutoff_disclaimers",
+          "source": "humanizer §21",
+          "language": "en",
+          "flag": "single",
+          "type": "phrase_list",
+          "phrases": ["as of", "up to my last training update", "based on available information", "specific details are limited", "not publicly available"]
+        },
+        {
+          "id": "filler_phrases",
+          "source": "humanizer §23",
+          "language": "en",
+          "flag": "single",
+          "type": "phrase_list",
+          "phrases": ["in order to", "due to the fact that", "at this point in time", "in the event that", "has the ability to"]
+        },
+        {
+          "id": "chatbot_artifacts",
+          "source": "humanizer §20",
+          "language": "en",
+          "flag": "single",
+          "type": "phrase_list",
+          "phrases": ["I hope this helps", "let me know if you would like", "would you like me to", "here is an overview"]
+        },
+        {
+          "id": "signposting_announcements",
+          "source": "humanizer §28",
+          "language": "en",
+          "flag": "single",
+          "type": "announcement_opener",
+          "phrases": ["let's dive in", "let's explore", "let's break this down", "here's what you need to know", "now let's look at", "without further ado"]
+        },
+        {
+          "id": "rhetorical_openers",
+          "source": "humanizer §33",
+          "language": "en",
+          "flag": "single",
+          "type": "phrase_list",
+          "phrases": ["honestly?", "look,", "here's the thing", "the thing is", "let's be honest", "real talk"]
+        },
+        {
+          "id": "ai_vocabulary",
+          "source": "humanizer §7",
+          "language": "en",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "word_list",
+          "words": ["actually", "additionally", "align with", "crucial", "delve", "emphasizing", "enduring", "enhance", "fostering", "garner", "highlight", "interplay", "intricate", "key", "landscape", "pivotal", "showcase", "tapestry", "testament", "underscore", "valuable", "vibrant"]
+        },
+        {
+          "id": "copula_avoidance",
+          "source": "humanizer §8",
+          "language": "en",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "phrase_list",
+          "phrases": ["serves as", "stands as", "marks a", "represents a", "boasts", "features", "offers a"]
+        },
+        {
+          "id": "false_ranges",
+          "source": "humanizer §12",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "regex",
+          "pattern": "\\bfrom\\s+[^\\n,.!?]{1,80}\\s+to\\s+[^\\n,.!?]{1,80}"
+        },
+        {
+          "id": "hyphenated_word_pairs",
+          "source": "humanizer §26",
+          "language": "universal",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "regex",
+          "pattern": "\\b[A-Za-z]+-[A-Za-z]+\\b"
+        },
+        {
+          "id": "authority_tropes",
+          "source": "humanizer §27",
+          "language": "en",
+          "flag": "cluster",
+          "min_hits": 2,
+          "type": "phrase_list",
+          "phrases": ["the real question is", "at its core", "what really matters", "fundamentally", "the deeper issue", "the heart of the matter"]
+        }
+      ]
+    },
+    "judgment": {
+      "description": "Reading-comprehension signals. The applying skill evaluates these and may flag one well-grounded instance; the CLI never counts them.",
+      "signals": [
+        {"id": "significance_inflation", "source": "humanizer §1", "language": "en", "name": "Undue emphasis on significance, legacy, and broader trends", "description": "Flag inflated importance claims when the passage adds significance without evidence, not every use of a word such as crucial."},
+        {"id": "notability_name_dropping", "source": "humanizer §2", "language": "en", "name": "Undue emphasis on notability and media coverage", "description": "Flag source or audience name-dropping when it substitutes for the person's actual claim."},
+        {"id": "superficial_ing_analysis", "source": "humanizer §3", "language": "en", "name": "Superficial -ing analysis", "description": "Flag present-participle clauses that restate a sentence instead of adding information."},
+        {"id": "promotional_language", "source": "humanizer §4", "language": "en", "name": "Promotional and advertisement-like language", "description": "Flag promotional framing when it replaces concrete description."},
+        {"id": "vague_attribution", "source": "humanizer §5", "language": "en", "name": "Vague attributions and weasel words", "description": "Flag vague authorities or unnamed critics when the attribution carries the claim without a traceable source."},
+        {"id": "formulaic_challenges", "source": "humanizer §6", "language": "en", "name": "Outline-like challenges and future prospects", "description": "Flag formulaic challenge sections that promise a broad outlook instead of naming specific facts or actions."},
+        {"id": "negative_parallelism", "source": "humanizer §9", "language": "en", "name": "Negative parallelisms and tailing negations", "description": "The construction can be legitimate. Flag its use as a rhetorical crutch or a clipped tailing-negation fragment."},
+        {"id": "rule_of_three_crutch", "source": "humanizer §10", "language": "en", "name": "Rule of three overuse", "description": "Flag forced groups of three used to simulate completeness."},
+        {"id": "synonym_cycling", "source": "humanizer §11", "language": "en", "name": "Elegant variation", "description": "Flag unnecessary synonym substitution when repeating the clearest noun would be more natural."},
+        {"id": "passive_voice_or_fragments", "source": "humanizer §13", "language": "en", "name": "Passive voice and subjectless fragments", "description": "Flag hidden actors or subjectless fragments when active wording would clarify responsibility."},
+        {"id": "inline_header_lists", "source": "humanizer §16", "language": "en", "name": "Inline-header vertical lists", "description": "Flag bolded labels followed by a sentence that merely repeats the label when prose would be clearer."},
+        {"id": "sycophancy", "source": "humanizer §22", "language": "en", "name": "Sycophantic or servile tone", "description": "Flag people-pleasing praise and agreement that adds no content."},
+        {"id": "excessive_hedging", "source": "humanizer §24", "language": "en", "name": "Excessive hedging", "description": "Flag stacked qualifiers that weaken a claim without adding real uncertainty."},
+        {"id": "generic_positive_conclusion", "source": "humanizer §25", "language": "en", "name": "Generic positive conclusion", "description": "Flag vague upbeat endings that replace a concrete next fact or plan."},
+        {"id": "fragmented_headers", "source": "humanizer §29", "language": "en", "name": "Fragmented headers", "description": "Flag a heading followed by a padded sentence that merely restates the heading."},
+        {"id": "diff_anchored_writing", "source": "humanizer §30", "language": "en", "name": "Diff-anchored writing", "description": "Flag prose that describes a change instead of describing the current behavior, except in changelogs or migration notes."},
+        {"id": "staccato_drama", "source": "humanizer §31", "language": "en", "name": "Manufactured punchlines and staccato drama", "description": "Flag stacked fragments used to manufacture emphasis rather than communicate a concrete claim."},
+        {"id": "aphorism_formula", "source": "humanizer §32", "language": "en", "name": "Aphorism formulas", "description": "Flag formulaic claims such as X is the language of Y when they add ceremony instead of precision."}
+      ]
+    }
+  },
+  "rewrite": {
+    "instructions": [
+      "Identify every applicable pattern before editing.",
+      "Rewrite rather than delete, and cover everything the original covers.",
+      "Preserve the original meaning.",
+      "Follow the stated profile's note-shape and editing preferences without inferring a corpus voice.",
+      "Add personality only when the note type and stated preferences call for it.",
+      "Do not introduce em dashes or en dashes as a rewrite preference unless the user explicitly asks for them."
     ]
   },
-  "judgment": {
-    "description": "Stays prose. Applied by whichever ground-* skill uses this file — an LLM reading the passage — because it requires reading-comprehension judgment a literal pattern-match can't do. Never mechanized.",
-    "signals": [
-      {
-        "id": "negative_parallelism",
-        "tier": "T1",
-        "name": "Negative parallelism (\"not x, but y\")",
-        "description": "The construction itself is legitimate; what's flagged is using it as a rhetorical crutch, which requires reading the actual content."
-      },
-      {
-        "id": "rule_of_three_crutch",
-        "tier": "T1",
-        "name": "Rule-of-three constructions used as a rhetorical crutch",
-        "description": "Flagged when the construction is used as a rhetorical crutch rather than because the content actually has three parts."
-      },
-      {
-        "id": "superficial_ing_analysis",
-        "tier": "T1",
-        "name": "Superficial \"-ing\" analysis clauses",
-        "description": "Clauses that restate the sentence's own claim instead of adding information."
-      }
+  "audit": {
+    "required": true,
+    "question": "What makes the rewrite still obviously AI generated?",
+    "instructions": [
+      "Review the draft for remaining patterns and false positives.",
+      "Revise the draft after the audit.",
+      "Confirm that the final rewrite preserves the source meaning and the user's stated note shape."
     ]
   }
 }

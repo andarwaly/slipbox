@@ -132,7 +132,7 @@ Usage:
   idea-db links add        --source S --target T --rel cites|extends
   idea-db config get       [<dotted.path>]
   idea-db config set       <dotted.path> <value>
-  idea-db humanize check    <file>
+  idea-db humanize check    <file> [--language LANG]
   idea-db --help | --version
 
 Output is JSON by default (--format table optional on find/get commands).
@@ -365,20 +365,31 @@ print(json.dumps({"status": "ok", "path": dotted, "value": value}))
 PYEOF
 }
 
-# ---- humanize check (mechanical signals only; judgment tier stays with the calling skill) ----
+# ---- humanize check (mechanical detection only; judgment stays with the calling skill) ----
 cmd_humanize_check() {
-  [ $# -ge 1 ] || usage_err "humanize check requires <file>"
+  [ $# -ge 1 ] || usage_err "humanize check requires <file> [--language LANG]"
   local file="$1"
+  shift
+  local passage_language=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --language)
+        [ $# -ge 2 ] || usage_err "--language requires LANG"
+        passage_language="$2"
+        shift 2
+        ;;
+      *) usage_err "unknown humanize check argument: $1" ;;
+    esac
+  done
   [ -f "$file" ] || runtime_err "file not found: $file"
   require_config
   local checklist="$SELF_DIR/humanize-checklist.json"
   [ -f "$checklist" ] || runtime_err "humanize-checklist.json not found at $checklist — run setup-slipbox first"
   local style="$SELF_DIR/style-profile.json"
-  [ -f "$style" ] || style="$SELF_DIR/stated_style.json"
-  [ -f "$style" ] || runtime_err "no style-profile.json or stated_style.json found — run setup-slipbox first"
+  [ -f "$style" ] || runtime_err "style-profile.json not found — run setup-slipbox first"
 
-  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" python3 - <<'PYEOF'
-import json, os, re, sys
+  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" python3 - <<'PYEOF'
+import json, os, re
 
 with open(os.environ["FILE_PATH"]) as f:
     text = f.read()
@@ -388,54 +399,95 @@ with open(os.environ["STYLE_PATH"]) as f:
     style = json.load(f)
 
 language = style.get("language", {})
-allowed_langs = {language.get("primary", "en")} | set(language.get("additional", []))
-english_ok = bool({"en", "english"} & {l.lower() for l in allowed_langs}) or not language
+allowed_langs = {
+    str(language.get("primary", "")),
+    str(language.get("secondary", "")),
+}
+allowed_langs.update(str(value) for value in language.get("additional", []))
+allowed_langs = {value.lower() for value in allowed_langs if value}
+passage_language = os.environ.get("PASSAGE_LANGUAGE", "").lower()
+english_ok = bool({"en", "english"} & ({passage_language} if passage_language else allowed_langs))
 
-signals_hit = []
+def language_allowed(signal):
+    scope = signal.get("language", "universal")
+    return scope == "universal" or (scope == "en" and english_ok)
 
-def get_field(obj, dotted):
-    node = obj
-    for part in dotted.split("."):
-        if not isinstance(node, dict) or part not in node:
-            return None
-        node = node[part]
-    return node
+def title_case_headings(value):
+    matches = []
+    for line in value.splitlines():
+        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        words = re.findall(r"[A-Za-z]+", match.group(1))
+        significant = [word for word in words if word.lower() not in {"a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to"}]
+        if len(significant) >= 2 and all(word[0].isupper() for word in significant):
+            matches.append(line.strip())
+    return matches
 
-for sig in checklist.get("mechanical", {}).get("signals", []):
-    sid = sig["id"]
-    stype = sig["type"]
+def signal_matches(signal):
+    stype = signal.get("type")
+    if stype == "title_case_heading":
+        return title_case_headings(text)
+    if stype == "word_list":
+        matches = []
+        for word in signal.get("words", []):
+            matches.extend(re.findall(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE))
+        return matches
+    if stype == "phrase_list":
+        matches = []
+        for phrase in signal.get("phrases", []):
+            matches.extend(re.findall(re.escape(phrase), text, re.IGNORECASE))
+        return matches
+    if stype == "announcement_opener":
+        matches = []
+        for phrase in signal.get("phrases", []):
+            pattern = r"(?im)(?:^|[.!?]\s+)\s*" + re.escape(phrase)
+            matches.extend(re.findall(pattern, text))
+        return matches
+    if stype == "regex":
+        return [match if isinstance(match, str) else " ".join(match) for match in re.findall(signal.get("pattern", ""), text, re.IGNORECASE)]
+    return []
 
-    if stype == "word_list" and english_ok:
-        for w in sig.get("words", []):
-            if re.search(r"\b" + re.escape(w) + r"\b", text, re.IGNORECASE):
-                signals_hit.append({"id": sid, "tier": sig["tier"], "match": w})
+signals_present = []
+signals_passed = []
+signal_results = []
 
-    elif stype == "phrase_list" and english_ok:
-        for p in sig.get("phrases", []):
-            if p.lower() in text.lower():
-                signals_hit.append({"id": sid, "tier": sig["tier"], "match": p})
+for signal in checklist.get("detection", {}).get("mechanical", {}).get("signals", []):
+    if not language_allowed(signal):
+        signal_results.append({"id": signal["id"], "skipped": "language_scope"})
+        continue
+    matches = signal_matches(signal)
+    present = bool(matches)
+    threshold = 1 if signal.get("flag") == "single" else int(signal.get("min_hits", 1))
+    passed = present and (signal.get("flag") == "single" or len(matches) >= threshold)
+    result = {
+        "id": signal["id"],
+        "flag": signal.get("flag"),
+        "hits": len(matches),
+        "min_hits": threshold,
+        "present": present,
+        "passed": passed,
+    }
+    if matches:
+        result["matches"] = matches[:20]
+        signals_present.append(signal["id"])
+    if passed:
+        signals_passed.append(signal["id"])
+    signal_results.append(result)
 
-    elif stype == "measurable_property":
-        baseline_field = sig.get("baseline_field")
-        baseline = get_field(style, baseline_field)
-        if sid == "em_dash_density":
-            count = text.count("—") + text.count("--")
-            words = max(len(text.split()), 1)
-            density = count / words
-            threshold = {"none": 0.0, "low": 0.01, "moderate": 0.02, "high": 0.04}.get(baseline, 0.02)
-            if density > threshold:
-                signals_hit.append({"id": sid, "tier": sig["tier"], "density": round(density, 4), "baseline": baseline})
-        elif sid == "passive_voice_density":
-            passive_hits = len(re.findall(r"\b(is|are|was|were|been|being|be)\s+\w+ed\b", text, re.IGNORECASE))
-            if baseline == "active" and passive_hits >= 3:
-                signals_hit.append({"id": sid, "tier": sig["tier"], "count": passive_hits, "baseline": baseline})
-
-clustering_ok = len(signals_hit) >= 2
+cross_signal_passed = len(signals_present) >= 2
+flagged = bool(signals_passed or cross_signal_passed)
 result = {
-    "flagged": clustering_ok,
-    "clustering_rule": "2+ distinct mechanical signals required",
-    "signals_hit": signals_hit,
-    "judgment_tier_reminder": "negative_parallelism, rule_of_three_crutch, superficial_ing_analysis stay judgment-only — apply reading-comprehension check separately",
+    "flagged": flagged,
+    "signals": signal_results,
+    "signals_passed": signals_passed,
+    "cross_signal": {
+        "mechanical_only": True,
+        "distinct_present": len(signals_present),
+        "min_distinct": 2,
+        "passed": cross_signal_passed,
+    },
+    "judgment": "Apply detection.judgment with reading comprehension; judgment signals are not counted by this CLI.",
 }
 print(json.dumps(result, indent=2))
 PYEOF

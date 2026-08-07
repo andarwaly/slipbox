@@ -2,12 +2,12 @@
   "test_cases": [
     {
       "prompt": "Set up slipbox in my vault for the first time.",
-      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults, runs Section B style analysis or greenfield interview, initializes idea.db, and shows a draft config.json for approval before writing.",
+      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults, interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, initializes idea.db, and shows a draft config.json for approval before writing.",
       "assertions": [
         {"type": "file_exists", "path": ".slipbox/idea.db"},
         {"type": "file_exists", "path": ".slipbox/config.json"},
-        {"type": "file_exists", "path": ".slipbox/style-profile.md"},
-        {"type": "file_exists", "path": ".slipbox/humanize-checklist.md"}
+        {"type": "file_exists", "path": ".slipbox/style-profile.json"},
+        {"type": "file_exists", "path": ".slipbox/humanize-checklist.json"}
       ]
     },
     {

@@ -29,7 +29,7 @@ This file only describes *what each variable is and when to use it*. How a bare 
 
 Freeform, no fixed vocabulary. Example: `{{"rewrite the transcript, as an article"}}`. A template author writing an Article or News body that should be a cleaned rewrite or a compressed summary — rather than raw `{{content}}` — writes the instruction directly, e.g. `{{"cleaned rewrite of the source article"}}` or `{{"summarized, compressed treatment of the source"}}`.
 
-Output from a quoted instruction is checked by `humanize-checklist.md`; bare-variable output never is, since there's nothing synthesized to check.
+Output from a quoted instruction enters the `.slipbox/humanize-checklist.json` workflow because the agent synthesized or rewrote it; bare-variable output never does, since there is nothing synthesized to check.
 
 ## Filters
 

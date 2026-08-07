@@ -18,11 +18,17 @@ idea-db evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--ite
 idea-db links add        --source S --target T --rel cites|extends
 idea-db config get       [<dotted.path>]
 idea-db config set       <dotted.path> <value>
-idea-db humanize check   <file>
+idea-db humanize check   <file> [--language LANG]
 idea-db --help | --version
 ```
 
 `seeds` and `evergreen` are the two backlog tables — a candidate idea or term surfaced by `surface-ideas` lands in `seeds`; a flagged tension from `ground-claim`, `ground-term`, or `ground-my-take` lands in `evergreen`. `links` records typed edges between written notes (`cites`, `extends`) for CLI/programmatic queries — separate from, and in addition to, the `[[wikilink]]`s a note's own prose uses for Obsidian's backlink pane.
+
+## `humanize check`
+
+`idea-db humanize check <file> [--language LANG]` runs only the checklist's `detection.mechanical` signals. It reads `.slipbox/style-profile.json` only to decide whether English-scoped signals are available; an explicit `--language` overrides the profile for the checked passage. It never reads profile baselines and never falls back to `stated_style.json`. Each signal declares its own `single` or `cluster` threshold. Cross-signal counting uses raw presence from mechanical signals only. Judgment signals are handled by the calling skill. The checklist's declarative rewrite, preference-context, and final-audit phases remain in the JSON; the calling skill executes them.
+
+The JSON result includes per-signal hits, signals that passed their own thresholds, the mechanical cross-signal result, and a reminder that the caller must apply `detection.judgment` separately.
 
 `created_at`/`updated_at` on both backlog tables are handled automatically — `created_at` on insert, `updated_at` on any subsequent `update` call, via triggers (`trg_seeds_updated_at`, `trg_evergreen_updated_at`). No flag exists to set either directly; nothing needs one.
 

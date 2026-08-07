@@ -10,22 +10,28 @@ metadata:
 
 ## Prerequisite
 
-Requires `.slipbox/config.json`, `.slipbox/style-profile.json` (or
-`.slipbox/stated_style.json`), and `.slipbox/humanize-checklist.json` — all produced by
-`setup-slipbox`. If any is missing, stop and say so.
+Requires `.slipbox/config.json`, `.slipbox/style-profile.json`, and
+`.slipbox/humanize-checklist.json` — all produced by `setup-slipbox`. If any is missing, stop and say so.
 
 ## Style
 
-Prose should read consistent with `.slipbox/style-profile.json` (or
-`.slipbox/stated_style.json` if no corpus exists) — voice, tone, punctuation
-fingerprint, lexicon, language/code-switching pattern — not a generic register.
+Read `.slipbox/style-profile.json` as the user's stated note-shape and editing preference contract. Follow its sentence shape, configured note-type tone, formatting, vocabulary, and editing preferences. Do not infer or mimic a corpus voice, and do not use the profile as a humanizer detection baseline.
 
 ## Humanize
 
-After drafting, apply `humanize-checklist.json`'s `judgment` section directly — reading
-comprehension, no tool needed — and run its `mechanical` section via
-`idea-db humanize check <draft-path>`. If either surfaces a flagged cluster, revise
-before writing the file — never write first and check after.
+Run the checklist's `detection.mechanical` section through
+`idea-db humanize check <draft-path>`. When the draft or passage language is known,
+pass `--language LANG` so language-scoped signals skip non-English passages; without
+the override, the CLI uses the profile's configured languages. It never reads profile
+baselines and never dual-reads `stated_style.json`. Apply `detection.judgment` with
+reading comprehension. Respect each signal's `single` or `cluster` policy, and keep
+judgment signals out of CLI cross-signal counting.
+
+If detection or judgment surfaces a flag, execute the checklist's declared
+`rewrite` phase before writing: rewrite rather than delete, preserve meaning, and follow
+the stated profile through `workflow.preference_context`. Then execute the required
+`audit` phase and revise again if the audit finds a remaining pattern. The checklist
+guides the workflow; it never rewrites a file automatically.
 
 ## Invocation modes
 

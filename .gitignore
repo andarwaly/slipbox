@@ -1,1 +1,7 @@
 .DS_Store
+
+# Stray idea.db from running idea-db inside the repo. The real database belongs at
+# .slipbox/idea.db in a user's vault, created by setup-slipbox — never in the package.
+idea.db
+idea.db-shm
+idea.db-wal
