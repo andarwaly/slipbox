@@ -2,20 +2,12 @@
   "test_cases": [
     {
       "prompt": "Set up slipbox in my vault for the first time.",
-      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults, interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, initializes idea.db, and shows a draft config.json for approval before writing.",
+      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults (including a combined question on which note types to resolve field_map for now versus defer), interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, installs the slipbox CLI and initializes its evergreen directory and links log, and shows a draft config.json for approval before writing.",
       "assertions": [
-        {"type": "file_exists", "path": ".slipbox/idea.db"},
+        {"type": "file_exists", "path": ".slipbox/bin/slipbox"},
         {"type": "file_exists", "path": ".slipbox/config.json"},
         {"type": "file_exists", "path": ".slipbox/style-profile.json"},
         {"type": "file_exists", "path": ".slipbox/humanize-checklist.json"}
-      ]
-    },
-    {
-      "prompt": "sqlite3 is not installed, set up slipbox anyway.",
-      "expected_output": "Stops before writing anything, tells the user sqlite3 is required, and offers to install it or asks the user to install it themselves — never proceeds or auto-installs without asking.",
-      "assertions": [
-        {"type": "contains", "text": "sqlite3"},
-        {"type": "not_contains", "text": "installed automatically without confirmation"}
       ]
     },
     {
@@ -28,10 +20,17 @@
     },
     {
       "prompt": "I already ran setup-slipbox once, my vault's filename convention changed from kebab-case to Title Case since then. Re-run setup.",
-      "expected_output": "Re-discovers conventions, diffs against the existing config.json, reports the specific mismatch (kebab-case vs Title Case), and asks the user which side wins — does not silently overwrite, does not re-ask every question from scratch, does not touch idea.db or existing notes.",
+      "expected_output": "Re-discovers conventions, diffs against the existing config.json, reports the specific mismatch (kebab-case vs Title Case), and asks the user which side wins — does not silently overwrite, does not re-ask every question from scratch, does not touch existing evergreen candidates or notes.",
       "assertions": [
         {"type": "contains", "text": "mismatch"},
         {"type": "not_contains", "text": "idea.db"}
+      ]
+    },
+    {
+      "prompt": "Re-run setup-slipbox — one of my term note's sources property changed type from List to Text since last setup.",
+      "expected_output": "The field_map drift check catches the type mismatch, reports it by field name and both values, and asks the user which side wins — re-resolve to a new List property, or override and accept the mismatch.",
+      "assertions": [
+        {"type": "contains", "text": "sources"}
       ]
     }
   ]
