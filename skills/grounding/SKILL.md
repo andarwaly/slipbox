@@ -41,16 +41,43 @@ If a source argues something your own prior knowledge contradicts, that correcti
 belongs somewhere else entirely (see **Noticing a tension** below) — never inside the
 statement itself, even if you believe the source is wrong.
 
+## Probing
+
+When the working statement has more than one gap, pick the question by naming the gap
+first — don't reach for whichever question feels natural. Three named patterns, each
+tied to a specific missing thing:
+
+- **Mechanism probe** — the statement asserts a claim without the underlying cause or
+  process. "You noted [claim], but what's the mechanism that causes it?"
+- **Boundary probe** — the statement generalizes or asserts something absolute. "Under
+  what conditions would [claim] fail to hold?"
+- **Distinction probe** — the statement uses squishy or overlapping terminology.
+  "How are you distinguishing [A] from [B] here?"
+
+If none of the three fit the actual gap, ask the specific question the gap calls for —
+these three are the common cases, not an exhaustive menu to force a fit into.
+
 ## Gate
 
-The statement is fixed only when the caller explicitly confirms it:
+The statement is fixed only when the caller explicitly confirms it — and getting there
+requires two things, not one:
 
-- **Fixes it**: "yes, that's it," "fixed," or equivalent — an explicit, unambiguous
-  signal.
-- **Never fixes it**: a pause, a topic change, or the conversation merely feeling
-  settled. Before treating the gate as passed, confirm the user has either produced the
-  statement's content themselves or meaningfully revised wording you introduced —
-  agreement alone, without either, isn't enough. Probe once more if it isn't.
+- **A precondition on ever showing a draft**: never present a finished statement for
+  confirmation until at least one open probe-and-answer round has already produced real
+  content from the user. If the first thing shown in a session is a polished draft, that
+  is a Gate failure by construction — go back and probe first.
+- **The confirmation question itself stays open**, never binary. Present the draft as
+  "here's what I have so far, based on what you said — what's missing or wrong?" not
+  "does this capture it, yes or no?" A genuine "yes, exactly" still closes the gate; the
+  question just never invites a reflexive rubber-stamp.
+
+**Fixes it**: "yes, that's it," "fixed," or equivalent — an explicit, unambiguous signal,
+after the precondition above has been met.
+
+**Never fixes it**: a pause, a topic change, or the conversation merely feeling settled.
+Before treating the gate as passed, confirm the user has either produced the statement's
+content themselves or meaningfully revised wording you introduced — agreement alone,
+without either, isn't enough. Probe once more if it isn't.
 
 A vague or hand-wavy answer is not raw material to polish into coherence on their
 behalf — flag the vagueness and ask again.

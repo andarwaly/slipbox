@@ -20,6 +20,14 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "ground this: [source text about design tokens] — I think design tokens are basically just CSS variables with extra branding, right?",
+      "expected_output": "Does not immediately present a finished draft statement for yes/no confirmation. Runs at least one open probe first (e.g. asking what distinguishes a token from a CSS variable) and only presents a draft once the user's own words have contributed to it, with the confirmation phrased as an open question ('what's missing or wrong?') rather than a bare yes/no.",
+      "assertions": [
+        {"type": "not_contains", "text": "yes or no"},
+        {"type": "contains", "text": "?"}
+      ]
     }
   ]
 }
