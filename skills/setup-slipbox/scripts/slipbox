@@ -1,0 +1,570 @@
+#!/usr/bin/env bash
+# slipbox — CLI wrapping .slipbox/evergreen/*.md, .slipbox/links.jsonl, and .slipbox/config.json.
+# Canonical source; setup-slipbox copies this file verbatim to .slipbox/bin/slipbox
+# on every run (always overwritten — versioned code, not user data).
+# See docs/adr/0002-slipbox-file-tier-cli.md for the design decisions behind this file's shape.
+#
+# No SQLite dependency. Evergreen candidates are plain files (one YAML-
+# frontmatter file per candidate, atomic write via tempfile+os.replace) and
+# links are an append-only JSONL log — sync-native, git-mergeable, no binary
+# database. See ADR 0002 for why idea.db was retired. `seeds` no longer
+# exists at all: literature/term tracking is now derived on demand from
+# existing notes' own frontmatter and wikilinks, not surfaced into a queue.
+#
+# Portability note: macOS ships bash 3.2 by default (GPL licensing) — this file
+# deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
+set -euo pipefail
+
+CLI_VERSION="2.0.0"
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+EVERGREEN_DIR="$SELF_DIR/evergreen"
+LINKS_FILE="$SELF_DIR/links.jsonl"
+CONFIG="$SELF_DIR/config.json"
+
+# ---- helpers ----
+usage_err() { echo "{\"error\":\"$1\"}" >&2; exit 2; }
+runtime_err() { echo "{\"error\":\"$1\"}" >&2; exit 1; }
+require_config() { [ -f "$CONFIG" ] || runtime_err "config.json not found at $CONFIG — run setup-slipbox first"; }
+require_evergreen_dir() { [ -d "$EVERGREEN_DIR" ] || runtime_err "evergreen directory not found at $EVERGREEN_DIR — run setup-slipbox first"; }
+
+# get_flag <name> "$@" — scans args for "--<name> <value>", echoes value, exits 1 if absent.
+# Plain positional scan, not an associative array — keeps this file bash-3.2-safe.
+get_flag() {
+  local name="--$1"; shift
+  while [ $# -gt 0 ]; do
+    if [ "$1" = "$name" ]; then
+      [ $# -ge 2 ] || usage_err "flag $name needs a value"
+      printf '%s' "$2"
+      return 0
+    fi
+    shift
+  done
+  return 1
+}
+
+print_help() {
+  cat <<'EOF'
+slipbox — CLI for .slipbox/evergreen/*.md, .slipbox/links.jsonl, and .slipbox/config.json
+
+Usage:
+  slipbox evergreen add    --slug SLUG --reason "..."
+  slipbox evergreen find   [--status S]
+  slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
+  slipbox links add        --source S --target T --rel cites|extends
+  slipbox links find       [--source S] [--target T] [--rel cites|extends]
+  slipbox config get       [<dotted.path>]
+  slipbox config set       <dotted.path> <value>
+  slipbox humanize check   <file> [--language LANG]
+  slipbox --help | --version
+
+Output is JSON by default (--format table optional on find/get commands).
+Exit 2 on usage errors, exit 1 on runtime failures.
+EOF
+}
+
+# ---- evergreen (file-per-candidate, YAML frontmatter, no body) ----
+cmd_evergreen_add() {
+  require_evergreen_dir
+  local slug reason
+  slug=$(get_flag slug "$@") || slug=""
+  reason=$(get_flag reason "$@") || reason=""
+  [ -n "$slug" ] || usage_err "evergreen add requires --slug"
+  [ -n "$reason" ] || usage_err "evergreen add requires --reason"
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" python3 - <<'PYEOF'
+import json, os, sys, tempfile
+from datetime import datetime, timezone
+
+evergreen_dir = os.environ["EVERGREEN_DIR"]
+slug = os.environ["SLUG"]
+reason = os.environ["REASON"]
+path = os.path.join(evergreen_dir, f"{slug}.md")
+
+if os.path.exists(path):
+    print(json.dumps({"error": f"evergreen slug already exists: {slug}"}), file=sys.stderr)
+    sys.exit(1)
+
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+order = ["status", "reason", "discussion_path", "note_path", "iteration", "created_at", "updated_at"]
+fields = {
+    "status": "to-discuss",
+    "reason": reason,
+    "discussion_path": None,
+    "note_path": None,
+    "iteration": 1,
+    "created_at": now,
+    "updated_at": now,
+}
+
+def serialize(fields, order):
+    lines = ["---"]
+    for key in order:
+        value = fields[key]
+        if value is None:
+            lines.append(f"{key}:")
+        elif isinstance(value, str):
+            lines.append(f"{key}: {json.dumps(value)}")
+        else:
+            lines.append(f"{key}: {value}")
+    lines.append("---")
+    return "\n".join(lines) + "\n"
+
+fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{slug}-", suffix=".md.tmp")
+with os.fdopen(fd, "w") as f:
+    f.write(serialize(fields, order))
+os.replace(tmp_path, path)
+
+print(json.dumps({"slug": slug, **fields}, indent=2))
+PYEOF
+}
+
+cmd_evergreen_find() {
+  require_evergreen_dir
+  local status format
+  status=$(get_flag status "$@") || status=""
+  format=$(get_flag format "$@") || format="json"
+  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" python3 - <<'PYEOF'
+import glob, json, os, re
+
+evergreen_dir = os.environ["EVERGREEN_DIR"]
+status_filter = os.environ.get("STATUS_FILTER", "")
+fmt = os.environ.get("FORMAT", "json")
+
+def parse_frontmatter(text):
+    match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
+    if not match:
+        return None, []
+    fields, order = {}, []
+    for line in match.group(1).splitlines():
+        if ":" not in line:
+            continue
+        key, _, raw = line.partition(":")
+        key = key.strip()
+        raw = raw.strip()
+        order.append(key)
+        if raw == "":
+            fields[key] = None
+        elif raw.startswith('"'):
+            fields[key] = json.loads(raw)
+        elif raw.lstrip("-").isdigit():
+            fields[key] = int(raw)
+        else:
+            fields[key] = raw
+    return fields, order
+
+rows = []
+for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
+    fields, _ = parse_frontmatter(open(path).read())
+    if fields is None:
+        continue
+    slug = os.path.splitext(os.path.basename(path))[0]
+    row = {"slug": slug, **fields}
+    if status_filter and row.get("status") != status_filter:
+        continue
+    rows.append(row)
+
+rows.sort(key=lambda r: r.get("created_at") or "", reverse=True)
+
+if fmt == "table":
+    if not rows:
+        print("(no rows)")
+    else:
+        cols = list(rows[0].keys())
+        print("\t".join(cols))
+        for row in rows:
+            print("\t".join(str(row.get(c, "")) for c in cols))
+else:
+    print(json.dumps(rows, indent=2))
+PYEOF
+}
+
+cmd_evergreen_update() {
+  require_evergreen_dir
+  [ $# -ge 1 ] || usage_err "evergreen update requires <slug>"
+  local slug="$1"; shift
+  local status note_path iteration new_slug
+  status=$(get_flag status "$@") || status=""
+  note_path=$(get_flag note-path "$@") || note_path=""
+  iteration=$(get_flag iteration "$@") || iteration=""
+  new_slug=$(get_flag slug "$@") || new_slug=""
+  if [ -z "$status" ] && [ -z "$note_path" ] && [ -z "$iteration" ] && [ -z "$new_slug" ]; then
+    usage_err "evergreen update requires at least one of --status, --note-path, --slug, --iteration"
+  fi
+  local path="$EVERGREEN_DIR/$slug.md"
+  [ -f "$path" ] || runtime_err "evergreen slug not found: $slug"
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" NEW_SLUG="$new_slug" STATUS="$status" NOTE_PATH="$note_path" ITERATION="$iteration" python3 - <<'PYEOF'
+import json, os, re, sys, tempfile
+from datetime import datetime, timezone
+
+evergreen_dir = os.environ["EVERGREEN_DIR"]
+slug = os.environ["SLUG"]
+new_slug = os.environ.get("NEW_SLUG", "")
+status = os.environ.get("STATUS", "")
+note_path = os.environ.get("NOTE_PATH", "")
+iteration = os.environ.get("ITERATION", "")
+
+path = os.path.join(evergreen_dir, f"{slug}.md")
+text = open(path).read()
+match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
+fields, order = {}, []
+for line in match.group(1).splitlines():
+    key, _, raw = line.partition(":")
+    key = key.strip()
+    raw = raw.strip()
+    order.append(key)
+    if raw == "":
+        fields[key] = None
+    elif raw.startswith('"'):
+        fields[key] = json.loads(raw)
+    elif raw.lstrip("-").isdigit():
+        fields[key] = int(raw)
+    else:
+        fields[key] = raw
+
+if status:
+    fields["status"] = status
+if note_path:
+    fields["note_path"] = note_path
+if iteration:
+    fields["iteration"] = int(iteration)
+fields["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def serialize(fields, order):
+    lines = ["---"]
+    for key in order:
+        value = fields[key]
+        if value is None:
+            lines.append(f"{key}:")
+        elif isinstance(value, str):
+            lines.append(f"{key}: {json.dumps(value)}")
+        else:
+            lines.append(f"{key}: {value}")
+    lines.append("---")
+    return "\n".join(lines) + "\n"
+
+final_slug = new_slug or slug
+final_path = os.path.join(evergreen_dir, f"{final_slug}.md")
+if new_slug and os.path.exists(final_path):
+    print(json.dumps({"error": f"evergreen slug already exists: {new_slug}"}), file=sys.stderr)
+    sys.exit(1)
+
+fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{final_slug}-", suffix=".md.tmp")
+with os.fdopen(fd, "w") as f:
+    f.write(serialize(fields, order))
+os.replace(tmp_path, final_path)
+if new_slug and new_slug != slug:
+    os.remove(path)
+
+print(json.dumps({"slug": final_slug, **fields}, indent=2))
+PYEOF
+}
+
+# ---- links (append-only JSONL log; edges have no natural filename) ----
+cmd_links_add() {
+  local source target rel
+  source=$(get_flag source "$@") || source=""
+  target=$(get_flag target "$@") || target=""
+  rel=$(get_flag rel "$@") || rel=""
+  [ -n "$source" ] || usage_err "links add requires --source"
+  [ -n "$target" ] || usage_err "links add requires --target"
+  [ -n "$rel" ] || usage_err "links add requires --rel"
+  case "$rel" in cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
+  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" python3 - <<'PYEOF'
+import json, os
+from datetime import datetime, timezone
+
+links_file = os.environ["LINKS_FILE"]
+row = {
+    "source_id": os.environ["SOURCE"],
+    "target_id": os.environ["TARGET"],
+    "rel_type": os.environ["REL"],
+    "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+with open(links_file, "a") as f:
+    f.write(json.dumps(row) + "\n")
+print(json.dumps({"status": "ok", **row}))
+PYEOF
+}
+
+cmd_links_find() {
+  local source target rel format
+  source=$(get_flag source "$@") || source=""
+  target=$(get_flag target "$@") || target=""
+  rel=$(get_flag rel "$@") || rel=""
+  format=$(get_flag format "$@") || format="json"
+  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" python3 - <<'PYEOF'
+import json, os
+
+links_file = os.environ["LINKS_FILE"]
+source_filter = os.environ.get("SOURCE_FILTER", "")
+target_filter = os.environ.get("TARGET_FILTER", "")
+rel_filter = os.environ.get("REL_FILTER", "")
+fmt = os.environ.get("FORMAT", "json")
+
+rows = []
+if os.path.exists(links_file):
+    with open(links_file) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            row = json.loads(line)
+            if source_filter and row.get("source_id") != source_filter:
+                continue
+            if target_filter and row.get("target_id") != target_filter:
+                continue
+            if rel_filter and row.get("rel_type") != rel_filter:
+                continue
+            rows.append(row)
+
+if fmt == "table":
+    if not rows:
+        print("(no rows)")
+    else:
+        cols = list(rows[0].keys())
+        print("\t".join(cols))
+        for row in rows:
+            print("\t".join(str(row.get(c, "")) for c in cols))
+else:
+    print(json.dumps(rows, indent=2))
+PYEOF
+}
+
+# ---- config (dotted-path get/set over config.json — unchanged from idea-db) ----
+cmd_config_get() {
+  require_config
+  local path="${1:-}"
+  CONFIG_PATH="$CONFIG" DOTTED="$path" python3 - <<'PYEOF'
+import json, os, sys
+with open(os.environ["CONFIG_PATH"]) as f:
+    data = json.load(f)
+dotted = os.environ.get("DOTTED", "")
+node = data
+if dotted:
+    for part in dotted.split("."):
+        if not isinstance(node, dict) or part not in node:
+            print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+            sys.exit(2)
+        node = node[part]
+print(json.dumps(node, indent=2))
+PYEOF
+}
+
+cmd_config_set() {
+  require_config
+  [ $# -ge 2 ] || usage_err "config set requires <dotted.path> <value>"
+  local dotted="$1" value="$2"
+  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" python3 - <<'PYEOF'
+import json, os, sys
+
+config_path = os.environ["CONFIG_PATH"]
+dotted = os.environ["DOTTED"]
+raw = os.environ["VALUE"]
+
+with open(config_path) as f:
+    data = json.load(f)
+
+try:
+    value = json.loads(raw)
+except json.JSONDecodeError:
+    value = raw
+
+parts = dotted.split(".")
+node = data
+for part in parts[:-1]:
+    if not isinstance(node, dict) or part not in node:
+        print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+        sys.exit(2)
+    node = node[part]
+leaf = parts[-1]
+if not isinstance(node, dict) or leaf not in node:
+    print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
+    sys.exit(2)
+node[leaf] = value
+
+with open(config_path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+
+print(json.dumps({"status": "ok", "path": dotted, "value": value}))
+PYEOF
+}
+
+# ---- humanize check (unchanged from idea-db — mechanical detection only) ----
+cmd_humanize_check() {
+  [ $# -ge 1 ] || usage_err "humanize check requires <file> [--language LANG]"
+  local file="$1"
+  shift
+  local passage_language=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --language)
+        [ $# -ge 2 ] || usage_err "--language requires LANG"
+        passage_language="$2"
+        shift 2
+        ;;
+      *) usage_err "unknown humanize check argument: $1" ;;
+    esac
+  done
+  [ -f "$file" ] || runtime_err "file not found: $file"
+  require_config
+  local checklist="$SELF_DIR/humanize-checklist.json"
+  [ -f "$checklist" ] || runtime_err "humanize-checklist.json not found at $checklist — run setup-slipbox first"
+  local style="$SELF_DIR/style-profile.json"
+  [ -f "$style" ] || runtime_err "style-profile.json not found — run setup-slipbox first"
+
+  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" python3 - <<'PYEOF'
+import json, os, re
+
+with open(os.environ["FILE_PATH"]) as f:
+    text = f.read()
+with open(os.environ["CHECKLIST_PATH"]) as f:
+    checklist = json.load(f)
+with open(os.environ["STYLE_PATH"]) as f:
+    style = json.load(f)
+
+language = style.get("language", {})
+allowed_langs = {
+    str(language.get("primary", "")),
+    str(language.get("secondary", "")),
+}
+allowed_langs.update(str(value) for value in language.get("additional", []))
+allowed_langs = {value.lower() for value in allowed_langs if value}
+passage_language = os.environ.get("PASSAGE_LANGUAGE", "").lower()
+english_ok = bool({"en", "english"} & ({passage_language} if passage_language else allowed_langs))
+
+def language_allowed(signal):
+    scope = signal.get("language", "universal")
+    return scope == "universal" or (scope == "en" and english_ok)
+
+def title_case_headings(value):
+    matches = []
+    for line in value.splitlines():
+        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        words = re.findall(r"[A-Za-z]+", match.group(1))
+        significant = [word for word in words if word.lower() not in {"a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to"}]
+        if len(significant) >= 2 and all(word[0].isupper() for word in significant):
+            matches.append(line.strip())
+    return matches
+
+def signal_matches(signal):
+    stype = signal.get("type")
+    if stype == "title_case_heading":
+        return title_case_headings(text)
+    if stype == "word_list":
+        matches = []
+        for word in signal.get("words", []):
+            matches.extend(re.findall(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE))
+        return matches
+    if stype == "phrase_list":
+        matches = []
+        for phrase in signal.get("phrases", []):
+            matches.extend(re.findall(re.escape(phrase), text, re.IGNORECASE))
+        return matches
+    if stype == "announcement_opener":
+        matches = []
+        for phrase in signal.get("phrases", []):
+            pattern = r"(?im)(?:^|[.!?]\s+)\s*" + re.escape(phrase)
+            matches.extend(re.findall(pattern, text))
+        return matches
+    if stype == "regex":
+        return [match if isinstance(match, str) else " ".join(match) for match in re.findall(signal.get("pattern", ""), text, re.IGNORECASE)]
+    return []
+
+signals_present = []
+signals_passed = []
+signal_results = []
+
+for signal in checklist.get("detection", {}).get("mechanical", {}).get("signals", []):
+    if not language_allowed(signal):
+        signal_results.append({"id": signal["id"], "skipped": "language_scope"})
+        continue
+    matches = signal_matches(signal)
+    present = bool(matches)
+    threshold = 1 if signal.get("flag") == "single" else int(signal.get("min_hits", 1))
+    passed = present and (signal.get("flag") == "single" or len(matches) >= threshold)
+    result = {
+        "id": signal["id"],
+        "flag": signal.get("flag"),
+        "hits": len(matches),
+        "min_hits": threshold,
+        "present": present,
+        "passed": passed,
+    }
+    if matches:
+        result["matches"] = matches[:20]
+        signals_present.append(signal["id"])
+    if passed:
+        signals_passed.append(signal["id"])
+    signal_results.append(result)
+
+cross_signal_passed = len(signals_present) >= 2
+flagged = bool(signals_passed or cross_signal_passed)
+result = {
+    "flagged": flagged,
+    "signals": signal_results,
+    "signals_passed": signals_passed,
+    "cross_signal": {
+        "mechanical_only": True,
+        "distinct_present": len(signals_present),
+        "min_distinct": 2,
+        "passed": cross_signal_passed,
+    },
+    "judgment": "Apply detection.judgment with reading comprehension; judgment signals are not counted by this CLI.",
+}
+print(json.dumps(result, indent=2))
+PYEOF
+}
+
+# ---- dispatch ----
+[ $# -ge 1 ] || { print_help; exit 2; }
+
+case "$1" in
+  --help|-h) print_help; exit 0 ;;
+  --version|-v) echo "slipbox $CLI_VERSION"; exit 0 ;;
+  evergreen)
+    shift
+    [ $# -ge 1 ] || usage_err "evergreen requires an action: find, add, update"
+    action="$1"; shift
+    case "$action" in
+      find) cmd_evergreen_find "$@" ;;
+      add) cmd_evergreen_add "$@" ;;
+      update) cmd_evergreen_update "$@" ;;
+      *) usage_err "unknown evergreen action: $action" ;;
+    esac
+    ;;
+  links)
+    shift
+    [ $# -ge 1 ] || usage_err "links requires an action: add, find"
+    action="$1"; shift
+    case "$action" in
+      add) cmd_links_add "$@" ;;
+      find) cmd_links_find "$@" ;;
+      *) usage_err "unknown links action: $action" ;;
+    esac
+    ;;
+  config)
+    shift
+    [ $# -ge 1 ] || usage_err "config requires an action: get, set"
+    action="$1"; shift
+    case "$action" in
+      get) cmd_config_get "$@" ;;
+      set) cmd_config_set "$@" ;;
+      *) usage_err "unknown config action: $action" ;;
+    esac
+    ;;
+  humanize)
+    shift
+    [ $# -ge 1 ] || usage_err "humanize requires an action: check"
+    action="$1"; shift
+    case "$action" in
+      check) cmd_humanize_check "$@" ;;
+      *) usage_err "unknown humanize action: $action" ;;
+    esac
+    ;;
+  *)
+    usage_err "unknown command: $1"
+    ;;
+esac
