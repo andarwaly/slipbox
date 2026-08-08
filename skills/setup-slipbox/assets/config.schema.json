@@ -3,7 +3,7 @@
   "$id": "https://slipbox.local/schemas/config.schema.json",
   "title": ".slipbox/config.json",
   "type": "object",
-  "required": ["paths", "filenames", "frontmatter", "links", "templates", "transcript_languages"],
+  "required": ["paths", "filenames", "frontmatter", "links", "templates", "transcript_languages", "prefixes"],
   "additionalProperties": false,
   "properties": {
     "paths": {
@@ -74,6 +74,16 @@
       "type": "array",
       "items": { "type": "string" },
       "minItems": 1
+    },
+    "prefixes": {
+      "type": "object",
+      "required": ["literature", "term", "evergreen"],
+      "additionalProperties": false,
+      "properties": {
+        "literature": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] },
+        "term": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] },
+        "evergreen": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] }
+      }
     }
   },
   "definitions": {
@@ -89,6 +99,14 @@
           { "type": "boolean", "const": false },
           {
             "type": "object",
+            "required": ["deferred"],
+            "additionalProperties": false,
+            "properties": {
+              "deferred": { "type": "boolean", "const": true }
+            }
+          },
+          {
+            "type": "object",
             "required": ["name", "type", "zone"],
             "additionalProperties": false,
             "properties": {
@@ -100,7 +118,7 @@
           }
         ]
       },
-      "description": "Per required field, one of three forms: (a) a bare string — shorthand for {name: <string>, type: \"text\", wikilink: false, zone: \"top\"}, the existing user property it maps onto or the standard field name if newly created (zone defaults to \"top\" for this shorthand form); (b) false for explicit opt-out; (c) an object {name, type, wikilink, zone} giving full control — name is the existing or standard property name, type is Obsidian's own native Properties type (text/list/number/checkbox/date/datetime, i.e. Text/List/Number/Checkbox/Date/Date & Time), wikilink (default false) marks whether the value(s) get wrapped per the sibling top-level links.style field, and zone (required, \"top\" or \"bottom\") places a newly-created field at the top or bottom of the frontmatter block — only meaningful for fields being newly created, since a field mapped onto an existing user property stays wherever that property already sits in the user's template. Never a key equal to the reserved properties tags, aliases, or cssclasses."
+      "description": "Per required field, one of four forms: (a) a bare string — shorthand for {name: <string>, type: \"text\", wikilink: false, zone: \"top\"}, the existing user property it maps onto or the standard field name if newly created (zone defaults to \"top\" for this shorthand form); (b) false for explicit opt-out; (c) {deferred: true} — resolution deliberately deferred to write-checks' first-write fallback, distinct from bare absence (which setup-slipbox's own drift-check would otherwise mistake for an interrupted setup); (d) an object {name, type, wikilink, zone} giving full control — name is the existing or standard property name, type is Obsidian's own native Properties type (text/list/number/checkbox/date/datetime, i.e. Text/List/Number/Checkbox/Date/Date & Time), wikilink (default false) marks whether the value(s) get wrapped per the sibling top-level links.style field, and zone (required, \"top\" or \"bottom\") places a newly-created field at the top or bottom of the frontmatter block — only meaningful for fields being newly created, since a field mapped onto an existing user property stays wherever that property already sits in the user's template. Never a key equal to the reserved properties tags, aliases, or cssclasses."
     }
   }
 }
