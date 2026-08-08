@@ -1,33 +1,34 @@
 # ground-claim
 
-Ground a surfaced idea into a Claim — the source's own position, restated in your own
-words and checked against the source — then write it as a literature note.
+Ground a clipped source into one or more Claims — the source's own position, restated in
+your own words and checked against the source — writing each as a Key Claim in a shared
+literature note for that source.
 
 ## When to use
 
-Run this once `surface-ideas` has already surfaced candidates from a Resource. It picks
-a pending candidate (or takes one you hand it directly), runs the grounding interview
-against that candidate's source, and writes the confirmed Claim to disk.
+Run this directly on a clipped source — no `surface-ideas` step required. It reads the
+whole source, surfaces the claims it actually supports, lets you pick which to ground,
+then runs a grounding interview per claim and writes each one to the literature note as
+soon as it's confirmed.
 
-If you hand it a raw, unprocessed source instead, it won't try to work with it — it'll
-tell you to run `surface-ideas` first.
+If the note already has claims from a prior session, it only offers what's left.
 
 ## How it works
 
-1. **Take the idea** — a pending `idea.db` candidate (`target_type: 'literature'`), or
-   one you hand it directly.
-2. **Ground it** — a `/grounding` session, holding you to the source. Any term that
-   comes up gets proposed as a link to its own Term note, one at a time, never linked
-   silently.
-3. **Write** — the confirmed Claim becomes a literature note, filename/frontmatter per
-   `.slipbox/config.json`. One-shot: written once, never revisited. A filename
-   collision stops and asks rather than auto-disambiguating.
-4. **Close the backlog row** — the original `seeds` row flips to `discussed`, with the
-   note's path attached.
+1. **Take the source** — direct capture, checked against existing literature notes'
+   `source` field to see if this source has already been (partially) grounded.
+2. **Surface pass** — reads the source, proposes a candidate list of claims, lets you
+   pick a subset, all of them, or add your own.
+3. **Ground each selected claim** — a fully independent `/grounding` session per claim,
+   holding you to the source.
+4. **Write each claim, incrementally** — each confirmed claim lands on disk as its own
+   Question/Evidence/Conclusion entry the moment it's confirmed, not batched at the end.
+   A filename collision on the note's first claim stops and asks rather than
+   auto-disambiguating.
 
 ## Usage
 
-> Ground a claim from [candidate/resource], or just: ground-claim
+> Ground claims from [source], or just: ground-claim
 
 ## Installation
 

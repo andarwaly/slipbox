@@ -1,21 +1,22 @@
 {
   "test_cases": [
     {
-      "prompt": "ground-claim, using the pending literature candidate for resources/ai-for-ux-guide",
-      "expected_output": "Picks the pending target_type='literature' candidate, runs a source-bound /grounding session, writes a one-shot literature note on confirmation, and flips the seeds row to status='discussed' with note_path attached.",
+      "prompt": "ground-claim on resources/2026-08-08-design-tokens.md, a freshly clipped source with no literature note yet",
+      "expected_output": "Reads the whole source, surfaces a list of candidate claims worth grounding (e.g. 'this source seems to argue: A, B, C — which do you want grounded, or is there something I missed?'), lets the user pick a subset or add their own, then runs one independent /grounding call per selected claim, writing each confirmed Q/E/C claim to the literature note incrementally as it's confirmed — not batched at the end.",
       "assertions": [
-        {"type": "sql_query", "query": "SELECT status FROM seeds WHERE resource='ai-for-ux-guide' AND target_type='literature' LIMIT 1", "expect": "discussed"}
+        {"type": "contains", "text": "?"},
+        {"type": "not_contains", "text": "surface-ideas"}
       ]
     },
     {
-      "prompt": "ground-claim, but hand it a raw article URL that hasn't been surfaced yet",
-      "expected_output": "Refuses to process the raw source itself and tells the user to run surface-ideas first.",
+      "prompt": "ground-claim on resources/2026-08-08-design-tokens.md, where the literature note already has one confirmed claim from a prior session",
+      "expected_output": "Reads the existing literature note's ### claim headings first, and only offers candidates not already covered — does not re-surface the already-grounded claim.",
       "assertions": [
-        {"type": "contains", "text": "surface-ideas"}
+        {"type": "contains", "text": "?"}
       ]
     },
     {
-      "prompt": "ground-claim on a candidate whose derived filename already exists on disk",
+      "prompt": "ground-claim on a candidate whose derived filename already exists on disk with unrelated content",
       "expected_output": "Stops and asks the user to reword the claim or confirm a genuine duplicate, rather than auto-disambiguating the filename.",
       "assertions": [
         {"type": "contains", "text": "?"}
