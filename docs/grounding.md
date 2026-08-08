@@ -19,10 +19,18 @@ loop without any of those wrappers' note-writing.
    complete outcome.
 2. **Never your own opinion** — the agent never introduces its own training or memory
    as if it belonged to the material, even when it privately disagrees with a source.
-3. **Gate** — the statement only fixes on an explicit, unambiguous confirmation. A
-   pause, a topic change, or a rubber-stamped proposal doesn't count; a rubber-stamp
-   gets probed once more before the gate can pass.
-4. **Noticing a tension** — if something in real tension with the material comes up
+3. **Probing** — when a statement has more than one gap, the agent names the gap before
+   picking a question, using one of three patterns: a mechanism probe (what causes this
+   claim?), a boundary probe (where would this stop holding?), or a distinction probe
+   (how does this differ from a similar term?). Whichever gap the statement actually has
+   picks the pattern, not habit.
+4. **Gate** — the statement only fixes on an explicit, unambiguous confirmation, and
+   getting there is hardened two ways: a finished draft is never shown until at least one
+   open probe-and-answer round has produced real content, and the confirmation question
+   itself always stays open ("what's missing or wrong?") rather than inviting a binary
+   yes/no rubber-stamp. A pause, a topic change, or a rubber-stamped proposal doesn't
+   count; a rubber-stamp gets probed once more before the gate can pass.
+5. **Noticing a tension** — if something in real tension with the material comes up
    mid-session, it's never acted on or leaked into the statement. Once the gate passes,
    the agent asks once whether to flag it for later.
 
