@@ -14,6 +14,15 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "ground me on: does spaced repetition actually generalize past rote memorization? — and I flagged a tension about it partway through",
+      "expected_output": "After the /grounding session confirms, presents a plain closing card: a 'Crystalized Thought' heading, a bold 'Core Thesis' label with the confirmed statement in a blockquote, a 'Flagged for later' line with the tension description, and a closing line asking whether to explore the tension further, move to something else, or call it done. No emoji anywhere in the output.",
+      "assertions": [
+        {"type": "contains", "text": "Core Thesis"},
+        {"type": "contains", "text": "Flagged for later"},
+        {"type": "not_contains", "text": "🎯"}
+      ]
     }
   ]
 }
