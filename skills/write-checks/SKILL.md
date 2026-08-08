@@ -20,7 +20,7 @@ Read `.slipbox/style-profile.json` as the user's stated note-shape and editing p
 ## Humanize
 
 Run the checklist's `detection.mechanical` section through
-`idea-db humanize check <draft-path>`. When the draft or passage language is known,
+`.slipbox/bin/slipbox humanize check <draft-path>`. When the draft or passage language is known,
 pass `--language LANG` so language-scoped signals skip non-English passages; without
 the override, the CLI uses the profile's configured languages. It never reads profile
 baselines and never dual-reads `stated_style.json`. Apply `detection.judgment` with
@@ -43,12 +43,35 @@ Humanize only, skipping Frontmatter fields and Zone placement entirely.
 ## Frontmatter fields
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
-resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map: write
-under the mapped property, the standard name if new, or skip if `false`. The field's
-own name is never the mapping. Format the value per the entry's recorded `type` (a
-`list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
+resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map:
+
+- **Already resolved** (a bare string, `false`, or a full `{name, type, wikilink, zone}`
+  object) — write under the mapped property, the standard name if new, or skip if
+  `false`. No interactive step; this is the common case for every field `setup-slipbox`
+  already resolved upfront.
+- **Deferred** (`{"deferred": true}`) — this is the first time this note type is being
+  written. Run the same interactive resolution `setup-slipbox`'s own field_map step
+  would run: check whether an existing user property already holds this field's data
+  (reading its actual discovered type — Text/List/Number/Checkbox/Date/Date & Time —
+  never assuming one), and resolve one of map-onto-existing, create-standard-field, or
+  explicit opt-out, following the same reserved-property guardrail (never `tags`,
+  `aliases`, `cssclasses`, except Term's `alt_names`→`aliases` carve-out) and the same
+  type-mismatch check for multi-valued fields (`sources`, `derived-from`) that
+  `setup-slipbox` uses. Write the resolved mapping back into `.slipbox/config.json`'s
+  `frontmatter.<type>.<field>` before continuing — every subsequent write for this note
+  type finds it already resolved and skips this branch entirely.
+
+The field's own name is never the mapping. Format the value per the entry's recorded
+`type` (a `list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
 timestamp), and wrap in wikilink or markdown-link syntax per the top-level
 `links.style` when `wikilink: true`.
+
+## Note-type prefix
+
+Check `.slipbox/config.json`'s `prefixes.<type>` for this note type. If it's a string,
+prepend it to the note's title (e.g. `§ Design Tokens`, not `Design Tokens`). If it's
+`false`, the title stays unprefixed. Never touch `resources/` — no prefix key exists for
+that type.
 
 ## Zone placement
 
@@ -61,5 +84,6 @@ the closing `---`.
 Hand back: a pass/revise signal for style and humanize (revise before writing if
 either flags a cluster), plus — on the full pass only — each resolved field's final
 property name, formatted value, and placement (already-positioned, or the zone it
-belongs in), so the calling skill never re-derives field_map or zone logic itself. The
-checks-only mode hands back the pass/revise signal alone.
+belongs in), and the resolved title prefix (or none), so the calling skill never
+re-derives field_map, zone, or prefix logic itself. The checks-only mode hands back the
+pass/revise signal alone.
