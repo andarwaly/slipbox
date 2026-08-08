@@ -23,8 +23,8 @@ metadata:
 
 Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
 stop and say so. Same check for `.slipbox/bin/slipbox` — if it doesn't exist or isn't
-executable, stop and say so too. Every `idea-db` call below uses this same path,
-`.slipbox/bin/slipbox` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
+executable, stop and say so too. Every `slipbox` call below uses this same path,
+`.slipbox/bin/slipbox` — never bare `slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Take the material
 
