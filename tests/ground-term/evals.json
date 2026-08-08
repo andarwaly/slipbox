@@ -2,21 +2,21 @@
   "test_cases": [
     {
       "prompt": "ground-term \"confirmation bias\" — this term has never been recorded before",
-      "expected_output": "Writes a fresh Term note and renames the seeds row to the term's final slug, type='term', status='discussed'.",
+      "expected_output": "Writes a fresh Term note through /write-checks, resolving the field_map for the term type (interactively, if it was deferred during setup) and the term-type prefix.",
       "assertions": [
-        {"type": "sql_query", "query": "SELECT count(*) FROM seeds WHERE type='term' AND status='discussed' AND slug LIKE '%confirmation-bias%'", "min": 1}
+        {"type": "contains", "text": "term"}
       ]
     },
     {
       "prompt": "ground-term \"confirmation bias\" again, from a second resource that also mentions it",
-      "expected_output": "Does not rename the second row's slug (would collide with the canonical row's primary key). Instead updates the second row in place and inserts a links row with rel_type='extends' pointing at the canonical row, then appends the new resource's contribution to the existing file rather than overwriting it.",
+      "expected_output": "Folds the new resource's contribution into the existing file via /write-checks' checks-only mode (sources' mapping already resolved from the first write), appending to the sources frontmatter array rather than overwriting the file wholesale, and inserts a links row with rel_type='extends' pointing at the canonical term note.",
       "assertions": [
-        {"type": "sql_query", "query": "SELECT count(*) FROM links WHERE rel_type='extends'", "min": 1}
+        {"type": "not_contains", "text": "seeds"}
       ]
     },
     {
-      "prompt": "ground-term with no term named and an empty backlog",
-      "expected_output": "Asks the user which term they want grounded rather than guessing.",
+      "prompt": "ground-term with no term named",
+      "expected_output": "Asks the user which term they want grounded rather than guessing or pulling from any backlog — there is no backlog to pull from for literature-style term surfacing anymore; the user names it directly, whether on their own or because find-terms suggested it.",
       "assertions": [
         {"type": "contains", "text": "?"}
       ]

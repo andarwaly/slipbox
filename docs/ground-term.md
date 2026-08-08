@@ -5,29 +5,22 @@ draw on multiple sources over separate sessions.
 
 ## When to use
 
-Bring a term to this directly (you noticed it recurring, or you're just curious), or
-work through the pending queue `surface-ideas` filled (`target_type: 'term'`,
-`status: 'to-discuss'`).
+Run this whenever you (or `find-terms`) name a term worth its own note. There's no
+backlog to check first — you name the term directly, every time.
 
 ## How it works
 
-1. **Take the term** — named directly, or picked from the backlog. Checks whether a
-   Term note for it already exists before starting.
-2. **Ground it** — a `/grounding` session, holding you to whichever source this
-   mention traces back to. If the term note already exists, its current content is
-   material too — a new answer has to stay consistent with what's already recorded.
-3. **Write, new term** — writes fresh, and renames the originating `seeds` row to the
-   term's final slug.
-4. **Write, extending** — the trickier path: since `seeds.slug` is a primary key, a
-   second mention of an already-recorded term can't rename its own row to the same
-   slug the first occurrence already claimed. Instead it keeps its own slug, updates
-   in place, and records the relationship as a `links` row (`rel_type: 'extends'`)
-   pointing at the canonical row — then folds its contribution into the existing file,
-   append-only, never a wholesale overwrite.
+1. **Take the term** — named directly, checked against existing term notes to see if
+   this is a new term or an extension.
+2. **Ground it** — a `/grounding` session, holding you to whichever source backs this
+   particular mention.
+3. **Write** — a fresh term note on first occurrence, or an in-place extension
+   (append-only, never overwritten wholesale) on repeat mentions, with a typed `links`
+   edge connecting the two.
 
 ## Usage
 
-> Ground the term "confirmation bias" — or just: ground-term
+> ground-term "confirmation bias"
 
 ## Installation
 

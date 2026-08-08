@@ -23,20 +23,15 @@ metadata:
 ## Prerequisite
 
 Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so. Same check for `.slipbox/bin/idea-db` — if it doesn't exist or isn't
-executable, stop and say so too. Every `idea-db` call below uses this same path,
-`.slipbox/bin/idea-db` — never bare `idea-db`, which isn't guaranteed to be on `PATH`.
+stop and say so. Same check for `.slipbox/bin/slipbox` — if it doesn't exist or isn't
+executable, stop and say so too. Every `slipbox` call below uses this same path,
+`.slipbox/bin/slipbox` — never bare `slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Take the term
 
-- **Named directly** → the user says which term they want grounded.
-- **From the backlog** → query the pending queue:
-
-  ```bash
-  .slipbox/bin/idea-db seeds find --target-type term --status to-discuss
-  ```
-
-  Offer these; let the user choose one.
+Named directly, only — the user says which term they want grounded, whether they
+thought of it themselves or because `/find-terms` suggested it. There is no backlog to
+pull from; term recurrence is derived on demand, not surfaced into a queue.
 
 Per `.slipbox/config.json`'s filename/casing convention, check whether a Term note for
 this term already exists before grounding:
@@ -55,12 +50,11 @@ its current content as material too — the user's new answer must stay consiste
 what's already recorded, not contradict it silently.
 
 /grounding hands back the confirmed definition, and — only if the user opted in — a
-flagged tension. If a tension came back, insert it as its own `seeds` row
-(`target_type: 'literature'`, since a term-grounding tension is source-facing, not a
-personal synthesis) before moving on to writing:
+flagged tension. If a tension came back, insert it into the evergreen backlog before
+moving on to writing:
 
 ```bash
-.slipbox/bin/idea-db seeds add --resource <resource> --type raw --target-type literature --reason "<tension description>"
+.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
 ## Write — new term
@@ -69,57 +63,37 @@ Write fresh:
 
 - Run a /write-checks session on the draft, passing the Term field list (`type`,
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
-  mapping, formatting, and zone placement, and checks the draft's style and humanize
-  signals.
+  mapping, formatting, zone placement, and title prefix, and checks the draft's style
+  and humanize signals.
 - Filename per `.slipbox/config.json`'s casing convention for the Term type.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.
 
-Flip the `seeds` row in place — this really is the term's first occurrence, so the slug
-can be renamed:
-
-```bash
-.slipbox/bin/idea-db seeds update <original-slug> --type term --status discussed --note-path <new-path> --slug <final-slug>
-```
-
 ## Write — extending an existing term
 
-**This is the PK-collision-safe path. Follow it exactly.**
+**This is the collision-safe path. Follow it exactly.**
 
-The trap: this row's slug cannot be renamed to the term's final slug, because that slug
-is already claimed — the term's first occurrence already renamed *its* row to it, and
-`seeds.slug` is the primary key. Renaming this row to the same value would collide with
-that existing row. So this row keeps its own original slug, permanently.
+`sources` already has its resolved mapping and formatting from the term's first write —
+no field resolution needed here.
 
-1. **Update this row in place — do not touch its slug:**
-
-   ```bash
-   .slipbox/bin/idea-db seeds update <this-row-original-slug> --type term --status discussed --note-path <existing-note-path>
-   ```
-
-2. **Insert a `links` row recording the relationship** — this row's own (unchanged)
-   slug is the source, the existing term row's slug is the target:
+1. Run a /write-checks session on the draft in its checks-only mode (no field list).
+2. Re-read the file from disk immediately before writing (state can have changed since
+   the read in "Take the term").
+3. Append the new resource to the `sources` frontmatter array, formatted per its
+   existing recorded `type` (list) and `wikilink` flag, and write the file. Never
+   overwrite the file wholesale.
+4. Insert a `links` row recording the relationship — this term's own note is the target,
+   the resource being folded in is the source:
 
    ```bash
-   .slipbox/bin/idea-db links add --source <this-row-slug> --target <existing-term-row-slug> --rel extends
+   .slipbox/bin/slipbox links add --source <this-resource-slug> --target <term-note-slug> --rel extends
    ```
-
-3. **Fold the new resource's contribution into the existing file.** Run a /write-checks
-   session on the draft in its checks-only mode (no field list) — `sources` already has
-   its resolved mapping and formatting from the term's first write, no field resolution
-   needed here. Re-read the file from disk immediately before writing (state can have
-   changed since the read in "Take the term"). Append the new resource to the `sources`
-   frontmatter array, formatted per its existing recorded `type` (list) and `wikilink`
-   flag, and write the file. Never overwrite the file wholesale.
 
 ## Done
 
-- New term: the file on disk reflects the confirmed definition; the `seeds` row is
-  renamed and flipped (`type='term'`, `status='discussed'`).
+- New term: the file on disk reflects the confirmed definition.
 - Extension: the file on disk reflects every resource that has ever fed it, old and
-  new; the extending row is flipped in place (unchanged slug, `note_path` pointing at
-  the existing file); a `links` row (`rel_type: 'extends'`) connects it to the
-  canonical row.
-- Any flagged tension is logged as its own `seeds` row.
+  new; a `links` row (`rel_type: 'extends'`) connects the new resource to the term note.
+- Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.
