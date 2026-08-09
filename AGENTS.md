@@ -20,7 +20,7 @@ slipbox/                    ← repo root, this file's location
 │   └── index.md              ← index of every AGENTS.md in this repo
 ├── docs/                     ← human-facing doc per skill (README.md + one per skill)
 ├── skills/
-│   ├── setup-slipbox/       ← one-time onboarding: vault conventions, idea.db init
+│   ├── setup-slipbox/       ← one-time onboarding: vault conventions, slipbox CLI init
 │   ├── clip-resource/        ← fetches a URL, writes a frozen Resource
 │   ├── surface-ideas/        ← surfaces discussion-worthy candidates + recurring terms
 │   ├── grounding/            ← lean interview engine; user-invocable, like grilling

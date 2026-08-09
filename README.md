@@ -27,11 +27,11 @@ clip-resource → surface-ideas → ground-claim / ground-term / ground-my-take
 npx skills add andarwaly/slipbox
 ```
 
-Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and initializes `idea.db`.
+Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and installs the `slipbox` CLI.
 
 ## Skills
 
-- **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `idea.db` init. Run once per vault.
+- **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `slipbox` CLI install. Run once per vault.
 - **[clip-resource](./docs/clip-resource.md)**: fetches a URL and freezes it as a Resource, for anyone without a clipper tool.
 - **[surface-ideas](./docs/surface-ideas.md)**: pulls 5-10 discussion-worthy candidates and recurring terms out of a clipped Resource.
 - **[grounding](./docs/grounding.md)**: the interview engine underneath every `ground-*` skill below.
