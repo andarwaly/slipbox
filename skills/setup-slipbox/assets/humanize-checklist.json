@@ -20,7 +20,7 @@
       "scoped_language": "en",
       "scoped_patterns_skip_non_english": true,
       "universal_patterns_apply_to_all_languages": true,
-      "explicit_passage_override": "idea-db humanize check accepts --language LANG; when present, it overrides profile language for language-scoped signals"
+      "explicit_passage_override": "slipbox humanize check accepts --language LANG; when present, it overrides profile language for language-scoped signals"
     },
     "passage_rule": {
       "mechanical_only": true,

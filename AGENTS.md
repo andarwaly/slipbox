@@ -22,7 +22,8 @@ slipbox/                    ← repo root, this file's location
 ├── skills/
 │   ├── setup-slipbox/       ← one-time onboarding: vault conventions, slipbox CLI init
 │   ├── clip-resource/        ← fetches a URL, writes a frozen Resource
-│   ├── surface-ideas/        ← surfaces discussion-worthy candidates + recurring terms
+│   ├── find-terms/          ← reports recurring terms with no term note yet
+│   ├── find-connections/    ← scans for missing links + sparked ideas
 │   ├── grounding/            ← lean interview engine; user-invocable, like grilling
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
 │   ├── ground-claim/          ← literature-note wrapper (was write-literature-note)
