@@ -15,10 +15,11 @@ This is heavily inspired by Matt Pocock's grilling skill. I saw it and thought, 
 
 So this isn't an agent that writes notes for me. It's the opposite. It grounds every claim back to the source instead of paraphrasing it away, asks me questions instead of handing me summaries, and drags my old notes back into the conversation so they can argue with the new one.
 
-The pipeline itself: clip a source, surface discussable ideas from it, ground one into a note.
+The pipeline itself: clip a source, ground discussable ideas from it into notes, or run whole-corpus passes to find patterns.
 
 ```
-clip-resource → surface-ideas → ground-claim / ground-term / ground-my-take
+clip-resource → ground-claim / ground-term / ground-my-take
+find-terms and find-connections (whole-corpus passes, run separately)
 ```
 
 ## Install
@@ -33,7 +34,8 @@ Run `/setup-slipbox` once per vault before anything else. It discovers your vaul
 
 - **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `slipbox` CLI install. Run once per vault.
 - **[clip-resource](./docs/clip-resource.md)**: fetches a URL and freezes it as a Resource, for anyone without a clipper tool.
-- **[surface-ideas](./docs/surface-ideas.md)**: pulls 5-10 discussion-worthy candidates and recurring terms out of a clipped Resource.
+- **[find-terms](./docs/find-terms.md)**: scans literature notes to identify recurring terms without dedicated term notes yet.
+- **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links and sparked ideas across your notes.
 - **[grounding](./docs/grounding.md)**: the interview engine underneath every `ground-*` skill below.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
 - **[ground-claim](./docs/ground-claim.md)**: grounds a candidate into a literature note, the source's own Claim, in your words.
