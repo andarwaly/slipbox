@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded-by-0002
 ---
 
 # idea-db CLI: schema ownership, bash runtime, per-vault install, JSON-first output
