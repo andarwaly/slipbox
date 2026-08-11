@@ -80,7 +80,8 @@ the Take states something none of the individual notes said on their own.
   formatting, and zone placement, and checks the draft's style and humanize signals.
   `updated-at` gets `created`'s own timestamp on a first write, and is refreshed to the
   current time on a revisit.
-- Filename per `.slipbox/config.json`'s casing convention for the evergreen type.
+- Write into `paths.evergreen` from `.slipbox/config.json`, filename per that same
+  config's casing convention for the evergreen type.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file — a
   full rewrite of existing content on a revisit, since unlike a Claim this doesn't mean

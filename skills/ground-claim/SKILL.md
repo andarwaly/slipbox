@@ -35,8 +35,10 @@ executable, stop and say so too. Every `slipbox` call below uses this same path,
 Direct capture only — no candidate backlog to pull from. Take the resource the user
 names, or the one just clipped by `/clip-resource`.
 
-Check whether a literature note for this source already exists: scan `/literature/*.md`
-frontmatter for a note whose `source` field points at this resource.
+Check whether a literature note for this source already exists: read `paths.literature`
+from `.slipbox/config.json` and scan `*.md` under that folder — never assume a folder
+literally named `literature/` — for a note whose resolved `source` field (per
+`frontmatter.literature.source.name` in the same config) points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed to the
   surface pass below with a fresh candidate list.
@@ -85,37 +87,16 @@ one:
 - Run a `/write-checks` session on the draft, passing the literature field list
   (`type`, `created`, `source`) — it resolves each field's mapping, formatting, zone
   placement, and title prefix, and checks the draft's style and humanize signals.
-- Filename per `.slipbox/config.json`'s casing convention for the literature type. The
-  title is source/topic-oriented (what the source is about), never claim-shaped — it
-  doesn't change as more claims get added.
+- Write into `paths.literature` from `.slipbox/config.json`, filename per that same
+  config's casing convention for the literature type. The title is source/topic-oriented
+  (what the source is about), never claim-shaped — it doesn't change as more claims get
+  added.
 - Re-read the target path from disk right before writing (the note may already hold
   earlier claims from this same session, or from a prior one).
-- Assemble the claim as its own `###`-headed entry under `## Key Claims`:
-
-```markdown
-### [short name for this claim]
-- **Question:** [the question this claim answers]
-- **Evidence:** [paraphrased evidence, or a quote — see below]
-- **Conclusion:** [the confirmed Claim, in the user's own words]
-```
-
-  If any evidence is a direct quote (earns its place only when the exact wording
-  carries something paraphrase would lose — a definition, a phrase later discussion
-  refers back to), place it after the bullet list, still under this same `###` heading,
-  never nested inside the Evidence bullet:
-
-  ```markdown
-  > [the quoted text]
-  [[Author Name]] #quote
-  ```
-
-  `[[Author Name]]` is a bare, intentionally-unresolved wikilink — no author-note entity
-  exists in this family.
-
-- Add or extend `## Key Concepts` with a wikilinked, 1-line gloss for any term this
-  claim introduces or leans on: `- [[term/<slug>|Term Name]]: [what this source says
-  about it, in one line]`. This section is load-bearing — `find-terms` scans it for
-  term-recurrence detection, so every term the claim actually uses must appear here.
+- Assemble and review the claim per `references/qec-theory.md` (what Question, Evidence,
+  and Conclusion each are, with good/bad examples) and `references/writing-a-claim.md`
+  (the `###` structure, the review checklist, quote formatting, and Key Concepts
+  wikilink resolution) — read both before writing the first claim in a session.
 - Filename collision on the note's first claim → stop and ask, never auto-disambiguate.
   On a second or later claim for an existing note, the existing file is expected, not a
   collision.

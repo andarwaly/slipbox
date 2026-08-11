@@ -33,8 +33,9 @@ Named directly, only — the user says which term they want grounded, whether th
 thought of it themselves or because `/find-terms` suggested it. There is no backlog to
 pull from; term recurrence is derived on demand, not surfaced into a queue.
 
-Per `.slipbox/config.json`'s filename/casing convention, check whether a Term note for
-this term already exists before grounding:
+Per `.slipbox/config.json`'s `paths.term` and filename/casing convention for the Term
+type, check whether a Term note for this term already exists — under that configured
+folder, not an assumed `term/` folder — before grounding:
 
 - **New term** — no note exists. Proceed planning to create one.
 - **Extending** — a note already exists. Read it in full now. You'll ground the
@@ -65,7 +66,8 @@ Write fresh:
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
   mapping, formatting, zone placement, and title prefix, and checks the draft's style
   and humanize signals.
-- Filename per `.slipbox/config.json`'s casing convention for the Term type.
+- Write into `paths.term` from `.slipbox/config.json`, filename per that same config's
+  casing convention for the Term type.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.
