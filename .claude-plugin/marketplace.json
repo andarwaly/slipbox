@@ -1,0 +1,23 @@
+{
+  "name": "slipbox",
+  "owner": {
+    "name": "andarwaly",
+    "url": "https://github.com/andarwaly"
+  },
+  "description": "Zettelkasten-inspired conversational note-taking skills, as an installable Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "slipbox-skills",
+      "source": "./",
+      "description": "Clip a source, ground it into a literature, term, or evergreen note, and surface connections across your vault.",
+      "category": "productivity",
+      "keywords": [
+        "zettelkasten",
+        "note-taking",
+        "obsidian",
+        "pkm",
+        "knowledge-management"
+      ]
+    }
+  ]
+}

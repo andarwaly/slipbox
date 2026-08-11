@@ -1,0 +1,30 @@
+{
+  "name": "slipbox-skills",
+  "version": "1.0.0",
+  "description": "Zettelkasten-inspired conversational note-taking skill family — clip a source, ground it into a literature, term, or evergreen note, and surface connections across your vault.",
+  "author": {
+    "name": "andarwaly",
+    "url": "https://github.com/andarwaly"
+  },
+  "repository": "https://github.com/andarwaly/slipbox",
+  "license": "MIT",
+  "keywords": [
+    "zettelkasten",
+    "note-taking",
+    "obsidian",
+    "pkm",
+    "knowledge-management"
+  ],
+  "skills": [
+    "./skills/setup-slipbox",
+    "./skills/clip-resource",
+    "./skills/find-terms",
+    "./skills/find-connections",
+    "./skills/grounding",
+    "./skills/ground-me",
+    "./skills/ground-claim",
+    "./skills/ground-term",
+    "./skills/ground-my-take",
+    "./skills/write-checks"
+  ]
+}
