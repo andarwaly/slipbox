@@ -22,7 +22,7 @@
     "./skills/find-connections",
     "./skills/grounding",
     "./skills/ground-me",
-    "./skills/ground-claim",
+    "./skills/ground-the-claim",
     "./skills/ground-term",
     "./skills/ground-my-take",
     "./skills/write-checks"

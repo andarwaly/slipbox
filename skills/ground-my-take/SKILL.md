@@ -39,7 +39,7 @@ executable, stop and say so too. Every `slipbox` call below uses this same path,
   ```
 
   Offer these; let the user choose one. This is how a flagged tension from
-  ground-claim or ground-term eventually gets picked up and turned into a real Take.
+  ground-the-claim or ground-term eventually gets picked up and turned into a real Take.
 
 ## Ground it
 

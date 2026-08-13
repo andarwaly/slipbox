@@ -26,7 +26,7 @@ slipbox/                    ← repo root, this file's location
 │   ├── find-connections/    ← scans for missing links + sparked ideas
 │   ├── grounding/            ← lean interview engine; user-invocable, like grilling
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
-│   ├── ground-claim/          ← literature-note wrapper (was write-literature-note)
+│   ├── ground-the-claim/          ← literature-note wrapper (was write-literature-note)
 │   ├── ground-term/           ← term-note wrapper (was write-reference-note)
 │   └── ground-my-take/        ← evergreen-note wrapper (was write-evergreen-note)
 └── tests/

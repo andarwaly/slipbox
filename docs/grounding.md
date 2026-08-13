@@ -6,7 +6,7 @@ explicitly confirmed it.
 
 ## When to use
 
-You won't usually invoke this directly. `ground-me`, `ground-claim`, `ground-term`, and
+You won't usually invoke this directly. `ground-me`, `ground-the-claim`, `ground-term`, and
 `ground-my-take` each call `/grounding` internally, framing the session with whatever
 material they've already gathered. Invoke it directly only if you want the raw interview
 loop without any of those wrappers' note-writing.

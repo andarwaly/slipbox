@@ -1,5 +1,5 @@
 ---
-name: ground-claim
+name: ground-the-claim
 description: Ground a clipped source into one or more Claims — the source's own
   position, restated in the user's own words and checked against the source — writing
   each as a Key Claim in a shared literature note for that source.
@@ -9,7 +9,7 @@ metadata:
   version: "1.0.0"
 ---
 
-# Ground-claim
+# Ground-the-claim
 
 ## What these words mean
 
