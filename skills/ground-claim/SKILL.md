@@ -14,8 +14,13 @@ metadata:
 ## What these words mean
 
 - **Claim** — the source's own position on one specific question the source answers,
-  restated in the user's words and checked for fidelity. Never the user's opinion — an
-  object of understanding, not agreement. A source usually holds several.
+  restated in the user's words and checked for fidelity, written as a declarative
+  sentence. Never the user's opinion — an object of understanding, not agreement. A
+  source usually holds several.
+- **Core Idea** — the source's central argument, one declarative sentence, every Claim
+  in the note in service of it. Distinct from a Claim: a Claim is one thing the source
+  argues, the Core Idea is what the source is *for*. Written once per note, on its first
+  Claim.
 - **Literature note** — the file a source's confirmed Claims get written into. One per
   source clip, holding as many Key Claims as the source actually supports — written
   incrementally as each is confirmed, never revisited afterward once written except
@@ -49,31 +54,40 @@ literally named `literature/` — for a note whose resolved `source` field (per
 
 Read the whole source yourself — this is your own judgment, not a `/grounding` call;
 `/grounding` was never built for open-ended "what does this cover" scanning, only for
-probing something already anchored. Identify every distinct claim the source actually
-supports, skipping anything an existing literature note (per Take the source above)
-already covers.
+probing something already anchored. Using Question/Evidence/Warrant as your own internal
+reasoning tool (`references/qec-theory.md`) — never shown to the user in this form —
+identify every distinct claim the source actually supports and the source's Core Idea,
+skipping anything an existing literature note (per Take the source above) already
+covers. Apply the shared-Warrant merge test now, before presenting anything: two
+candidates resting on the same inferential move are one claim, not two.
 
-Present the list to the user before grounding anything:
+Present the right-sized list to the user before grounding anything:
 
-> "This source is talking about these: [list]. Which do you want grounded — or is there
-> something I missed?"
+> "This source's core idea seems to be [X]. It's talking about these: [list]. Which do
+> you want grounded — or is there something I missed, or something here that should be
+> combined or split differently?"
 
-The user can pick any subset, all of them, or name a claim you didn't surface. This
-candidate list is session-scoped only — nothing gets written to disk from this step, and
-it's discarded once the session ends regardless of how many claims got picked.
+The user can pick any subset, all of them, name a claim you didn't surface, or reshape
+the list itself — combine two, split one, drop one that doesn't hold enough weight. This
+candidate list and Core Idea are session-scoped only — nothing gets written to disk from
+this step, and it's discarded once the session ends regardless of how many claims got
+picked.
 
 ## Ground each selected claim
 
 For every claim the user picked (in the order they picked, one at a time), run a fully
 independent `/grounding` session — no shared state between calls, no memory of a
-previous claim in this same sitting. Hold the user to the source. If a term comes up
-mid-session that already has (or could start) its own Term note, propose linking it with
-a one-line reason — the user accepts or rejects each one individually, never linked
-silently.
+previous claim in this same sitting. Hold the user to the source.
 
-`/grounding` hands back the confirmed Claim as a Question/Evidence/Conclusion triplet,
-and — only if the user opted in — a flagged tension. If a tension came back, insert it
-into the evergreen backlog before moving on to writing this claim:
+`/grounding` hands back one confirmed statement (its own contract — see
+`grounding/SKILL.md`'s Done section — not a Question/Evidence/Conclusion triplet), and —
+only if the user opted in — a flagged tension. Before writing, run the Warrant self-check
+from `references/qec-theory.md` against the confirmed statement: state the "why" in one
+sentence — if that sentence and the statement would say the same thing, the statement is
+still restating Evidence, go back and probe further rather than writing it as-is.
+
+If a tension came back, insert it into the evergreen backlog before moving on to writing
+this claim:
 
 ```bash
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
@@ -90,13 +104,15 @@ one:
 - Write into `paths.literature` from `.slipbox/config.json`, filename per that same
   config's casing convention for the literature type. The title is source/topic-oriented
   (what the source is about), never claim-shaped — it doesn't change as more claims get
-  added.
+  added. On this note's first claim, write the Core Idea line too, directly under the
+  title (see `references/writing-a-claim.md`); skip it on a second or later claim, it's
+  already there.
 - Re-read the target path from disk right before writing (the note may already hold
   earlier claims from this same session, or from a prior one).
-- Assemble and review the claim per `references/qec-theory.md` (what Question, Evidence,
-  and Conclusion each are, with good/bad examples) and `references/writing-a-claim.md`
-  (the `###` structure, the review checklist, quote formatting, and Key Concepts
-  wikilink resolution) — read both before writing the first claim in a session.
+- Assemble and review the claim per `references/writing-a-claim.md` — the declarative
+  heading, condensed Evidence, the review checklist, quote formatting, and Key Concepts
+  wikilink resolution — read it (and `references/qec-theory.md` for what backs the
+  checklist) before writing the first claim in a session.
 - Filename collision on the note's first claim → stop and ask, never auto-disambiguate.
   On a second or later claim for an existing note, the existing file is expected, not a
   collision.
@@ -104,9 +120,26 @@ one:
 Repeat for the next selected claim, if any — a fresh `/grounding` call, then this same
 write step, until every selected claim is written.
 
+## Spot terms and entities
+
+Once every selected claim for this sitting is written, one batch pass — never mid-claim.
+Re-read the finished note; re-read the source too if this is a resumed session and it's
+no longer in context. Compare the two and find any term or load-bearing named entity
+(person, tool, framework, place — same test as a term: does a claim's weight actually
+rest on it?) that a claim leans on but Key Concepts doesn't yet cover.
+
+Show what was found and why, in one message:
+
+> "Found these worth adding to Key Concepts: [list, each with a one-line reason]. Add
+> all, some, or none?"
+
+On confirmation, run `/write-checks` again and append the confirmed entries to
+`## Key Concepts` per `references/writing-a-claim.md`'s wikilink resolution. Zero found
+is a complete, valid result — say so, don't manufacture one to fill the step.
+
 ## Done
 
-The literature note exists on disk with every selected claim as its own `## Key Claims`
-entry (partial if the session stopped early — that's a complete, valid outcome, not a
-failure), any flagged tensions are logged in the evergreen backlog, and the user is told
-the file path.
+The literature note exists on disk with its Core Idea, every selected claim as its own
+`## Key Claims` entry, and any confirmed Key Concepts (partial if the session stopped
+early — that's a complete, valid outcome, not a failure), any flagged tensions are
+logged in the evergreen backlog, and the user is told the file path.

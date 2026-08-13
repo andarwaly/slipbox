@@ -1,20 +1,37 @@
 # Writing a claim
 
-See `qec-theory.md` first for what Question, Evidence, and Conclusion each are. This
-file covers the structure a confirmed claim gets assembled into, how to review it before
-committing it to disk, and the formatting mechanics (quotes, Key Concepts wikilinks)
-that live inside a claim entry once it's written.
+See `qec-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
+and which of them ever reach the page (only Evidence and Conclusion do). This file covers
+the note's structure, the Core Idea line, how to review a claim before committing it to
+disk, and the formatting mechanics (quotes, Key Concepts wikilinks) that live inside a
+claim entry once it's written.
 
 ## Structure
 
-Assemble the claim as its own `###`-headed entry under `## Key Claims`:
-
 ```markdown
-### [short name for this claim]
-- **Question:** [the question this claim answers]
-- **Evidence:** [paraphrased evidence, or a quote — see Quotes below]
-- **Conclusion:** [the confirmed Claim, in the user's own words]
+# {{prefix}} [Source-oriented title]
+
+[Core Idea — bare declarative sentence, no label]
+
+## Key Claims
+
+### [Conclusion, stated declaratively — this is the claim, and the heading]
+[Evidence, condensed — no separate "Evidence:" label, just the prose itself]
 ```
+
+`{{prefix}}` resolves from `.slipbox/config.json`'s `prefixes.literature` for the vault
+in question — never hardcode a literal character.
+
+**Core Idea** — one sentence stating the source's central argument, everything else in
+the note in service of it. Positional, not labeled: it's always the line directly after
+the title and before `## Key Claims`, the same way a Resource's own `description` field
+sits bare under its title. Written once, when the note's first claim is written; never
+touched on a second or later claim for the same note.
+
+**The `###` heading is the Conclusion, verbatim.** No separate "Conclusion:" bullet
+follows it — that would just duplicate the heading. Evidence is the only other thing
+under the heading: condensed prose, no bullet marker, no hard length cap — governed by
+the vault's own `.slipbox/style-profile.json` the same as any other note content.
 
 ## Review checklist
 
@@ -22,11 +39,19 @@ Run this against the assembled entry before writing it to disk. This checks the
 *content* quality of the claim itself — not style, frontmatter, or humanize signals,
 which is `/write-checks`'s job, run separately.
 
-**Question**
-- Is it a question the source actually answers, not one invented to give the claim a
-  slot to sit in?
-- Is it specific enough that a Conclusion could resolve it — not a topic label
-  ("What does X cover?") standing in for a real question?
+**Core Idea** (first claim in a note only)
+- Does every claim in this session serve it? A claim that doesn't points to one of two
+  things: it doesn't belong in this note, or the Core Idea was drawn too narrow — flag
+  either read to the user rather than silently resolving it.
+
+**Conclusion** (the heading)
+- Delete-test: with the Evidence line gone, does the Conclusion still stand alone as a
+  complete statement of the source's position?
+- Is it the source's position — no drift into the user's own reaction or synthesis (per
+  `/grounding`'s "never your own opinion" and the literature note's purity rule)?
+- Warrant self-check (per `qec-theory.md`): can the "why" be stated in one sentence from
+  the Evidence? If Conclusion and that one sentence would say the same thing, the
+  Conclusion is still restating, not concluding — go back and sharpen it.
 
 **Evidence**
 - Does it report what the source said or showed — not already a step toward what it
@@ -35,19 +60,13 @@ which is `/write-checks`'s job, run separately.
   discussion refers back to) — or would paraphrase lose nothing?
 - Traceable to the source, nothing added that isn't there?
 
-**Conclusion**
-- Delete-test: with the Evidence bullet gone, does the Conclusion still stand alone as
-  a complete statement of the source's position?
-- Is it the source's position — no drift into the user's own reaction or synthesis (per
-  `/grounding`'s "never your own opinion" and the literature note's purity rule)?
-- Stated as a claim, not a rewording of Evidence?
-
 **The claim as a whole**
 - Citability test (`CONTEXT.md`'s atomicity rule): if another note cited this Key
   Claim, is there exactly one clear thing being cited — not a bundle of several source
-  points under one heading?
-- Every term the claim leans on present in Key Concepts, each with a correctly
-  resolved wikilink (see Key Concepts wikilinks below)?
+  points under one heading? (The shared-Warrant merge test in `qec-theory.md` should
+  already have caught this at the Surface pass — this is the final check, not the first.)
+- Every term or load-bearing named entity the claim leans on present in Key Concepts,
+  each with a correctly resolved wikilink (see Key Concepts wikilinks below)?
 
 If any item fails, the claim isn't done — go back to `/grounding` and probe further
 (Mechanism, Boundary, or Distinction probe, per `grounding/SKILL.md`) rather than
@@ -60,8 +79,8 @@ A direct quote earns its place in Evidence only when the exact wording carries
 something paraphrase would lose — a definition, or a phrase later discussion refers
 back to. Otherwise paraphrase.
 
-When used, place it after the bullet list, still under the same `###` heading, never
-nested inside the Evidence bullet:
+When used, place it after the Evidence prose, still under the same `###` heading, never
+folded into the Evidence line itself:
 
 ```markdown
 > [the quoted text]
@@ -71,17 +90,20 @@ nested inside the Evidence bullet:
 `[[Author Name]]` is a bare, intentionally-unresolved wikilink — no author-note entity
 exists in this family.
 
-## Key Concepts wikilinks
+## Key Concepts
 
-Add or extend `## Key Concepts` with a wikilinked, 1-line gloss for any term this claim
-introduces or leans on:
+Add or extend `## Key Concepts` with a wikilinked, 1-line gloss for anything this claim
+introduces or leans on — not just terms. A named person, tool, or framework qualifies on
+the same test as a term: is the claim's weight actually resting on it, or is it just
+mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten method's origins,
+passes this test; a place name mentioned once in an aside does not.
 
 ```markdown
 - [[<term-note-filename>|Term Name]]: [what this source says about it, in one line]
 ```
 
 This section is load-bearing — `find-terms` scans it for term-recurrence detection, so
-every term the claim actually uses must appear here.
+every term or entity the claim actually uses must appear here.
 
 **Resolving `<term-note-filename>` correctly** — this is not just casing. Three
 `.slipbox/config.json` keys apply together, never assume any of them:
