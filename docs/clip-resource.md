@@ -8,10 +8,12 @@ Use this when you want to bring an article or video into your vault as a Resourc
 
 It only handles content it can fetch cleanly. Paywalled articles and login-gated pages are explicitly out of scope: the skill reports the failure plainly rather than attempting a workaround.
 
+For Article and News, if the default fetcher gets blocked by bot detection (some Medium articles, for example) rather than the page genuinely not existing, it retries once via Firecrawl before giving up — optional, only used for this one case, most sources never need it.
+
 ## How it works
 
 1. **Take the URL** — a single article or video link. No pasted-text fallback; if you hand it raw text, it asks for a URL instead.
-2. **Fetch and detect** — retrieves the page or video content directly. Detects content type (article, news clip, social post, or video).
+2. **Fetch and detect** — retrieves the page or video content directly (Article/News fall back to Firecrawl once if the default fetch is blocked, never for content that simply doesn't exist). Detects content type (article, news clip, social post, or video).
 3. **Extract facts** — resolves author, title, publish date, and other metadata via an extraction ladder: schema.org JSON-LD first, then `<meta>` tags (Open Graph and standard), then LLM-read fallback on the fetched content. No CSS-selector extraction — that requires a headless browser, which isn't available here yet.
 4. **Transform** — fills in whatever your own template asks for: mechanical frontmatter (`type`, `link`, `author`, `published`, `tags`) always applies, but the body itself has no built-in default — verbatim content, a rewrite, a summary, entity sections, none of it is assumed by this skill. It only does what your template's variables tell it to. It deliberately stops there — no "Bud candidate" or "Further exploration" section. Forming an opinion about the content is a separate skill's job (`ground-the-claim`), run later. `ground-the-claim` does its own surface pass over the source to identify discussion-worthy claims.
 5. **Write** — saves the file using the conventions `setup-slipbox` recorded. Once written, the file is frozen: this skill never reopens it, and neither does any other skill in the family.

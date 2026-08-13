@@ -51,6 +51,20 @@ Call the `defuddle` binary directly, not via `npx` — `npx`'s own resolution/ca
 
 Take `content`, `title`, `author`, and any schema.org-derived metadata directly from Defuddle's output — this replaces the schema.org / `<meta>` tag / LLM-read ladder for these two types. Defuddle parses via a DOM implementation (not a real browser), so it still won't see JS-rendered or lazy-loaded content that only appears after client-side execution — that ceiling is unchanged, it's just no longer masked by an upstream summarizing pass. If `defuddle` is missing, stop and tell the user to run `setup-slipbox` to install it — do not attempt `npm install` from inside this skill.
 
+**On a blocked fetch, fall back to Firecrawl.** Defuddle has no headers/cookie/proxy override of any kind — some sites (confirmed: Medium) reject its bare fetch outright with a bot-detection block, distinct from the JS-rendering ceiling above. Distinguish by Defuddle's own error shape: an HTTP-response-level failure (a real status code, e.g. `Failed to fetch: 403`) is worth retrying; a network-level failure (`fetch failed`, no status code — a dead domain, a typo) is not, since no fetch method resolves a domain that doesn't exist.
+
+On an HTTP-response-level failure, retry once via Firecrawl:
+
+```bash
+firecrawl scrape "<url>" --only-main-content
+```
+
+If `firecrawl` is missing or unauthenticated, treat this exactly like Defuddle's own missing-binary case — stop, tell the user Firecrawl is optional and only needed for this fallback, and point them at `setup-slipbox`. Never attempt an install or `firecrawl config` from inside this skill.
+
+Take `content`/`title`/`author`/metadata from Firecrawl's markdown output the same way as Defuddle's, once it succeeds. If the fetched content itself reads as a login/paywall/registration wall (Medium's member-only stories land here even after the bot-block clears) — this is `clip-resource`'s existing "paywalled or login-gated pages are not handled" rule, not a new case: report it and write nothing, same as any other paywall hit today.
+
+Fallback-only, never preemptive: Defuddle stays the default path for every Article/News source regardless of domain — no domain list routes straight to Firecrawl. A second Firecrawl failure is a clean stop, same as any other unfetchable page — no third attempt.
+
 ### Social: extraction ladder (unchanged)
 
 Defuddle has no concept of `root_post` plus `continuation` (the author's own reply chain, not other participants' replies) — it would flatten a thread into one article-shaped blob. Resolve facts for Social via the same extraction ladder as before, in order, stopping at the first rung that yields the value:

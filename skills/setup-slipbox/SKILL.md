@@ -15,11 +15,13 @@ Every other skill in this family reads `.slipbox/config.json` before it writes a
 
 This is the only place in the slipbox family that installs anything — every other skill that hits a missing dependency stops and points back here rather than installing it inline.
 
-Run `scripts/check-prereqs.sh` and read its report. It checks `youtube_transcript_api` importability and `defuddle` resolvability via `npx` — no database dependency exists anymore, so `sqlite3` is not checked. The video-transcript check can be skipped entirely if the user has already said they have no interest in clipping video; otherwise check both by default.
+Run `scripts/check-prereqs.sh` and read its report. It checks `youtube_transcript_api` importability, `defuddle` presence on `PATH` (called directly, never via `npx` — see `clip-resource/SKILL.md`), and `firecrawl`'s auth status — no database dependency exists anymore, so `sqlite3` is not checked. The video-transcript check can be skipped entirely if the user has already said they have no interest in clipping video; otherwise check both by default.
 
-For each dependency the report marks missing: stop, tell the user what it's needed for (`youtube-transcript-api` for `clip-resource`'s Video path; `defuddle` for `clip-resource`'s Article and News path), and ask explicitly before doing anything about it — never install without that per-dependency ask. If the user agrees, run `scripts/install-prereqs.sh <dependency>` for just that one dependency. If they'd rather install it themselves, tell them to re-run this skill once it's in place.
+For each **required** dependency the report marks missing: stop, tell the user what it's needed for (`youtube-transcript-api` for `clip-resource`'s Video path; `defuddle` for `clip-resource`'s Article and News path), and ask explicitly before doing anything about it — never install without that per-dependency ask. If the user agrees, run `scripts/install-prereqs.sh <dependency>` for just that one dependency. If they'd rather install it themselves, tell them to re-run this skill once it's in place.
 
-**Done when:** every dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves.
+`firecrawl` is **optional**, not required — it's only ever used as `clip-resource`'s fallback when a fetch is blocked by bot detection (e.g. some Medium articles); the skill family works fully without it for the large majority of sources. If the report shows it missing or unauthenticated, mention it once, in passing, without treating it as a blocker: offer to run `scripts/install-prereqs.sh firecrawl` if the binary itself is missing, and point the user at `firecrawl config` for authentication (this script never handles credentials) — then move on regardless of their answer.
+
+**Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated is never a reason to hold up completion.
 
 ## Explore (no questions yet)
 

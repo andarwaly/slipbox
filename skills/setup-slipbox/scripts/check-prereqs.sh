@@ -21,4 +21,17 @@ else
   missing=1
 fi
 
+# Optional — only used as clip-resource's fallback when a fetch is blocked by
+# bot detection (e.g. some Medium articles). Never counts toward `missing`:
+# the skill family works fully without it for the large majority of sources.
+if command -v firecrawl >/dev/null 2>&1; then
+  if firecrawl --status 2>/dev/null | grep -qi "Authenticated"; then
+    echo "firecrawl: present, authenticated"
+  else
+    echo "firecrawl: present, not authenticated (optional — run 'firecrawl config' to enable the bot-detection fallback)"
+  fi
+else
+  echo "firecrawl: missing (optional — only needed for clip-resource's bot-detection fallback)"
+fi
+
 exit "$missing"
