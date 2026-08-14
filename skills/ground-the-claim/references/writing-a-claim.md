@@ -109,8 +109,27 @@ downstream, in `find-connections`, once cross-note evidence exists (see
 This section is load-bearing — `find-connections` scans it for recurrence detection, so
 everything the claim actually leans on must appear here.
 
-**Resolving `<note-filename>` correctly** — this is not just casing. Three
-`.slipbox/config.json` keys apply together, never assume any of them:
+**Two different questions, don't conflate them.** Which type of note this candidate
+eventually becomes (Reference, Person, Location, Organization, or nothing) is decided
+downstream, in `find-connections` — never here. But the wikilink still has to be
+*written* one way or the other right now, so a narrower question does need an answer
+at write time: does this candidate read as a person, place, or organization (real or
+fictional), or as a concept/term/method? That's a link-*format* decision only — Person/
+Location/Organization wikilinks are never prefixed, since slipbox never writes those
+three types and has no `paths.*`/`prefixes.*` config for them; a concept/term/method
+candidate uses the Reference-note format below, since that's what it becomes if and
+when it's promoted. Get this guess wrong and the link still just sits broken like any
+other unresolved candidate — nothing is lost, and the "spot terms and entities" batch
+confirmation is exactly where the user can catch and correct a misread before it's
+written.
+
+**Person/Location/Organization format** — flat, unprefixed, no config lookup needed:
+`[[Niklas Luhmann]]`, `[[Wano]]`, `[[Ship30]]` (as a brand/organization — see
+[[reference-note-admission-contract]] for when the same string reads as a method
+instead).
+
+**Reference-note format** — resolving `<note-filename>` correctly here is not just
+casing. Three `.slipbox/config.json` keys apply together, never assume any of them:
 
 - `paths.reference` — which folder the note lives in (a vault may have no dedicated
   folder at all, e.g. everything under `Notes/`).
@@ -129,4 +148,6 @@ Reference notes live at `Notes/※ Confirmation Bias.md`.
 
 A vault with no reference folder and no prefix links flat and unprefixed, e.g.
 `[[Strong Opinions, Weakly Held]]` — read all three keys, don't assume any one of them
-based on what another vault does.
+based on what another vault does. (Note this can look identical to the
+Person/Location/Organization format above for a vault with no reference prefix — the
+distinction is still meaningful once the vault does configure one.)

@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's ow
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.1"
+  version: "1.1.0"
 ---
 
 # Ground-the-claim
@@ -132,10 +132,19 @@ happens entirely downstream, in `find-connections`, once cross-note evidence exi
 author-exclusion stays unchanged: a source's own author still gets a bare, unresolved
 wikilink, never routed toward a Person note through this pipeline.
 
+For each candidate, also make a quick, cheap read — not the full classification, just
+enough to pick a link *format*: does this look like a person, place, or organization
+(real or fictional), or does it look like a concept/term/method? This decides whether
+the wikilink gets written flat or with the Reference-note prefix (see
+`references/writing-a-claim.md`'s Key Concepts section) — it does not decide whether
+the target ever becomes a note, or which type. Show the guess alongside each candidate
+so the user can correct a misread before anything is written, not after.
+
 Show what was found and why, in one message:
 
-> "Found these worth adding to Key Concepts: [list, each with a one-line reason]. Add
-> all, some, or none?"
+> "Found these worth adding to Key Concepts: [list, each with a one-line reason and its
+> guessed kind — person/place/organization, or concept/term]. Add all, some, or none —
+> and flag any I've read wrong."
 
 On confirmation, run `/write-checks` again and append the confirmed entries to
 `## Key Concepts` per `references/writing-a-claim.md`'s wikilink resolution. Zero found
