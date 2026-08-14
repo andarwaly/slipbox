@@ -1,8 +1,8 @@
 {
   "test_cases": [
     {
-      "prompt": "write-checks on a term-note draft, field list [type, created, sources], where config.json's frontmatter.term.sources is {\"deferred\": true}",
-      "expected_output": "Detects the deferred marker for sources, runs the same interactive resolution logic setup-slipbox's field_map step would have run (checks whether an existing property already holds this data, asks the user to map onto it or create a new List property), writes the resolved mapping back into config.json's frontmatter.term.sources, then proceeds with formatting and zone placement using the newly-resolved mapping.",
+      "prompt": "write-checks on a reference-note draft, field list [type, created, sources], where config.json's frontmatter.reference.sources is {\"deferred\": true}",
+      "expected_output": "Detects the deferred marker for sources, runs the same interactive resolution logic setup-slipbox's field_map step would have run (checks whether an existing property already holds this data, asks the user to map onto it or create a new List property), writes the resolved mapping back into config.json's frontmatter.reference.sources, then proceeds with formatting and zone placement using the newly-resolved mapping.",
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "prompt": "write-checks in checks-only mode (no field list) on an extending term note",
+      "prompt": "write-checks in checks-only mode (no field list) on an extending Reference note",
       "expected_output": "Runs Style and Humanize only, skipping Frontmatter fields and Zone placement entirely — hands back a pass/revise signal alone, no resolved-field data.",
       "assertions": [
         {"type": "not_contains", "text": "zone"}

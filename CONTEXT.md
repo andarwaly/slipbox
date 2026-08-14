@@ -67,7 +67,7 @@ name or a place. A source's own author is the one standing exception: per
 wikilink, never a Person note through this pipeline.
 
 **Evergreen note** (Zettel / permanent note, `ground-my-take`'s output — internally discussed via `grounding`, notes-bound fidelity):
-Idea-oriented. Answers "what do I think, as my own contribution?" Not bound to any one source or term. Holds exactly one atomic claim (the Take), synthesized from multiple existing notes (literature and/or evergreen) plus personal experience. Cites the notes that fed it; does not bundle or contain them, and never merely restates one of them un-transformed. **Can be revisited and evolve across separate sessions** (corrected 2026-07-23 — see Flagged ambiguities) — and unlike a term note's append-only accumulation, an evergreen note's update can be a full rewrite of its existing content, not just an addition alongside the old.
+Idea-oriented. Answers "what do I think, as my own contribution?" Not bound to any one source or term. Holds exactly one atomic claim (the Take), synthesized from multiple existing notes (literature and/or evergreen) plus personal experience. Cites the notes that fed it; does not bundle or contain them, and never merely restates one of them un-transformed. **Can be revisited and evolve across separate sessions** (corrected 2026-07-23 — see Flagged ambiguities) — and unlike a Reference note's append-only accumulation, an evergreen note's update can be a full rewrite of its existing content, not just an addition alongside the old.
 
 **Claim**:
 The author's position on an idea, restated in the user's own words, written as a declarative sentence. Lives only in a literature note. Object of understanding, not agreement.

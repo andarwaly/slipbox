@@ -27,7 +27,7 @@
       ]
     },
     {
-      "prompt": "Re-run setup-slipbox — one of my term note's sources property changed type from List to Text since last setup.",
+      "prompt": "Re-run setup-slipbox — one of my reference note's sources property changed type from List to Text since last setup.",
       "expected_output": "The field_map drift check catches the type mismatch, reports it by field name and both values, and asks the user which side wins — re-resolve to a new List property, or override and accept the mismatch.",
       "assertions": [
         {"type": "contains", "text": "sources"}

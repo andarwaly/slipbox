@@ -16,7 +16,7 @@
     },
     {
       "prompt": "ground-my-take, revisiting an evergreen note written three months ago",
-      "expected_output": "Reads the existing note fresh from disk, and the resulting rewrite can replace its existing content wholesale rather than only appending — unlike a Term note's append-only rule.",
+      "expected_output": "Reads the existing note fresh from disk, and the resulting rewrite can replace its existing content wholesale rather than only appending — unlike a Reference note's append-only rule.",
       "assertions": [
         {"type": "not_contains", "text": "append"}
       ]

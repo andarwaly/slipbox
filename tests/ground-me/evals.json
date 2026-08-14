@@ -2,10 +2,10 @@
   "test_cases": [
     {
       "prompt": "ground me on: does spaced repetition actually generalize past rote memorization?",
-      "expected_output": "Runs a /grounding session on the given idea directly, with no note-type classification and no offer to hand off to ground-the-claim/ground-term/ground-my-take.",
+      "expected_output": "Runs a /grounding session on the given idea directly, with no note-type classification and no offer to hand off to ground-the-claim/write-reference/ground-my-take.",
       "assertions": [
         {"type": "not_contains", "text": "ground-the-claim"},
-        {"type": "not_contains", "text": "ground-term"}
+        {"type": "not_contains", "text": "write-reference"}
       ]
     },
     {

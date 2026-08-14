@@ -112,23 +112,21 @@ everything the claim actually leans on must appear here.
 **Resolving `<note-filename>` correctly** — this is not just casing. Three
 `.slipbox/config.json` keys apply together, never assume any of them:
 
-- `paths.term` — which folder the note lives in (a vault may have no dedicated
-  folder at all, e.g. everything under `Notes/`). TODO: this config key is still named
-  `paths.term` as of this writing; whether it gets renamed to reflect the broader
-  Reference-note scope (per [[reference-note-admission-contract]]) is not decided here.
-- `filenames.term` — the casing convention (kebab-case, Title Case, snake_case, per
-  vault).
-- `prefixes.term` — a title-prefix character (e.g. `※`), if the vault uses one. The
-  note's actual filename on disk includes this prefix; a link built without it
+- `paths.reference` — which folder the note lives in (a vault may have no dedicated
+  folder at all, e.g. everything under `Notes/`).
+- `filenames.reference` — the casing convention (kebab-case, Title Case, snake_case,
+  per vault).
+- `prefixes.reference` — a title-prefix character (e.g. `※`), if the vault uses one.
+  The note's actual filename on disk includes this prefix; a link built without it
   points at a file that doesn't exist.
 
 **Correct**, vault using `※` prefix and Title Case: `[[※ Confirmation Bias|Confirmation
 Bias]]` — prefix in the link target, clean name in the display alias.
 
 **Incorrect**: `[[confirmation-bias|Confirmation Bias]]` — hardcoded kebab-case,
-no `paths.term` folder, no prefix. Points at nothing if the vault's actual term notes
-live at `Notes/※ Confirmation Bias.md`.
+no `paths.reference` folder, no prefix. Points at nothing if the vault's actual
+Reference notes live at `Notes/※ Confirmation Bias.md`.
 
-A vault with no term folder and no prefix links flat and unprefixed, e.g.
+A vault with no reference folder and no prefix links flat and unprefixed, e.g.
 `[[Strong Opinions, Weakly Held]]` — read all three keys, don't assume any one of them
 based on what another vault does.

@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Write-checks
@@ -37,7 +37,7 @@ guides the workflow; it never rewrites a file automatically.
 
 Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
 Zone placement — the full pass below. Called with no field list (already-resolved
-fields, e.g. a term extension re-using its first write's mapping), it runs Style and
+fields, e.g. a Reference-note extension re-using its first write's mapping), it runs Style and
 Humanize only, skipping Frontmatter fields and Zone placement entirely.
 
 ## Frontmatter fields
@@ -55,7 +55,7 @@ resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map:
   (reading its actual discovered type — Text/List/Number/Checkbox/Date/Date & Time —
   never assuming one), and resolve one of map-onto-existing, create-standard-field, or
   explicit opt-out, following the same reserved-property guardrail (never `tags`,
-  `aliases`, `cssclasses`, except Term's `alt_names`→`aliases` carve-out) and the same
+  `aliases`, `cssclasses`, except Reference's `alt_names`→`aliases` carve-out) and the same
   type-mismatch check for multi-valued fields (`sources`, `derived-from`) that
   `setup-slipbox` uses. Write the resolved mapping back into `.slipbox/config.json`'s
   `frontmatter.<type>.<field>` before continuing — every subsequent write for this note

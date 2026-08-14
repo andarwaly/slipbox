@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized position,
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Ground-my-take
@@ -39,7 +39,7 @@ executable, stop and say so too. Every `slipbox` call below uses this same path,
   ```
 
   Offer these; let the user choose one. This is how a flagged tension from
-  ground-the-claim or ground-term eventually gets picked up and turned into a real Take.
+  ground-the-claim or write-reference eventually gets picked up and turned into a real Take.
 
 ## Ground it
 
@@ -124,8 +124,8 @@ named or a bare hunch, close out the row it drew from:
 .slipbox/bin/slipbox evergreen update <slug> --status discussed --note-path <path>
 ```
 
-Rename the slug too if this was a first write — same pattern as ground-term's own
-"Write — new term" step. Bump `--iteration` instead if this is a revisit to an existing
+Rename the slug too if this was a first write — same pattern as write-reference's own
+"Write — new reference" step. Bump `--iteration` instead if this is a revisit to an existing
 evergreen note rather than a first write. The note's own `updated-at` frontmatter field
 was already set in the Write section above — `created`'s timestamp on a first write,
 refreshed to current time on a revisit.

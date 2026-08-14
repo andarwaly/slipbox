@@ -6,7 +6,7 @@
 
 Skills for a Zettelkasten-inspired, conversational note-taking pipeline: clip a source, surface discussable ideas from it, discuss one into a literature note, optionally spin off a reference note, optionally connect notes into an evergreen note.
 
-Domain vocabulary (Resource, Literature note, Term note, Evergreen note, Claim, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
+Domain vocabulary (Resource, Literature note, Reference note, Person/Location/Organization, Evergreen note, Claim, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
 
 ## Structure
 
@@ -14,7 +14,7 @@ Domain vocabulary (Resource, Literature note, Term note, Evergreen note, Claim, 
 slipbox/                    ← repo root, this file's location
 ├── AGENTS.md                ← this file
 ├── CLAUDE.md                 ← symlink to AGENTS.md
-├── CONTEXT.md                ← domain glossary — the four note/resource types, Claim vs. Take
+├── CONTEXT.md                ← domain glossary — the note/resource types, Claim vs. Take
 ├── .agents/
 │   ├── dox-framework.md     ← doc-maintenance rules (read first)
 │   └── index.md              ← index of every AGENTS.md in this repo
@@ -22,12 +22,14 @@ slipbox/                    ← repo root, this file's location
 ├── skills/
 │   ├── setup-slipbox/       ← one-time onboarding: vault conventions, slipbox CLI init
 │   ├── clip-resource/        ← fetches a URL, writes a frozen Resource
-│   ├── find-terms/          ← reports recurring terms with no term note yet
-│   ├── find-connections/    ← scans for missing links + sparked ideas
+│   ├── find-connections/    ← --references (recurrence + Person/Location/Organization
+│   │                            surfacing, absorbed find-terms) or --evergreen
+│   │                            (missing links + sparked ideas) — explicit mode flag
 │   ├── grounding/            ← lean interview engine; user-invocable, like grilling
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
 │   ├── ground-the-claim/          ← literature-note wrapper (was write-literature-note)
-│   ├── ground-term/           ← term-note wrapper (was write-reference-note)
+│   ├── write-reference/       ← Reference-note synthesis wrapper (was ground-term,
+│   │                              was write-reference-note); never runs /grounding
 │   └── ground-my-take/        ← evergreen-note wrapper (was write-evergreen-note)
 └── tests/
     └── {{skill-name}}/
