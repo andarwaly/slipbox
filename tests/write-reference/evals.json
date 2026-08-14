@@ -1,0 +1,39 @@
+{
+  "test_cases": [
+    {
+      "prompt": "write-reference \"Zettelkasten Method\" — no Reference note exists yet; two literature notes' Key Concepts already wikilink to it, each with its own grounded characterization from a prior /grounding session",
+      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via ground-the-claim), reconciles them into one merged definition where they agree or add distinct facets, presents it for confirmation, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix.",
+      "assertions": [
+        {"type": "contains", "text": "reference"}
+      ]
+    },
+    {
+      "prompt": "write-reference \"Zettelkasten Method\" again, from a third literature note whose Key Concepts also wikilinks to it and is already grounded",
+      "expected_output": "Reads the existing Reference note in full as the working synthesis, folds the third note's grounded characterization in via /write-checks' checks-only mode (sources' mapping already resolved from the first write), appending to the sources frontmatter array rather than overwriting the file wholesale, and inserts a links row with rel_type='extends' pointing at the reference note's own slug.",
+      "assertions": [
+        {"type": "not_contains", "text": "seeds"}
+      ]
+    },
+    {
+      "prompt": "write-reference \"Compass of Zettelkasten Thinking\" where two of the three literature notes' grounded characterizations conflict on what the framework claims",
+      "expected_output": "Surfaces the conflict to the user instead of silently picking one side; if the user opts to flag it rather than resolve it now, inserts it into the evergreen backlog via slipbox evergreen add before continuing to write the reconciled definition.",
+      "assertions": [
+        {"type": "contains", "text": "conflict"}
+      ]
+    },
+    {
+      "prompt": "write-reference \"Compass of Zettelkasten Thinking\" where one of the three candidate literature notes has not gone through ground-the-claim yet — no grounded Key Concepts wikilink exists there",
+      "expected_output": "Stops synthesizing from that one ungrounded source and tells the user it needs to go through ground-the-claim first, but continues synthesizing and writing from the other two already-grounded sources rather than blocking the whole write.",
+      "assertions": [
+        {"type": "contains", "text": "ground-the-claim"}
+      ]
+    },
+    {
+      "prompt": "write-reference with no candidate named",
+      "expected_output": "Asks the user which reference they want written rather than guessing or pulling from any backlog — there is no backlog this skill pulls from itself; the user names it directly, whether on their own or because find-connections --references surfaced it as a recurrence candidate.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    }
+  ]
+}

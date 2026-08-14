@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's ow
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Ground-the-claim
@@ -124,9 +124,13 @@ write step, until every selected claim is written.
 
 Once every selected claim for this sitting is written, one batch pass — never mid-claim.
 Re-read the finished note; re-read the source too if this is a resumed session and it's
-no longer in context. Compare the two and find any term or load-bearing named entity
-(person, tool, framework, place — same test as a term: does a claim's weight actually
-rest on it?) that a claim leans on but Key Concepts doesn't yet cover.
+no longer in context. Compare the two and find anything a claim leans on — its weight
+actually resting on it, not just mentioned in passing — that Key Concepts doesn't yet
+cover. Wikilink liberally here: this step doesn't decide what the target will become
+(Reference note, Person, Location, Organization, or nothing at all) — that classification
+happens entirely downstream, in `find-connections`, once cross-note evidence exists. The
+author-exclusion stays unchanged: a source's own author still gets a bare, unresolved
+wikilink, never routed toward a Person note through this pipeline.
 
 Show what was found and why, in one message:
 

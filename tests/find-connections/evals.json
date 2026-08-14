@@ -13,6 +13,48 @@
       "assertions": [
         {"type": "not_contains", "text": "already linked"}
       ]
+    },
+    {
+      "prompt": "find-connections",
+      "expected_output": "No --references or --evergreen flag was given. Stops and asks the user which mode they mean instead of guessing or defaulting to one — per the explicit mode-flag requirement in SKILL.md.",
+      "assertions": [
+        {"type": "contains", "text": "?"},
+        {"type": "not_contains", "text": "links row"},
+        {"type": "not_contains", "text": "evergreen backlog"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references across the vault",
+      "expected_output": "Scans Reference/Person/Location/Organization recurrence only — mechanical link suggestions and sparked ideas are out of scope for this mode. Every candidate crossing threshold is batch-presented, never auto-written; for any approved Reference candidate the user is told to invoke /write-reference themselves.",
+      "assertions": [
+        {"type": "not_contains", "text": "links row"},
+        {"type": "not_contains", "text": "evergreen backlog"}
+      ]
+    },
+    {
+      "prompt": "find-connections --evergreen across the vault",
+      "expected_output": "Scans for mechanical link suggestions and sparked ideas only — Reference/Person/Location/Organization recurrence is out of scope for this mode. Approved links get both a links row and inline wikilink written; sparked ideas are routed to the evergreen backlog via slipbox evergreen add, never written as a note directly.",
+      "assertions": [
+        {"type": "not_contains", "text": "Reference candidate"},
+        {"type": "not_contains", "text": "write-reference"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where [[UI Design]] appears once in one literature note and [[User Interface Design]] appears once in a different literature note",
+      "expected_output": "Semantic clustering runs before threshold-counting: [[UI Design]] and [[User Interface Design]] are recognized as variant labels for the same underlying thing and clustered together first. The cluster's combined count (one mention each, two total) crosses the 2+ recurrence threshold as a single candidate, surfaced with both labels listed as alt_names — neither label alone would reach 2+ under exact-string counting, so counting before clustering would have missed this case entirely.",
+      "assertions": [
+        {"type": "contains", "text": "alt_names"},
+        {"type": "contains", "text": "UI Design"},
+        {"type": "contains", "text": "User Interface Design"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where a wikilink target recurs across notes and turns out to be a person's name",
+      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no ground-the-claim/write-reference invocation happens on this entity's behalf.",
+      "assertions": [
+        {"type": "not_contains", "text": "Reference candidate"},
+        {"type": "not_contains", "text": "write-reference"}
+      ]
     }
   ]
 }

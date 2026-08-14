@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Setup Slipbox
@@ -42,7 +42,7 @@ Check the vault for existing signal before asking the user anything:
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
-- **Paths**: `resources/`, `literature/`, `evergreen/`, and the term notes' folder.
+- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference` — renamed from `paths.term`; see `discussion/slipbox/discussion-topics/reference-note-admission-contract.md`).
 - **Filename casing** per note type (kebab-case, Title Case, snake_case, or whatever the vault already does).
 - **Note-type prefixes**: ask once, for all three note types together — "Want a symbol prefix on note titles, so they're distinguishable at a glance even if they all end up in the same folder? Default: `§` for literature, `※` for term, `✱` for evergreen. Keep these, pick your own, or skip prefixes entirely?" Record per-type: a string, or `false` for no prefix. Resources never get a prefix — no question asked for that type.
 - **Templates**: three note templates (literature, term, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
@@ -131,8 +131,8 @@ The script copy is always overwritten (versioned code, not user data — distinc
 
 Draft the config from everything confirmed in Sections A and B, against the fields defined in `assets/config.schema.json`:
 
-- `paths` — the resources/literature/evergreen/term folder paths from Section A.
-- `filenames` — casing per note type.
+- `paths` — the resources/literature/evergreen/reference (`paths.reference`, renamed from `paths.term`) folder paths from Section A.
+- `filenames` — casing per note type (`filenames.reference`, renamed from `filenames.term`).
 - `prefixes` — the per-type title prefix (or `false`) from Section A.
 - `frontmatter` — the field_map from Section A, per type (literature/term/evergreen); each entry carries `name`/`type`/`wikilink`/`zone`, `{"deferred": true}`, the bare string/`false` shorthand, validated against `assets/config.schema.json`.
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.

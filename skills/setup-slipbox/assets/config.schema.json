@@ -1,4 +1,5 @@
 {
+  "$comment": "TODO: only paths.term/filenames.term were renamed to paths.reference/filenames.reference so far (per discussion/slipbox/discussion-topics/reference-note-admission-contract.md and find-terms-find-connections-merge.md). frontmatter.term, prefixes.term, and templates.term_path still use the old 'term' name — renaming those was not in scope of this change and is left as-is, not silently decided here. Person/Location/Organization deliberately get NO paths.* config entries (vault-wide filename lookup instead, per the merge doc's 2026-08-14 amendment) — do not add paths.person/paths.location/paths.organization.",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://slipbox.local/schemas/config.schema.json",
   "title": ".slipbox/config.json",
@@ -8,22 +9,22 @@
   "properties": {
     "paths": {
       "type": "object",
-      "required": ["resources", "literature", "evergreen", "term"],
+      "required": ["resources", "literature", "evergreen", "reference"],
       "additionalProperties": false,
       "properties": {
         "resources": { "type": "string" },
         "literature": { "type": "string" },
         "evergreen": { "type": "string" },
-        "term": { "type": "string" }
+        "reference": { "type": "string" }
       }
     },
     "filenames": {
       "type": "object",
-      "required": ["literature", "term", "evergreen"],
+      "required": ["literature", "reference", "evergreen"],
       "additionalProperties": false,
       "properties": {
         "literature": { "$ref": "#/definitions/casing" },
-        "term": { "$ref": "#/definitions/casing" },
+        "reference": { "$ref": "#/definitions/casing" },
         "evergreen": { "$ref": "#/definitions/casing" }
       }
     },

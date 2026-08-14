@@ -65,8 +65,8 @@ which is `/write-checks`'s job, run separately.
   Claim, is there exactly one clear thing being cited — not a bundle of several source
   points under one heading? (The shared-Warrant merge test in `qec-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
-- Every term or load-bearing named entity the claim leans on present in Key Concepts,
-  each with a correctly resolved wikilink (see Key Concepts wikilinks below)?
+- Everything this claim leans on present in Key Concepts, each with a correctly
+  resolved wikilink (see Key Concepts wikilinks below)?
 
 If any item fails, the claim isn't done — go back to `/grounding` and probe further
 (Mechanism, Boundary, or Distinction probe, per `grounding/SKILL.md`) rather than
@@ -93,27 +93,33 @@ exists in this family.
 ## Key Concepts
 
 Add or extend `## Key Concepts` with a wikilinked, 1-line gloss for anything this claim
-introduces or leans on — not just terms. A named person, tool, or framework qualifies on
-the same test as a term: is the claim's weight actually resting on it, or is it just
-mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten method's origins,
-passes this test; a place name mentioned once in an aside does not.
+introduces or leans on — a term, a named person, tool, framework, place, or anything
+else. The test is always the same: is the claim's weight actually resting on it, or is
+it just mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten method's
+origins, passes this test; a place name mentioned once in an aside does not. This step
+wikilinks liberally and does not decide what the target will become — Reference note,
+Person, Location, Organization, or nothing — that classification happens entirely
+downstream, in `find-connections`, once cross-note evidence exists (see
+[[find-terms-find-connections-merge]]).
 
 ```markdown
-- [[<term-note-filename>|Term Name]]: [what this source says about it, in one line]
+- [[<note-filename>|Display Name]]: [what this source says about it, in one line]
 ```
 
-This section is load-bearing — `find-terms` scans it for term-recurrence detection, so
-every term or entity the claim actually uses must appear here.
+This section is load-bearing — `find-connections` scans it for recurrence detection, so
+everything the claim actually leans on must appear here.
 
-**Resolving `<term-note-filename>` correctly** — this is not just casing. Three
+**Resolving `<note-filename>` correctly** — this is not just casing. Three
 `.slipbox/config.json` keys apply together, never assume any of them:
 
-- `paths.term` — which folder the term note lives in (a vault may have no dedicated
-  term folder at all, e.g. everything under `Notes/`).
+- `paths.term` — which folder the note lives in (a vault may have no dedicated
+  folder at all, e.g. everything under `Notes/`). TODO: this config key is still named
+  `paths.term` as of this writing; whether it gets renamed to reflect the broader
+  Reference-note scope (per [[reference-note-admission-contract]]) is not decided here.
 - `filenames.term` — the casing convention (kebab-case, Title Case, snake_case, per
   vault).
 - `prefixes.term` — a title-prefix character (e.g. `※`), if the vault uses one. The
-  term note's actual filename on disk includes this prefix; a link built without it
+  note's actual filename on disk includes this prefix; a link built without it
   points at a file that doesn't exist.
 
 **Correct**, vault using `※` prefix and Title Case: `[[※ Confirmation Bias|Confirmation
