@@ -18,8 +18,8 @@ So this isn't an agent that writes notes for me. It's the opposite. It grounds e
 The pipeline itself: clip a source, ground discussable ideas from it into notes, or run whole-corpus passes to find patterns.
 
 ```
-clip-resource → ground-the-claim / ground-term / ground-my-take
-find-terms and find-connections (whole-corpus passes, run separately)
+clip-resource → make-literature-note / write-reference / make-evergreen-note
+find-connections (whole-corpus pass, run separately)
 ```
 
 ## Install
@@ -38,9 +38,9 @@ Run `/setup-slipbox` once per vault before anything else. It discovers your vaul
 - **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links and sparked ideas across your notes.
 - **[grounding](./docs/grounding.md)**: the interview engine underneath every `ground-*` skill below.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
-- **[ground-the-claim](./docs/ground-the-claim.md)**: grounds a candidate into a literature note, the source's own Claim, in your words.
-- **[ground-term](./docs/ground-term.md)**: grounds a recurring term into a Term note that accumulates across sessions.
-- **[ground-my-take](./docs/ground-my-take.md)**: grounds a synthesis across notes into an evergreen note, your own Take.
+- **[make-literature-note](./docs/make-literature-note.md)**: grounds a clipped source into a literature note, the source's own Claim, in your words.
+- **[write-reference](./docs/write-reference.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.
+- **[make-evergreen-note](./docs/make-evergreen-note.md)**: grounds a synthesis across notes into an evergreen note, your own original Take.
 - **write-checks**: internal. Checks a note draft against vault style before any `ground-*` skill writes it. Runs automatically, not invoked directly.
 
 For per-skill detail, see [docs/](./docs/README.md). For the domain vocabulary (Resource, Claim, Take, Atomicity, and the rest), see [CONTEXT.md](./CONTEXT.md).

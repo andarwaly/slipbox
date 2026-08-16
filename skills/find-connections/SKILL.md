@@ -110,7 +110,7 @@ different things — don't conflate them:
   already has a `links` row.
 - **A sparked idea** — noticing two or more existing notes together produces something
   neither one states alone. This is generative, not mechanical — it needs full
-  `ground-my-take` grounding before it's a real Take, not a citation edit.
+  `make-evergreen-note` grounding before it's a real Take, not a citation edit.
 
 ### Present link suggestions as a batch
 
@@ -139,7 +139,7 @@ never fold it into a link suggestion:
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the spark, described>"
 ```
 
-`ground-my-take` picks these up from its own backlog read, same as any other flagged
+`make-evergreen-note` picks these up from its own backlog read, same as any other flagged
 tension.
 
 ---
