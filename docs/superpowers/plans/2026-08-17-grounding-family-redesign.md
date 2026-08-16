@@ -2338,7 +2338,7 @@ Run: `grep -c "^name: make-evergreen-note$" skills/make-evergreen-note/SKILL.md`
 Expected: `1`
 
 Run: `grep -c "references/compass\|references/connect\|references/challenge\|references/distil" skills/make-evergreen-note/SKILL.md`
-Expected: `0` (confirms no local `references/` paths are cited — Compass is referenced by name, pointing at `grounding`'s shared copy, not a local file path)
+Expected: `1` (corrected during implementation — the verbatim content above descriptively cites `references/compass.md` once, explicitly noting it "now living inside `grounding`" — that's a pointer to the shared file, not a local path, and the check couldn't distinguish the two. The real requirement, already satisfied: no `skills/make-evergreen-note/references/` directory or local file exists — verified separately by directory listing, not this grep)
 
 Run: `grep -c "Concept$" skills/make-evergreen-note/SKILL.md`
 Expected: `1` (the new cited Sign-off section)
