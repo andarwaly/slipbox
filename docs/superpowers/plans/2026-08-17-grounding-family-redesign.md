@@ -1071,7 +1071,7 @@ Run: `grep -c "^## " skills/grounding/references/discovery-walk.md`
 Expected: `6`
 
 Run: `grep -c "feynman.md\|maieutic.md" skills/grounding/references/discovery-walk.md`
-Expected: `2` or more (both composed techniques named)
+Expected: `1` (corrected during implementation — the verbatim content only literally names `maieutic.md` once, in the "Don't use this when" line; "Feynman" is named as a plain word elsewhere, never as `feynman.md`. The plan originally miscounted this as 2+)
 
 - [ ] **Step 4: Commit**
 
