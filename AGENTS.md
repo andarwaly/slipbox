@@ -25,12 +25,15 @@ slipbox/                    ← repo root, this file's location
 │   ├── find-connections/    ← --references (recurrence + Person/Location/Organization
 │   │                            surfacing, absorbed find-terms) or --evergreen
 │   │                            (missing links + sparked ideas) — explicit mode flag
-│   ├── grounding/            ← lean interview engine; user-invocable, like grilling
+│   ├── grounding/            ← interview engine, ten named techniques in
+│   │                            references/; user-invocable, like grilling
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
-│   ├── ground-the-claim/          ← literature-note wrapper (was write-literature-note)
+│   ├── make-literature-note/  ← literature-note wrapper (was ground-the-claim,
+│   │                              was write-literature-note)
 │   ├── write-reference/       ← Reference-note synthesis wrapper (was ground-term,
 │   │                              was write-reference-note); never runs /grounding
-│   └── ground-my-take/        ← evergreen-note wrapper (was write-evergreen-note)
+│   └── make-evergreen-note/   ← evergreen-note wrapper (was ground-my-take,
+│                                  was write-evergreen-note)
 └── tests/
     └── {{skill-name}}/
         ├── evals.json         ← test cases: prompt, expected_output, assertions
@@ -42,7 +45,7 @@ slipbox/                    ← repo root, this file's location
 ## Workflow
 
 - **Skill format**: follow the [agentskills.io](https://agentskills.io) spec — a directory with `SKILL.md` (`name`, `description` frontmatter; optional `license`, `metadata`, and `scripts/`/`references/`/`assets/` subdirs). Frontmatter extensions (e.g. `disable-model-invocation`) are fine anywhere; an unrecognized key degrades gracefully. Heading/prose style (no numbered step-headings, etc.) is governed workspace-wide by the root `AGENTS.md`'s "Skill-writing conventions" section — not restated here.
-- **Cross-skill references**: `/grounding` and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's two composable "engine" skills (`disable-model-invocation: true`, built to be invoked as a sub-procedure *from inside* another skill's own flow: "Run a `/grounding` session," "Run a `/write-checks` session"). Every other skill (`find-connections`, `ground-the-claim`, `write-reference`, `ground-my-take`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows the way `grounding`/`write-checks` are.
+- **Cross-skill references**: `/grounding` and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's two composable "engine" skills (`disable-model-invocation: true`, built to be invoked as a sub-procedure *from inside* another skill's own flow: "Run a `/grounding` session," "Run a `/write-checks` session"). Every other skill (`find-connections`, `make-literature-note`, `write-reference`, `make-evergreen-note`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows the way `grounding`/`write-checks` are.
 - **Docs**: every skill gets a human-facing page at `docs/{{skill-name}}.md`.
 - **Distribution**: published to a public GitHub repo. Users install with `npx skills add andarwaly/slipbox` (or a specific skill within it).
 - **Writing a skill or a change to one**: two phases, don't skip the second.
