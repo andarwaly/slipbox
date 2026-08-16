@@ -543,7 +543,7 @@ Run: `grep -c "^## " skills/grounding/references/verification.md`
 Expected: `6` (What it is, Why this technique for this job, Concept, Conversational adoption, Worked example, Guardrail — the opener has no `##` heading of its own)
 
 Run: `grep -c "elenchus.md" skills/grounding/references/verification.md`
-Expected: `2`
+Expected: `1` (corrected during implementation — the verbatim content specified above mentions `elenchus.md` once, in the "Escalate to `elenchus.md` instead when" line; the plan originally miscounted this as 2)
 
 - [ ] **Step 4: Commit**
 
