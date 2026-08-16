@@ -2008,8 +2008,8 @@ backlog, and the user is told the file path.
 Run: `grep -c "^name: make-literature-note$" skills/make-literature-note/SKILL.md`
 Expected: `1`
 
-Run: `grep -c "menu\|which do you want grounded" skills/make-literature-note/SKILL.md`
-Expected: `0` (confirms the shown-menu language is gone)
+Run: `grep -c "which do you want grounded" skills/make-literature-note/SKILL.md`
+Expected: `0` (corrected during implementation — the original check also matched on the bare word "menu", which the new prose legitimately uses several times to *disavow* the old shape, e.g. "not a menu presented to the user." Narrowed to the literal old menu-prompt phrase, which should be genuinely absent)
 
 Run: `grep -c "private backlog" skills/make-literature-note/SKILL.md`
 Expected: `2` or more
