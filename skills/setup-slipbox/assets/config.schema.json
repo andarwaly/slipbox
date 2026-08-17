@@ -1,5 +1,5 @@
 {
-  "$comment": "Term note renamed to Reference note throughout (per discussion/slipbox/discussion-topics/reference-note-admission-contract.md and find-terms-find-connections-merge.md): paths.term/filenames.term/frontmatter.term/prefixes.term/templates.term_path all renamed to their .reference equivalents for full consistency. Person/Location/Organization deliberately get NO paths.* config entries (vault-wide filename lookup instead, per the merge doc's 2026-08-14 amendment) — do not add paths.person/paths.location/paths.organization.",
+  "$comment": "Term note renamed to Reference note throughout: paths.term/filenames.term/frontmatter.term/prefixes.term/templates.term_path all renamed to their .reference equivalents for full consistency. Person/Location/Organization deliberately get NO paths.* config entries (vault-wide filename lookup instead) — do not add paths.person/paths.location/paths.organization; see GLOSSARY.md for why these three are surfacing-only, never written.",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://slipbox.local/schemas/config.schema.json",
   "title": ".slipbox/config.json",

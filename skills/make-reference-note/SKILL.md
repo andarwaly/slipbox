@@ -1,15 +1,17 @@
 ---
-name: write-reference
+name: make-reference-note
 description: Synthesize an already-grounded Reference note from the literature
   notes that wikilink to it — pulls in each note's grounded characterization,
   reconciles them into one definition, presents for confirmation, writes.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.0"
 ---
 
-# Write-reference
+# Make-reference-note
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## What these words mean
 
@@ -17,7 +19,7 @@ metadata:
   reusable label, independent of any one source (e.g. "confirmation bias," "CRDT,"
   "Zettelkasten Method") — admission is a reusability test (does the note survive if
   the source disappears; can it compress into a declarative, subject+verb title with
-  no "According to X..."), not an origin test. See `CONTEXT.md` for the full type
+  no "According to X..."), not an origin test. See `GLOSSARY.md` for the full type
   shape and the admission test's detail.
 - **Reference note** — the cumulative file a reference's definition lives in. Unlike a
   Claim, never one-shot: extended across however many sources touch this reference,
@@ -29,7 +31,7 @@ metadata:
 Grounding — holding the user to a source for a claim, via a `/grounding` session —
 already happened upstream, at the claim level, inside whichever literature notes'
 `## Key Concepts` section wikilinks to this reference. That's `make-literature-note`'s
-job, not this skill's. `write-reference`'s own job starts after that: pull the
+job, not this skill's. `make-reference-note`'s own job starts after that: pull the
 already-grounded characterizations back out of those literature notes, reconcile them
 into one definition, present for confirmation, write.
 
@@ -41,9 +43,8 @@ only come back here once its relevant claim (and Key Concepts wikilink) exists. 
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so. Same check for `.slipbox/bin/slipbox` — if it doesn't exist or isn't
-executable, stop and say so too. Every `slipbox` call below uses this same path,
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed
+a full run. If missing, stop and say so. Every `slipbox` call below uses this same path,
 `.slipbox/bin/slipbox` — never bare `slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Take the candidate
@@ -53,9 +54,9 @@ thought of it themselves or because `find-connections --references` surfaced it 
 recurrence candidate. There is no backlog this skill pulls from itself; recurrence is
 derived on demand by `find-connections`, not surfaced into a queue this skill owns.
 
-Per `.slipbox/config.json`'s `paths.reference` and `filenames.reference` casing
-convention, check whether a Reference note for this candidate already exists — under
-that configured folder, not an assumed `reference/` folder — before writing:
+Use `slipbox config get paths.reference` to locate the folder, checking for
+a Reference note for this candidate there — not an assumed `reference/` folder —
+before writing. Apply the `slipbox config get filenames.reference` casing convention:
 
 - **New reference** — no note exists. Proceed to gather characterizations.
 - **Extending** — a note already exists. Read it in full now. Its accumulated text is
@@ -109,8 +110,8 @@ Write fresh:
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
   mapping, formatting, zone placement, and title prefix, and checks the draft's style
   and humanize signals.
-- Write into `paths.reference` from `.slipbox/config.json`, filename per that same
-  config's `filenames.reference` casing convention.
+- Write into the folder from `slipbox config get paths.reference`, filename per
+  `slipbox config get filenames.reference` casing convention.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.

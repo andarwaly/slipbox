@@ -25,7 +25,7 @@
     },
     {
       "prompt": "find-connections --references across the vault",
-      "expected_output": "Scans Reference/Person/Location/Organization recurrence only — mechanical link suggestions and sparked ideas are out of scope for this mode. Every candidate crossing threshold is batch-presented, never auto-written; for any approved Reference candidate the user is told to invoke /write-reference themselves.",
+      "expected_output": "Scans Reference/Person/Location/Organization recurrence only — mechanical link suggestions and sparked ideas are out of scope for this mode. Every candidate crossing threshold is batch-presented, never auto-written; for any approved Reference candidate the user is told to invoke /make-reference-note themselves.",
       "assertions": [
         {"type": "not_contains", "text": "links row"},
         {"type": "not_contains", "text": "evergreen backlog"}
@@ -36,7 +36,7 @@
       "expected_output": "Scans for mechanical link suggestions and sparked ideas only — Reference/Person/Location/Organization recurrence is out of scope for this mode. Approved links get both a links row and inline wikilink written; sparked ideas are routed to the evergreen backlog via slipbox evergreen add, never written as a note directly.",
       "assertions": [
         {"type": "not_contains", "text": "Reference candidate"},
-        {"type": "not_contains", "text": "write-reference"}
+        {"type": "not_contains", "text": "make-reference-note"}
       ]
     },
     {
@@ -50,10 +50,10 @@
     },
     {
       "prompt": "find-connections --references where a wikilink target recurs across notes and turns out to be a person's name",
-      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no make-literature-note/write-reference invocation happens on this entity's behalf.",
+      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no make-literature-note/make-reference-note invocation happens on this entity's behalf.",
       "assertions": [
         {"type": "not_contains", "text": "Reference candidate"},
-        {"type": "not_contains", "text": "write-reference"}
+        {"type": "not_contains", "text": "make-reference-note"}
       ]
     }
   ]

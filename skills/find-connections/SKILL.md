@@ -4,16 +4,18 @@ description: Scan existing notes for missing links, sparked ideas, and Reference
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.1"
 ---
 
 # Find-connections
 
+Bold terms in this file are defined in `GLOSSARY.md`.
+
 ## Prerequisite
 
-Requires `.slipbox/config.json` and `.slipbox/bin/slipbox` — same as every skill in this
-family. Every `slipbox` call below uses this same path, `.slipbox/bin/slipbox` — never
-bare `slipbox`.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed
+a full run. If missing, tell the user to run `setup-slipbox` first; do not proceed. Every
+`slipbox` call below uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`.
 
 ## Pick a mode
 
@@ -68,7 +70,7 @@ in this order — entity-check first, then the reusability test:
    (e.g. `coworkers/`, `family/`, `authors/`).
    - If yes: this is a Person/Location/Organization candidate. Surfacing only —
      `find-connections` never writes one of these three types, real or fictional
-     (per [[reference-note-admission-contract]]). Report it the same way as a
+     (per `GLOSSARY.md`). Report it the same way as a
      Reference candidate (recurrence threshold, batch-presented), just without ever
      attempting a write.
    - Entity-status is checked first even though a person's name can technically also
@@ -92,7 +94,7 @@ Person/Location/Organization candidates alike — never auto-write. This matches
 existing mechanical-links batch-presentation discipline below. For each cluster, show
 its variant labels (`alt_names`), the count, and which notes mention it.
 
-For each approved Reference candidate, the user invokes `/write-reference` themselves,
+For each approved Reference candidate, the user invokes `/make-reference-note` themselves,
 naming the candidate directly — `find-connections` does not write it.
 
 Zero clusters crossing the threshold is a complete, valid result — report it as such,
@@ -148,7 +150,7 @@ tension.
 
 **`--references`**: every cluster crossing threshold is reported — classified as
 Reference, Person, Location, or Organization — with its variant labels and source
-notes. Nothing is written; the user invokes `/write-reference` themselves for any
+notes. Nothing is written; the user invokes `/make-reference-note` themselves for any
 approved Reference candidate. A cluster that fails classification, or never reaches
 threshold, stays a broken wikilink — expected, not an error.
 

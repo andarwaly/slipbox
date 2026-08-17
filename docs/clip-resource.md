@@ -33,4 +33,4 @@ This skill ships as part of the `andarwaly/slipbox` repo:
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/clip-resource/) for the full agent-facing instructions.
+See the [skill source](../skills/clip-resource/) for the full agent-facing instructions.

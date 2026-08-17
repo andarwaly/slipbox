@@ -41,8 +41,8 @@ perform token objections.
   respond.
 - **Stay a question, not a verdict.** Surfacing the competing case is the
   whole job; delivering the counter-argument's conclusion on the user's
-  behalf is not — the same "never your own opinion" rule `grounding` holds
-  everywhere, aimed here at a synthesis instead of a source.
+  behalf is not — see `SKILL.md`'s **Never finish it for them**, aimed here
+  at a synthesis instead of a source.
 
 ## Worked example
 

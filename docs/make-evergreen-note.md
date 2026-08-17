@@ -40,5 +40,5 @@ rather than only appending to it.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/make-evergreen-note/) for the full
+See the [skill source](../skills/make-evergreen-note/) for the full
 agent-facing instructions.

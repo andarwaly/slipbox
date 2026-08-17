@@ -9,6 +9,6 @@ Human-facing documentation for the slipbox skill family.
 - [grounding](./grounding.md) — Socratic-discussion engine with named techniques (Feynman, Maieutic, Elenchus, and others) underlying the note-writing skills
 - [ground-me](./ground-me.md) — Bare grounding session: no note-type commitment, nothing gets written
 - [make-literature-note](./make-literature-note.md) — Ground a clipped source into a literature note, the source's own Claim, in your words
-- [write-reference](./write-reference.md) — Synthesize a reference note from one or more sources, accumulating knowledge on a topic across sessions
+- [make-reference-note](./make-reference-note.md) — Synthesize a reference note from one or more sources, accumulating knowledge on a topic across sessions
 - [make-evergreen-note](./make-evergreen-note.md) — Ground a synthesis across notes into an evergreen note, your own original Take
 - [slipbox (CLI reference)](./slipbox-cli.md) — The command surface every skill above talks to `.slipbox/` state through

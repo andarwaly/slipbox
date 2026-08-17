@@ -1,5 +1,7 @@
 # clip-resource variable glossary
 
+_Mirrored from `clip-resource/references/variable-glossary.md`, bundled here so `setup-slipbox` can draft resource templates without a cross-skill path. `clip-resource` is the canonical, authoring-time source — keep both in sync by hand when the vocabulary changes._
+
 Two variable forms, matching Obsidian Web Clipper's own convention (no new syntax invented):
 
 - **Bare `{{variable}}`** — a raw, mechanically-extracted value. No agent judgment involved in producing it.

@@ -65,18 +65,14 @@ This is a chat, not a worksheet — the technique has to be carried entirely
 in how the agent talks, one turn at a time, matching `grounding`'s own
 global one-question-per-turn rule.
 
+See `SKILL.md`'s **Never finish it for them** — naming the gap is the agent's
+job here, filling it is the user's.
+
 - **Play the role for real, not performatively.** The agent's confusion at
   a jargon word or an unexplained leap should read as genuine
   not-understanding, not a quiz-show "and what does *that* mean?" The
   question is: what would someone actually need explained here, sincerely
   asked.
-- **Sit in the gap.** The moment a gap is spotted, the strongest pull is to
-  just say what's missing — resist it. Naming the gap ("what does 'connect'
-  mean here, exactly?") is the agent's job; filling it is the user's.
-- **Don't finish their sentences.** If the user trails off mid-explanation,
-  let the silence or the trailing-off stand as the answer to work with —
-  don't complete the thought for them, even when the completion seems
-  obvious.
 - **Point at the source, don't summarize it.** When sending the user back
   to fill a gap, name *where* to look ("look at the paragraph starting 'a
   note gains meaning...'"), not what it says — reading it and

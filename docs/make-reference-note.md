@@ -1,10 +1,10 @@
-# write-reference
+# make-reference-note
 
 Synthesize an already-grounded Reference note from the literature notes that
 wikilink to it. There is no `/grounding` session in this skill — the
 citation-discipline work already happened upstream, at the claim level, inside
 whichever literature notes' `## Key Concepts` section wikilinks to this
-reference (`make-literature-note`'s job). `write-reference` pulls those
+reference (`make-literature-note`'s job). `make-reference-note` pulls those
 already-grounded characterizations back out, reconciles them into one
 definition, presents for confirmation, and writes.
 
@@ -39,7 +39,7 @@ queue this skill owns.
 
 ## Usage
 
-> write-reference "confirmation bias"
+> make-reference-note "confirmation bias"
 
 ## Installation
 
@@ -55,5 +55,5 @@ this skill should just stop and tell the user to run it separately, is still
 unresolved — see
 `discussion/slipbox/discussion-topics/find-terms-find-connections-merge.md`.
 
-See the [skill source](../../skills/slipbox/write-reference/) for the full
+See the [skill source](../skills/make-reference-note/) for the full
 agent-facing instructions.

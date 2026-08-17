@@ -4,10 +4,12 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.4.3"
 ---
 
 # Setup Slipbox
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `config.json` plus the `.slipbox/bin/slipbox` CLI, `style-profile.json`, and `humanize-checklist.json` through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (stated note preferences), humanizer workflow snapshot, CLI install, config write. Three of those outputs are built from fixed assets rather than composed fresh each run: `assets/config.schema.json`, `assets/humanize-checklist.json`, and `assets/style-profile.schema.json`. Re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `slipbox config get`/`slipbox config set` CLI (see Done).
 
@@ -21,7 +23,9 @@ For each **required** dependency the report marks missing: stop, tell the user w
 
 `firecrawl` is **optional**, not required — it's only ever used as `clip-resource`'s fallback when a fetch is blocked by bot detection (e.g. some Medium articles); the skill family works fully without it for the large majority of sources. If the report shows it missing or unauthenticated, mention it once, in passing, without treating it as a blocker: offer to run `scripts/install-prereqs.sh firecrawl` if the binary itself is missing, and point the user at `firecrawl config` for authentication (this script never handles credentials) — then move on regardless of their answer.
 
-**Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated is never a reason to hold up completion.
+**TinyFish** is also **optional**, checked separately from the three dependencies above and never through `scripts/check-prereqs.sh`. TinyFish is an MCP-based tool, not a CLI binary or Python library — there is no local install step for it the way there is for Defuddle, Firecrawl, or `youtube-transcript-api`, so this check is detect-and-report only. Check whether a TinyFish MCP tool is available in the current session. If it is, note it as available for `clip-resource`'s Social fetch path. If it isn't, tell the user once, in passing, that TinyFish adds free fetching and the only path that can read Threads for Social clips, that it's connected outside this skill (an MCP server the user adds to their own harness, not something this script installs), and that Social clipping works fully on Firecrawl alone without it — then move on regardless.
+
+**Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated, and TinyFish being unavailable, are never reasons to hold up completion.
 
 ## Explore (no questions yet)
 
@@ -29,7 +33,7 @@ Check the vault for existing signal before asking the user anything:
 
 - `.obsidian/` for a `templates/` folder and Templater plugin config (`.obsidian/plugins/templater-obsidian`), which show the vault's real template location and syntax.
 - Root `AGENTS.md` or `CLAUDE.md` for conventions the user already wrote down.
-- Existing `Literature`/`Reference`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
+- Existing `Literature`/`Reference`/`Evergreen` (or similarly named) folders — these are a convention signal, plus a general sense of the vault's existing formatting and structure, referenced for context, never analyzed as a sample set.
 - Whatever `tags` actually seems to be used for in this vault — note it in plain language for Section A's presentation (e.g. subtype-marker, topic/subject labels, a catch-all, a minimal signal, some mixture, or not used at all). This is descriptive narration only, never a mapping decision, and never forced into a fixed category list — real vaults don't fit a clean taxonomy, so describe what's actually observed. `tags` itself is never mapped onto or written to by any field_map resolution, regardless of what this narration finds.
 - An existing `.slipbox/` directory. Its presence branches three ways, not two:
   - `.slipbox/config.json` exists → this is a re-run; switch to the drift-check flow in Re-run semantics.
@@ -42,13 +46,13 @@ Check the vault for existing signal before asking the user anything:
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
-- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference` — renamed from `paths.term`; see `discussion/slipbox/discussion-topics/reference-note-admission-contract.md`).
+- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference`; see `GLOSSARY.md` for the Reference note's admission test).
 - **Filename casing** per note type (kebab-case, Title Case, snake_case, or whatever the vault already does).
 - **Note-type prefixes**: ask once, for all three note types together — "Want a symbol prefix on note titles, so they're distinguishable at a glance even if they all end up in the same folder? Default: `§` for literature, `※` for reference, `✱` for evergreen. Keep these, pick your own, or skip prefixes entirely?" Record per-type: a string, or `false` for no prefix. Resources never get a prefix — no question asked for that type.
 - **Templates**: three note templates (literature, reference, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
   - **The three note templates almost always already exist** — resolve their path and move on, same as any other convention item.
   - **The four resource templates usually don't** — the templates *folder* typically exists (from note-taking), but article/news/social/video `.md` files inside it typically don't, since clipping is a newer concept for most vaults than note-taking. For each one that's missing at its resolved path, offer to draft it together right there rather than asking the user to go write Obsidian template syntax cold:
-    1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `../clip-resource/references/variable-glossary.md` and `../clip-resource/references/filter-glossary.md`, but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
+    1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `variable-glossary.md` and `filter-glossary.md` (bundled with this skill, mirroring `clip-resource`'s own copies), but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
     2. Ask what they want captured in the note and in what order (title, source link, a raw excerpt, a synthesized summary, etc.).
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
@@ -90,7 +94,7 @@ For each required field below, on a type the user chose to resolve now, resolve 
 
 ## Section B: stated note preferences
 
-Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus, infer a voice fingerprint, or create `stated_style.json`. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
+Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus or infer a voice fingerprint. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
 
 Start from `assets/style-profile.schema.json` and interview the user against its fixed sections:
 
@@ -104,7 +108,7 @@ Start from `assets/style-profile.schema.json` and interview the user against its
 
 Show the complete draft to the user. Let them edit or approve it. Verify preference-sensitive shape choices against an actual note where useful, but never treat that note as a corpus to analyze. Validate the approved profile against `assets/style-profile.schema.json` before writing `.slipbox/style-profile.json`.
 
-**Done when:** the user has approved one stated profile, it validates against the fixed schema, and `.slipbox/style-profile.json` is written. No corpus branch and no `stated_style.json` output exist.
+**Done when:** the user has approved one stated profile, it validates against the fixed schema, and `.slipbox/style-profile.json` is written. No corpus branch exists.
 
 ## Write `.slipbox/humanize-checklist.json`
 
@@ -134,7 +138,7 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 - `paths` — the resources/literature/evergreen/reference (`paths.reference`, renamed from `paths.term`) folder paths from Section A.
 - `filenames` — casing per note type (`filenames.reference`, renamed from `filenames.term`).
 - `prefixes` — the per-type title prefix (or `false`) from Section A.
-- `frontmatter` — the field_map from Section A, per type (literature/reference/evergreen); each entry carries `name`/`type`/`wikilink`/`zone`, `{"deferred": true}`, the bare string/`false` shorthand, validated against `assets/config.schema.json`.
+- `frontmatter` — the field_map from Section A, per type (literature/reference/evergreen), validated against `assets/config.schema.json` — see that file's own `description` field for the canonical shape each entry can take.
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
 - `templates` — seven explicit paths: `literature_path`, `reference_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Section A's clip config.
@@ -143,15 +147,24 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 **Done when:** `.slipbox/config.json` is written, matches the approved draft, and validates against `assets/config.schema.json`.
 
+## Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
+
+Two unconditionally-copied assets, same treatment as `humanize-checklist.json` above:
+
+- Copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md`, verbatim, on every run.
+- Copy `assets/AGENTS.md` to `.slipbox/AGENTS.md`, verbatim, but only after every other artifact in this skill (`config.json`, `bin/slipbox`, `evergreen/`, `links.jsonl`, `style-profile.json`, `humanize-checklist.json`, `GLOSSARY.md`) has already succeeded. `.slipbox/AGENTS.md` is written strictly last — its existence is the completion sentinel every other skill in this family checks, so a partial or interrupted run must never leave it behind claiming success.
+
+**Done when:** `.slipbox/GLOSSARY.md` matches `assets/GLOSSARY.md` exactly, and `.slipbox/AGENTS.md` matches `assets/AGENTS.md` exactly and was written only after every other artifact above already exists.
+
 ## Done
 
-Tell the user what was created: `.slipbox/config.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `write-reference` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
+Tell the user what was created: `.slipbox/config.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
 ## Re-run semantics (drift check, manual trigger only)
 
-Triggered only when the user explicitly asks to re-run, or when Explore finds an existing `.slipbox/`. Never runs automatically otherwise.
+Triggered only when the user explicitly asks to re-run, or when Explore finds `.slipbox/config.json` already present. Never runs automatically otherwise.
 
 1. Validate the existing `.slipbox/config.json` against `assets/config.schema.json` first, before doing anything else. A file that predates the schema or was hand-edited may not conform — surface any validation errors to the user before proceeding to the diff, rather than feeding a malformed file straight into it.
 2. Re-discover conventions and style the same way as Explore/Section A/Section B, using the current state of the vault.
@@ -165,8 +178,9 @@ Triggered only when the user explicitly asks to re-run, or when Explore finds an
 7. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
 8. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
 9. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.
-10. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
+10. Re-copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md` and `assets/AGENTS.md` to `.slipbox/AGENTS.md`, unconditionally, same category as `humanize-checklist.json` — both pick up any skill-package-level update. Neither is on the "never overwrite" list below; they're routine refreshes, not user-owned state. Write `.slipbox/AGENTS.md` last, after every other re-copy and write in this list has succeeded, same ordering guarantee as a first run.
+11. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
 
 **Never** overwrite `.slipbox/evergreen/*.md`, `.slipbox/discussions/`, or any existing note during a re-run.
 
-**Done when:** `config.json` reflects only the mismatches the user resolved (including field_map drift) and re-validates against `assets/config.schema.json`, the user has seen the stated-profile diff, and `.slipbox/humanize-checklist.json` matches the current `assets/humanize-checklist.json`.
+**Done when:** `config.json` reflects only the mismatches the user resolved (including field_map drift) and re-validates against `assets/config.schema.json`, the user has seen the stated-profile diff, `.slipbox/humanize-checklist.json` matches the current `assets/humanize-checklist.json`, and `.slipbox/GLOSSARY.md`/`.slipbox/AGENTS.md` match their current package assets.

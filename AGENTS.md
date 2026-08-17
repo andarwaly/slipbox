@@ -30,8 +30,9 @@ slipbox/                    ← repo root, this file's location
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
 │   ├── make-literature-note/  ← literature-note wrapper (was ground-the-claim,
 │   │                              was write-literature-note)
-│   ├── write-reference/       ← Reference-note synthesis wrapper (was ground-term,
-│   │                              was write-reference-note); never runs /grounding
+│   ├── make-reference-note/   ← Reference-note synthesis wrapper (was ground-term,
+│   │                              was write-reference, was write-reference-note);
+│   │                              never runs /grounding
 │   └── make-evergreen-note/   ← evergreen-note wrapper (was ground-my-take,
 │                                  was write-evergreen-note)
 └── tests/
@@ -40,12 +41,13 @@ slipbox/                    ← repo root, this file's location
         └── {{skill-name}}-workspace/   ← run outputs, one subfolder per iteration
 ```
 
-`tests/` sits at repo root, sibling to `skills/` — never nested inside a skill's own folder. This keeps it out of every `npx skills add` per-skill install (same mechanism that keeps `CONTEXT.md` out of individual installs) while still shipping with a full clone of the repo.
+`tests/` sits at repo root, sibling to `skills/` — never nested inside a skill's own folder. Neither `tests/` nor `CONTEXT.md` ever ships under any `npx skills add` invocation, because the install unit is always one skill's own directory — `skills add owner/repo` included. The `git clone` the CLI performs is discovery staging only, deleted after copying whichever skill directories were requested. This means an installed skill can never read `CONTEXT.md` or anything else at repo root directly; `.slipbox/AGENTS.md`/`GLOSSARY.md`, copied into the vault by `setup-slipbox`, are the actual mechanism that closes that runtime-reachability gap.
 
 ## Workflow
 
 - **Skill format**: follow the [agentskills.io](https://agentskills.io) spec — a directory with `SKILL.md` (`name`, `description` frontmatter; optional `license`, `metadata`, and `scripts/`/`references/`/`assets/` subdirs). Frontmatter extensions (e.g. `disable-model-invocation`) are fine anywhere; an unrecognized key degrades gracefully. Heading/prose style (no numbered step-headings, etc.) is governed workspace-wide by the root `AGENTS.md`'s "Skill-writing conventions" section — not restated here.
-- **Cross-skill references**: `/grounding` and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's two composable "engine" skills (`disable-model-invocation: true`, built to be invoked as a sub-procedure *from inside* another skill's own flow: "Run a `/grounding` session," "Run a `/write-checks` session"). Every other skill (`find-connections`, `make-literature-note`, `write-reference`, `make-evergreen-note`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows the way `grounding`/`write-checks` are.
+- **Cross-skill references**: `/grounding` and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's two composable "engine" skills, built to be invoked as a sub-procedure *from inside* another skill's own flow: "Run a `/grounding` session," "Run a `/write-checks` session." Every other skill (`find-connections`, `make-literature-note`, `make-reference-note`, `make-evergreen-note`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows the way `grounding`/`write-checks` are.
+  - The `disable-model-invocation` flag marks "runs only when the user explicitly asks," not "is an engine skill." Five skills carry it — `clip-resource`, `find-connections`, `ground-me`, `setup-slipbox`, `make-reference-note` — each a leaf action meant to run only on explicit user request, never the model's own suggestion. `grounding` and `write-checks` structurally cannot carry the flag, since the family's architecture depends on other skills freely invoking them mid-procedure. `make-literature-note`/`make-evergreen-note` correctly lack it too.
 - **Docs**: every skill gets a human-facing page at `docs/{{skill-name}}.md`.
 - **Distribution**: published to a public GitHub repo. Users install with `npx skills add andarwaly/slipbox` (or a specific skill within it).
 - **Writing a skill or a change to one**: two phases, don't skip the second.

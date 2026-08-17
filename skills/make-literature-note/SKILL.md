@@ -6,37 +6,19 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.4.2"
 ---
 
 # Make-literature-note
 
-## What these words mean
-
-- **Claim** — the source's own position on one specific question the source
-  answers, restated in the user's words and checked for fidelity, written
-  as a declarative sentence. Never the user's opinion — an object of
-  understanding, not agreement. A source usually holds several.
-- **Core Idea** — the source's central argument, one declarative sentence,
-  every Claim in the note in service of it. Distinct from a Claim: a Claim
-  is one thing the source argues, the Core Idea is what the source is
-  *for*. Written once per note, on its first Claim.
-- **Literature note** — the file a source's confirmed Claims get written
-  into. One per source clip, holding as many Key Claims as the source
-  actually supports — written incrementally as each is confirmed, never
-  revisited afterward except out-of-band manual fidelity corrections:
-  fixing a misreading, a transcription error, or wording that
-  misrepresents the source. Reaction, stance, or synthesis never enters; a
-  correction must move the note closer to the source. Slugs stay final
-  once written.
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If
-it's missing, stop and say so. Same check for `.slipbox/bin/slipbox` — if
-it doesn't exist or isn't executable, stop and say so too. Every `slipbox`
-call below uses this same path, `.slipbox/bin/slipbox` — never bare
-`slipbox`, which isn't guaranteed to be on `PATH`.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
+completed a full run. If missing, stop and say so. Every `slipbox` call below
+uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
+isn't guaranteed to be on `PATH`.
 
 ## Invocation
 
@@ -49,14 +31,14 @@ and never require the argument when the source is obvious from context.
 
 ## Take the source
 
-Check whether a literature note for this source already exists: read
-`paths.literature` from `.slipbox/config.json` and scan `*.md` under that
-folder — never assume a folder literally named `literature/` — for a note
-whose resolved `source` field (per `frontmatter.literature.source.name` in
-the same config) points at this resource.
+Check whether a literature note for this source already exists: use
+`slipbox config get paths.literature` to locate the folder and scan `*.md`
+under it — never assume a folder literally named `literature/` — for a note
+whose resolved `source` field (per `slipbox config get frontmatter.literature.source.name`)
+points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
-  to the surface pass below with a fresh candidate backlog.
+  to the Surface pass below with a fresh Private backlog.
 - **A note already exists** — read it in full. Its existing `## Key
   Claims` `###` headings are claims already confirmed; the backlog below
   must not re-offer them.
@@ -77,7 +59,7 @@ are one claim, not two.
 This candidate list is **your own private backlog, not a menu presented to
 the user** — never surfaced as a checklist, never asked "which of these do
 you want grounded." It exists only to steer where the conversation still
-needs to go and to check coverage once the sitting winds down. It is
+needs to go and to check coverage once the session winds down. It is
 session-scoped only — discarded once the session ends, regardless of how
 much of it got covered.
 
@@ -106,14 +88,14 @@ backlog before continuing:
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
-## Knowing when the sitting is done
+## Knowing when the session is done
 
 Once the conversation's natural energy winds down, check the private
 backlog against what actually got covered (in whatever reshaped form).
 Anything genuinely untouched gets one nudge, never more: "you haven't
 mentioned [X] — is that not something the source argues, or should we
 leave it for now?" The user's own "I think that's everything" always ends
-the sitting regardless of what the backlog still shows uncovered — the
+the session regardless of what the backlog still shows uncovered — the
 nudge is a single offer, never an insistence.
 
 ## Write each claim, incrementally
@@ -125,15 +107,15 @@ toward the next one, if there is a next one:
   list (`type`, `created`, `source`) — it resolves each field's mapping,
   formatting, zone placement, and title prefix, and checks the draft's
   style and humanize signals.
-- Write into `paths.literature` from `.slipbox/config.json`, filename per
-  that same config's casing convention for the literature type. The title
+- Write into the folder from `slipbox config get paths.literature`, filename per
+  `slipbox config get filenames.literature` casing convention. The title
   is source/topic-oriented (what the source is about), never claim-shaped
   — it doesn't change as more claims get added. On this note's first
   claim, write the Core Idea line too, directly under the title (see
   `references/writing-a-claim.md`); skip it on a second or later claim,
   it's already there.
 - Re-read the target path from disk right before writing (the note may
-  already hold earlier claims from this same sitting, or from a prior
+  already hold earlier claims from this same session, or from a prior
   one).
 - Assemble and review the claim per `references/writing-a-claim.md` — the
   declarative heading, condensed Evidence, the review checklist, quote
@@ -144,7 +126,7 @@ toward the next one, if there is a next one:
 
 ## Spot terms and entities
 
-Once the sitting ends, one batch pass — never mid-claim. Re-read the
+Once the session ends, one batch pass — never mid-claim. Re-read the
 finished note; re-read the source too if this is a resumed session and
 it's no longer in context. Compare the two and find anything a claim leans
 on — its weight actually resting on it, not just mentioned in passing —
@@ -174,7 +156,7 @@ resolution. Zero found is a complete, valid result.
 ## Done
 
 The literature note exists on disk with its Core Idea, every claim the
-sitting actually produced as its own `## Key Claims` entry, and any
+session actually produced as its own `## Key Claims` entry, and any
 confirmed Key Concepts (partial if the session stopped early — that's a
 complete, valid outcome), any flagged tensions are logged in the evergreen
 backlog, and the user is told the file path.

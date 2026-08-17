@@ -47,8 +47,9 @@ wouldn't self-explain well unprompted has something concrete to work from.
 - **Name the specific contradiction, not the general confusion.** "You said
   X, but a moment ago you said Y — how do those fit together?" is far more
   useful than "that doesn't quite make sense, try again."
-- **Point at the discrepancy, don't resolve it.** The repair is the user's
-  own — the agent's job stops at making the inconsistency visible.
+- **Point at the discrepancy, don't resolve it.** See `SKILL.md`'s
+  **Never finish it for them** — the repair is the user's own; the agent's
+  job stops at making the inconsistency visible.
 - **Let genuine confusion sit for a moment.** Don't rush to rephrase the
   question if the first attempt to surface the discrepancy doesn't land
   immediately — repair takes a beat, especially for material that was

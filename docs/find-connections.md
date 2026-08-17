@@ -44,7 +44,7 @@ connections relating to just those notes, instead of a whole-vault scan.
    + declarative-title test) for anything that isn't an entity.
 4. **Present as a batch** — every candidate crossing threshold (Reference and Person/
    Location/Organization alike) shown together, never auto-written. For an approved
-   Reference candidate, the user invokes `/write-reference` themselves — this skill never
+   Reference candidate, the user invokes `/make-reference-note` themselves — this skill never
    writes one directly. Person/Location/Organization candidates are surfaced only; this
    family has no write skill for those three types.
 5. Zero clusters crossing threshold is a complete, valid result, not an error.
@@ -72,5 +72,5 @@ connections relating to just those notes, instead of a whole-vault scan.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/find-connections/) for the full agent-facing
+See the [skill source](../skills/find-connections/) for the full agent-facing
 instructions.

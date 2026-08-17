@@ -5,10 +5,12 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.3.2"
 ---
 
 # Make-evergreen-note
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## What these words mean
 
@@ -21,11 +23,10 @@ metadata:
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If
-it's missing, stop and say so. Same check for `.slipbox/bin/slipbox` — if
-it doesn't exist or isn't executable, stop and say so too. Every `slipbox`
-call below uses this same path, `.slipbox/bin/slipbox` — never bare
-`slipbox`, which isn't guaranteed to be on `PATH`.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
+completed a full run. If missing, stop and say so. Every `slipbox` call below
+uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
+isn't guaranteed to be on `PATH`.
 
 ## Take the material
 
@@ -41,7 +42,7 @@ call below uses this same path, `.slipbox/bin/slipbox` — never bare
 
   Offer these; let the user choose one. This is how a flagged tension from
   `make-literature-note` — or a spawned Compass sub-idea from a prior
-  `make-evergreen-note` sitting — eventually gets picked up and turned
+  `make-evergreen-note` session — eventually gets picked up and turned
   into a real Take.
 
 ## Ground it
@@ -56,9 +57,8 @@ aimed at yourself instead of the user this time). This is the
 Fidelity-direction parameter you supply to `/grounding` when the session
 starts.
 
-Orient the take with `references/compass.md` (now living inside
-`grounding`, alongside its own supporting techniques) — reach for whichever
-direction the conversation calls for, no fixed order. Compass's own
+Orient the take with the Compass technique — reach for whichever direction
+the conversation calls for, no fixed order. Compass's own
 directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
 gets logged to the evergreen backlog the same way any other flagged tension
 does (see Compass's own Guardrail).
@@ -87,8 +87,8 @@ notes said on their own.
   field's mapping, formatting, and zone placement, and checks the draft's
   style and humanize signals. `updated-at` gets `created`'s own timestamp
   on a first write, and is refreshed to the current time on a revisit.
-- Write into `paths.evergreen` from `.slipbox/config.json`, filename per
-  that same config's casing convention for the evergreen type.
+- Write into the folder from `slipbox config get paths.evergreen`, filename per
+  `slipbox config get filenames.evergreen` casing convention.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from `write-checks`' returned fields and write
   the file — a full rewrite of existing content on a revisit, since unlike

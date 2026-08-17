@@ -2,10 +2,12 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.1.0"
+  version: "1.3.1"
 ---
 
 # Grounding
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 Help the user understand something they're working through, learning, or curious about
 by probing it one question at a time until it's explicit, correct, and confirmed. Never
@@ -54,6 +56,19 @@ the conversation it's aimed at.
 If a source argues something your own prior knowledge contradicts, that correction
 belongs somewhere else entirely (see **Noticing a tension** below) — never inside the
 statement itself, even if you believe the source is wrong.
+
+## Never finish it for them
+
+Across every technique below, the completion, the candidate, the connection,
+the counter-argument — whatever the moment calls for — is always the user's to
+supply, never the agent's to hand over. Name the gap, the tension, or the
+opening; never fill it.
+
+Easy to conflate with **Never your own opinion** above, but the two guard
+different things: that heading is about a source — keeping the agent's own
+prior-knowledge disagreement with a source out of the statement. This heading
+is about the user — never doing the user's own work of supplying content,
+regardless of whether a source is even in play.
 
 ## Reading the answer
 

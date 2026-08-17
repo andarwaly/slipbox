@@ -22,7 +22,7 @@
     "./skills/grounding",
     "./skills/ground-me",
     "./skills/make-literature-note",
-    "./skills/write-reference",
+    "./skills/make-reference-note",
     "./skills/make-evergreen-note",
     "./skills/write-checks"
   ]

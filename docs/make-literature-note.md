@@ -42,5 +42,5 @@ If the note already has claims from a prior session, it only offers what's left.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/make-literature-note/) for the full
+See the [skill source](../skills/make-literature-note/) for the full
 agent-facing instructions.

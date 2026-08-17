@@ -18,8 +18,8 @@ decide whether a passage is one claim, part of a bigger one, or not claim-worthy
   addresses.
 - **Bad:** "What is the Zettelkasten Method?" — a topic label. Nothing this broad
   resolves into a single claim; it's an invitation to summarize the whole source under
-  one heading, which breaks the atomicity a Key Claim needs (see `../../../CONTEXT.md`'s
-  Atomicity section).
+  one heading, which breaks the atomicity a Key Claim needs (see `GLOSSARY.md`'s
+  Atomicity entry).
 
 ## Evidence
 

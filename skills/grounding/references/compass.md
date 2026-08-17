@@ -83,7 +83,7 @@ decides what the next question is about.
 - **Directions recurse — treat this as optional, not mandatory.** Any
   answer that comes out of a direction can become its own new center idea,
   with its own SOUTH/EAST/WEST branches. This is real and worth noticing,
-  but never mandatory to chase within the current sitting: a spawned
+  but never mandatory to chase within the current session: a spawned
   sub-idea that isn't pursued now gets logged to the evergreen backlog
   (`slipbox evergreen add --slug <draft-slug> --reason "<what came up>"`)
   for a later, separate session — the same way any other flagged tension
@@ -97,7 +97,7 @@ stability needed to function in society" reaches EAST and surfaces
 EAST answer is itself a candidate for a fresh Compass session later — its
 own SOUTH might be "land-value taxation as one response," its own EAST
 might be "does regulation actually worsen scarcity?" None of that gets
-chased down in the current sitting unless the user wants to; if not, it's
+chased down in the current session unless the user wants to; if not, it's
 logged to the backlog as its own future starting point.
 
 ## Guardrail
