@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Setup Slipbox
@@ -23,7 +23,9 @@ For each **required** dependency the report marks missing: stop, tell the user w
 
 `firecrawl` is **optional**, not required — it's only ever used as `clip-resource`'s fallback when a fetch is blocked by bot detection (e.g. some Medium articles); the skill family works fully without it for the large majority of sources. If the report shows it missing or unauthenticated, mention it once, in passing, without treating it as a blocker: offer to run `scripts/install-prereqs.sh firecrawl` if the binary itself is missing, and point the user at `firecrawl config` for authentication (this script never handles credentials) — then move on regardless of their answer.
 
-**Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated is never a reason to hold up completion.
+**TinyFish** is also **optional**, checked separately from the three dependencies above and never through `scripts/check-prereqs.sh`. TinyFish is an MCP-based tool, not a CLI binary or Python library — there is no local install step for it the way there is for Defuddle, Firecrawl, or `youtube-transcript-api`, so this check is detect-and-report only. Check whether a TinyFish MCP tool is available in the current session. If it is, note it as available for `clip-resource`'s Social fetch path. If it isn't, tell the user once, in passing, that TinyFish adds free fetching and the only path that can read Threads for Social clips, that it's connected outside this skill (an MCP server the user adds to their own harness, not something this script installs), and that Social clipping works fully on Firecrawl alone without it — then move on regardless.
+
+**Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated, and TinyFish being unavailable, are never reasons to hold up completion.
 
 ## Explore (no questions yet)
 

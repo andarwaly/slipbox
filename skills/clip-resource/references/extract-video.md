@@ -6,6 +6,6 @@ Failure taxonomy. These are not interchangeable:
 
 - **`VideoUnavailable`, `TranscriptsDisabled`, `NoTranscriptFound`**: a clean failure. Treat exactly like a paywall or login wall: report it, write nothing, stop.
 - **`RequestBlocked`, `IpBlocked`**: a distinct message. This is an environment or rate-limit problem, not "no transcript exists for this video." Say so explicitly; don't conflate the two failure kinds in the report.
-- **`import` fails / library not installed**: a third, distinct case, different from both of the above. This isn't about the video at all; it's a missing dependency. `setup-slipbox`'s Step 0 should have caught this already. If it's still missing, stop and tell the user to run `setup-slipbox` to install it. Do not attempt `pip install` from inside this skill.
+- **`import` fails / library not installed**: a third, distinct case, different from both of the above. This isn't about the video at all; it's a missing dependency. `setup-slipbox`'s prerequisite check should have caught this already. If it's still missing: same shared shape as `SKILL.md`'s Step 0, except don't attempt `pip install`.
 
 No Whisper fallback, or any other transcription workaround, under any failure condition.

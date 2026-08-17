@@ -37,6 +37,4 @@ See `filter-glossary.md` for the filter vocabulary (`wikilink`, `date`, `slice`,
 
 ## Not supported (yet)
 
-- CSS-selector-style variables (`{{selector:...}}`, `{{selectorHtml:...}}`) — no DOM access without a headless browser. Planned for a future version alongside a headless-browser install script.
-- DOM-dependent filters (`markdown`, `strip_tags`, `strip_attr`, `remove_html`, `image`) — same reason; deferred to the same future version.
-- Template logic (`{% if %}`, `{% for %}`) — the agent has judgment already; a rules-engine layer here would be redundant.
+CSS-selector-style variables (`{{selector:...}}`, `{{selectorHtml:...}}`) — no DOM access without a headless browser. Planned for a future version alongside a headless-browser install script. See `filter-glossary.md` for the filter vocabulary's own "Not supported (yet)" section, which covers the matching DOM-dependent filters. Template logic (`{% if %}`, `{% for %}`) is also unsupported — the agent has judgment already; a rules-engine layer here would be redundant.

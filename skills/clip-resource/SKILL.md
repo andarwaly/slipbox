@@ -1,10 +1,10 @@
 ---
 name: clip-resource
-description: Fetch a URL and write it as a frozen Resource, matching Obsidian Web Clipper's output shape. For users without a clipper tool. Fetchable content only; paywalled or login-gated pages are not handled by this skill.
+description: Fetch one or more URLs and write each as a frozen Resource, matching Obsidian Web Clipper's output shape. For users without a clipper tool. Fetchable content only; paywalled or login-gated pages are not handled by this skill.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Clip Resource
@@ -17,11 +17,17 @@ For the case where the user has no Web Clipper, no Readwise, nothing installed: 
 
 Check first, before anything else. Its presence confirms `setup-slipbox` completed a full run. Nothing here can proceed without it.
 
-If `.slipbox/AGENTS.md` is absent: stop. Do not proceed to any other step, and do not improvise conventions in its place. Tell the user to run `setup-slipbox` first, then re-run this skill.
+Tell the user to run `setup-slipbox` first, then re-run this skill, if `.slipbox/AGENTS.md` is absent. Do not improvise conventions in its place while waiting.
 
-## 1. Take the URL
+### Missing dependency: the same shape every time
 
-Ask for a single URL: an article, news story, social/forum thread, or video link. There is no paste-the-text fallback. If the user hands you raw text instead of a link, tell them this skill only takes URLs and ask for one.
+Defuddle, Firecrawl, `youtube-transcript-api`, and TinyFish each get used somewhere below. Whichever one turns out missing or unauthenticated, the response is identical: stop the affected step, tell the user which dependency is missing and what it's for, point them at `setup-slipbox`, and do not install it yourself — that's `setup-slipbox`'s job alone, never this skill's. Each dependency's own mention further down states only what's different about that one case.
+
+## 1. Take the URL(s)
+
+Ask for one or more URLs: articles, news stories, social/forum threads, or video links, any mix. There is no paste-the-text fallback. If the user hands you raw text instead of a link, tell them this skill only takes URLs and ask for one.
+
+For more than one URL, spawn one subagent per URL. Each subagent runs the full fetch/extract/transform/write pipeline (Steps 2 through 6) independently, in parallel, for its own URL only. If no subagent capability exists in this harness, process each URL sequentially instead. Either way, one URL's failure never blocks or corrupts another's — each is fetched, extracted, transformed, and written on its own, and reported on its own in Step 7's batch table.
 
 ## 2. Detect the content type
 
@@ -41,8 +47,8 @@ Note what you actually got back: full content, a truncated snippet, or nothing. 
 
 | Content type | Reference | Method |
 |---|---|---|
-| **Article**, **News** | `references/extract-article-news.md` | Defuddle (primary) with Firecrawl fallback for blocked fetches |
-| **Social/Forum thread** | `references/extract-social.md` | Extraction ladder: schema.org JSON-LD, then `<meta>` tags, then LLM-read fallback |
+| **Article**, **News** | `references/extract-article-news.md` | A two-rung Ladder (see `GLOSSARY.md`): Defuddle first, Firecrawl fallback for blocked fetches |
+| **Social/Forum thread** | `references/extract-social.md` | TinyFish or Firecrawl fetch, then the Ladder (see `GLOSSARY.md`) for facts: schema.org JSON-LD, then `<meta>` tags, then LLM-read fallback |
 | **Video** | `references/extract-video.md` | `youtube-transcript-api` Python library |
 
 Read the reference file for your type; it covers the full extraction logic, tooling, error taxonomy, and fallback paths specific to that content type.
@@ -51,25 +57,56 @@ Read the reference file for your type; it covers the full extraction logic, tool
 
 `clip-resource` has no opinion on what any template's body should contain. Every template is 100% user-authored via `setup-slipbox`, and there is no shipped/default treatment implied by content type. This skill resolves bare variables verbatim and executes quoted instructions exactly as written (see `references/variable-glossary.md`), for every content type equally. A template author may write bare `{{content}}` for Article, a quoted cleanup instruction for News, `{{root_post}}` plus `{{continuation}}` for Social, bare `{{transcript}}` for Video, entity sections (People/Tools/Resources/Definition) or none at all — this skill fills in whatever the actual template asks for, without assuming a "typical" shape per type.
 
-Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the extraction ladder in Step 3 for Social, same as any other bare fact for that type.
+Read the template first — its location comes from the `templates.<type>_path` scoped read described above — then resolve its variables and filters against the reference files. Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the Ladder in Step 3 for Social, same as any other bare fact for that type.
 
-Stop there. Do not add a "Bud candidate" section, a "Further exploration" section, or any other line that names an idea worth pursuing or a conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
+`clip-resource` fills in only what the template's own variables and filters ask for — see `references/variable-glossary.md` and `references/filter-glossary.md`. Nothing beyond that: no line naming an idea worth pursuing, no conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
 
 ## 5. Variable syntax (summary)
 
 Templates (see `.slipbox/config.json`'s `templates` paths for the four resource templates) use two variable forms, matching Obsidian Web Clipper's own convention. No new syntax invented. Full detail in `references/variable-glossary.md`; filters (`|wikilink`, `|date:"..."`, etc.) in `references/filter-glossary.md`.
 
-- Bare `{{variable}}`: a raw, mechanically-extracted **fact** (e.g. `{{author}}`, `{{title}}`). Each bare variable is resolved by whatever method fits it. Most use the extraction ladder in Step 3 above, but `{{transcript}}` is the exception: it's pulled via `youtube-transcript-api`, never the ladder.
+- Bare `{{variable}}`: a raw, mechanically-extracted **fact** (e.g. `{{author}}`, `{{title}}`). Each bare variable is resolved by whatever method fits it. Most use the Ladder in Step 3 above, but `{{transcript}}` is the exception: it's pulled via `youtube-transcript-api`, never the Ladder.
 - Quoted `{{"instruction"}}`: a **synthesis instruction**, freeform natural language executed inline by the same agent running this skill. No separate Interpreter service, no API key. Templates are user-authored (see `.slipbox/config.json`). This skill doesn't dictate what any given template's body variable looks like. A rewritten or summarized Article or News body is a quoted instruction the template's author writes, not something bare `{{content}}` does automatically.
 - No template logic layer (`{% if %}`, `{% for %}`): the agent applies judgment directly. A rules-engine layer here would be redundant.
 
 ## 6. Write
 
-Save the file using the filename and frontmatter conventions recorded in `.slipbox/config.json`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it, and no other skill in this family does either. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
+Save the file using the filename and frontmatter conventions recorded in `.slipbox/config.json`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
 
 ## 7. Report the outcome
 
-Two valid endings, both explicit:
+For a single URL, two valid endings, both explicit:
 
-- **Success**: the Resource file exists at its path, shaped per Step 4, with the correct `type` in frontmatter. Tell the user where it landed.
-- **Fetch failure**: the fetch returned an error, or returned content but it's a paywall teaser, a login wall, a blocked/rate-limited transcript request, or otherwise not the real article/thread/video. Report plainly what came back and why it looks incomplete, and stop there. Do not write a partial Resource file, and do not attempt to work around the paywall, login gate, or block. A clear failure report is a complete, correct run of this skill; a half-written Resource file is not.
+- **Success**: the Resource file exists at its path, shaped per Step 4, with the correct `type` in frontmatter.
+
+  ```
+  Clip Saved
+
+  **Type:** article
+  **URL:** https://example.com/some-post
+  **Saved to:** resources/article/some-post.md
+  ```
+
+- **Fetch failure**: the fetch returned an error, or returned content but it's a paywall teaser, a login wall, a blocked/rate-limited transcript request, or otherwise not the real article/thread/video. Do not write a partial Resource file, and do not attempt to work around the paywall, login gate, or block. A clear failure report is a complete, correct run of this skill; a half-written Resource file is not.
+
+  ```
+  Clip Failed
+
+  **URL:** https://example.com/some-post
+  **Type:** article (detected)
+  **Reason:** Defuddle and Firecrawl fallback both failed — page returned a login wall.
+  ```
+
+For multiple URLs, one batch table covering every URL together, successes and failures alike, matching `find-connections`' batch-present convention:
+
+```
+Clip Results — 3 URLs
+
+| URL | Type | Result |
+|---|---|---|
+| example.com/a | article | Saved to `resources/article/a.md` |
+| example.com/b | video | Failed — transcript disabled |
+| example.com/c | social | Saved to `resources/social/c.md` |
+```
+
+No closing prompt or question after either shape. State the outcome and end.
