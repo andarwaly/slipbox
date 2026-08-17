@@ -46,7 +46,8 @@ a schema-less encounter with the same material doesn't.
 - **Trace to material actually in play.** Per `grounding`'s own Fidelity
   rule, a suggested connection must trace to a note actually retrieved or
   already in the session — never supplied from the agent's own outside
-  knowledge of "similar things."
+  knowledge of "similar things." See also `SKILL.md`'s **Never finish it for them**
+  — the connection itself is the user's to draw, not the agent's to hand over.
 - **Let a thin connection stay thin.** If nothing structural turns up,
   that's a complete result for this direction, not a gap to force.
 

@@ -47,10 +47,7 @@ open-endedness.
   (principle of charity), not the weakest or most convenient one to work
   with.
 - **The reflect-back only counts once the user has explicitly confirmed
-  it** — `grounding`'s own Gate applies at full force here: a pause, a
-  topic change, or the conversation merely feeling settled does not fix
-  it, and a vague or hand-wavy answer is not raw material to polish into
-  coherence on the user's behalf.
+  it** — `grounding`'s own Gate applies at full force here.
 
 ## Worked example
 

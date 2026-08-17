@@ -46,10 +46,10 @@ hold onto: this is closer to a stance than a script.
   keep coming back to?" invites the forming idea forward, rather than
   asking a diagnostic question that presumes something specific already
   exists to interrogate.
-- **Don't supply candidate answers.** Because there's no source to point
-  at, the temptation to just suggest a plausible-sounding position is
-  stronger here than anywhere else in the family — resist it entirely; a
-  suggested idea isn't the user's own, however close it might be.
+- **Don't supply candidate answers.** See `SKILL.md`'s **Never finish it for them**
+  — because there's no source to point at, the temptation to just suggest a
+  plausible-sounding position is stronger here than anywhere else in the
+  family, but a suggested idea isn't the user's own, however close it might be.
 - **Test only after something's delivered.** The diagnostic half (is this
   "offspring" legitimate) only starts once a real position has actually
   been spoken — don't test a hunch that hasn't been said yet.
