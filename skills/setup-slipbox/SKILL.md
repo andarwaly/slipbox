@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.3"
+  version: "1.4.4"
 ---
 
 # Setup Slipbox

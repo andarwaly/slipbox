@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.4.2"
+  version: "1.5.0"
 ---
 
 # Make-literature-note
