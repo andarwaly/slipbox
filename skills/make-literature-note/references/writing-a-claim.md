@@ -52,6 +52,9 @@ which is `/write-checks`'s job, run separately.
 - Warrant self-check (per `qec-theory.md`): can the "why" be stated in one sentence from
   the Evidence? If Conclusion and that one sentence would say the same thing, the
   Conclusion is still restating, not concluding — go back and sharpen it.
+- Does it stay in the source's own terms, or has a metaphor/framing crept in that the
+  source itself never used? A Conclusion that compresses cleanly into the agent's own
+  imagery rather than the source's is drift, not synthesis.
 
 **Evidence**
 - Does it report what the source said or showed — not already a step toward what it
@@ -106,6 +109,11 @@ happens entirely downstream, in `find-connections`, once cross-note evidence exi
 ```markdown
 - [[<note-filename>|Display Name]]: [what this source says about it, in one line]
 ```
+
+For a `## Mentioned` entry specifically, front-load the source's attribution rather than
+burying it mid-sentence: "Tseng identifies X as the person who popularized Y," not "the
+person Tseng identifies as having popularized Y" — the source's own claim should read as
+the subject of the sentence, not a clause nested inside a description of the entity.
 
 Both sections are load-bearing — `find-connections` scans `## Key Concepts` **and**
 `## Mentioned` for recurrence detection, so everything the claim actually leans on must

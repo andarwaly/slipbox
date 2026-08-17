@@ -52,7 +52,11 @@ Question/Evidence/Warrant as your own internal reasoning tool (see
 `references/qec-theory.md`) — never shown to the user in this form —
 identify every distinct claim the source actually supports and the
 source's Core Idea, skipping anything an existing literature note (per
-Take the source above) already covers. Apply the shared-Warrant merge test
+Take the source above) already covers. Include the source's own
+setup/motivation claims — why it argues what it argues, what it's reacting
+to or building on — not just its main framework's mechanics; a source's
+justification for its central idea is as load-bearing as the idea itself.
+Apply the shared-Warrant merge test
 now, before proceeding: two candidates resting on the same inferential move
 are one claim, not two.
 

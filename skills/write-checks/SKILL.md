@@ -66,7 +66,8 @@ own `description` field — not restated here.
 
 The field's own name is never the mapping. Format the value per the entry's recorded
 `type` (a `list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
-timestamp), and wrap in wikilink or markdown-link syntax per
+timestamp, written bare/unquoted — never `"YYYY-MM-DD"` — consistent across every note
+of that type), and wrap in wikilink or markdown-link syntax per
 `slipbox config get links.style` when `wikilink: true`.
 
 ## Note-type prefix

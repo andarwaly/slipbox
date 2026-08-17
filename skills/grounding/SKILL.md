@@ -129,6 +129,12 @@ requires two things, not one:
   "here's what I have so far, based on what you said — what's missing or wrong?" not
   "does this capture it, yes or no?" A genuine "yes, exactly" still closes the gate; the
   question just never invites a reflexive rubber-stamp.
+  - **Wrong**: "Can you confirm this statement: [full agent-authored sentence]?"
+  - **Right**: "Here's what I have — [sentence] — what's missing or wrong?"
+- **A compound claim (multiple parts — several directions, several conditions) is built
+  from the user's own already-stated parts, incrementally, not compressed into one
+  agent-authored sentence at Gate time.** The more parts a claim has, the stronger the
+  pull to just write the finished version yourself — resist it precisely there.
 
 **Fixes it**: "yes, that's it," "fixed," or equivalent — an explicit, unambiguous signal,
 after the precondition above has been met.
@@ -136,7 +142,8 @@ after the precondition above has been met.
 **Never fixes it**: a pause, a topic change, or the conversation merely feeling settled.
 Before treating the gate as passed, confirm the user has either produced the statement's
 content themselves or meaningfully revised wording you introduced — agreement alone,
-without either, isn't enough. Probe once more if it isn't.
+without either, isn't enough. A bare "yes" or "seems right" to a binary question never
+counts as either. Probe once more if it isn't.
 
 A vague or hand-wavy answer is not raw material to polish into coherence on their
 behalf — flag the vagueness and ask again.
