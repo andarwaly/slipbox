@@ -18,7 +18,7 @@ So this isn't an agent that writes notes for me. It's the opposite. It grounds e
 The pipeline itself: clip a source, ground discussable ideas from it into notes, or run whole-corpus passes to find patterns.
 
 ```
-clip-resource → make-literature-note / write-reference / make-evergreen-note
+clip-resource → make-literature-note / make-reference-note / make-evergreen-note
 find-connections (whole-corpus pass, run separately)
 ```
 
@@ -38,7 +38,7 @@ Run `/setup-slipbox` once per vault before anything else. It discovers your vaul
 - **[grounding](./docs/grounding.md)**: the Socratic-discussion engine underlying the note-writing skills.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
 - **[make-literature-note](./docs/make-literature-note.md)**: grounds a clipped source into a literature note, the source's own Claim, in your words.
-- **[write-reference](./docs/write-reference.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.
+- **[make-reference-note](./docs/make-reference-note.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.
 - **[make-evergreen-note](./docs/make-evergreen-note.md)**: grounds a synthesis across notes into an evergreen note, your own original Take.
 - **write-checks**: internal. Checks a note draft against vault style before any note-writing skill commits it. Runs automatically, not invoked directly.
 

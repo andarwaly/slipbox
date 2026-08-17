@@ -1,15 +1,15 @@
 ---
-name: write-reference
+name: make-reference-note
 description: Synthesize an already-grounded Reference note from the literature
   notes that wikilink to it — pulls in each note's grounded characterization,
   reconciles them into one definition, presents for confirmation, writes.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
-# Write-reference
+# Make-reference-note
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
@@ -31,7 +31,7 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 Grounding — holding the user to a source for a claim, via a `/grounding` session —
 already happened upstream, at the claim level, inside whichever literature notes'
 `## Key Concepts` section wikilinks to this reference. That's `make-literature-note`'s
-job, not this skill's. `write-reference`'s own job starts after that: pull the
+job, not this skill's. `make-reference-note`'s own job starts after that: pull the
 already-grounded characterizations back out of those literature notes, reconcile them
 into one definition, present for confirmation, write.
 

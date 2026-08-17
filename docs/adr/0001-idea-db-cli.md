@@ -4,7 +4,7 @@ status: superseded-by-0002
 
 # idea-db CLI: schema ownership, bash runtime, per-vault install, JSON-first output
 
-Every skill touching `idea.db` (e.g., `make-literature-note`, `write-reference`, `make-evergreen-note`, `write-checks`) used to embed raw `sqlite3`/SQL directly in its own prose. We built `idea-db`, a single bash script wrapping `sqlite3`, as the one shared interface every skill talks to `idea.db` through instead.
+Every skill touching `idea.db` (e.g., `make-literature-note`, `make-reference-note`, `make-evergreen-note`, `write-checks`) used to embed raw `sqlite3`/SQL directly in its own prose. We built `idea-db`, a single bash script wrapping `sqlite3`, as the one shared interface every skill talks to `idea.db` through instead.
 
 ## Decisions
 
