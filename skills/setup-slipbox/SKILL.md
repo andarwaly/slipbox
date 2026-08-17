@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Setup Slipbox
@@ -143,9 +143,18 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 **Done when:** `.slipbox/config.json` is written, matches the approved draft, and validates against `assets/config.schema.json`.
 
+## Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
+
+Two unconditionally-copied assets, same treatment as `humanize-checklist.json` above:
+
+- Copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md`, verbatim, on every run.
+- Copy `assets/AGENTS.md` to `.slipbox/AGENTS.md`, verbatim, but only after every other artifact in this skill (`config.json`, `bin/slipbox`, `evergreen/`, `links.jsonl`, `style-profile.json`, `humanize-checklist.json`, `GLOSSARY.md`) has already succeeded. `.slipbox/AGENTS.md` is written strictly last — its existence is the completion sentinel every other skill in this family checks, so a partial or interrupted run must never leave it behind claiming success.
+
+**Done when:** `.slipbox/GLOSSARY.md` matches `assets/GLOSSARY.md` exactly, and `.slipbox/AGENTS.md` matches `assets/AGENTS.md` exactly and was written only after every other artifact above already exists.
+
 ## Done
 
-Tell the user what was created: `.slipbox/config.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `write-reference` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
+Tell the user what was created: `.slipbox/config.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `write-reference` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
@@ -165,8 +174,9 @@ Triggered only when the user explicitly asks to re-run, or when Explore finds an
 7. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
 8. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
 9. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.
-10. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
+10. Re-copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md` and `assets/AGENTS.md` to `.slipbox/AGENTS.md`, unconditionally, same category as `humanize-checklist.json` — both pick up any skill-package-level update. Neither is on the "never overwrite" list below; they're routine refreshes, not user-owned state. Write `.slipbox/AGENTS.md` last, after every other re-copy and write in this list has succeeded, same ordering guarantee as a first run.
+11. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
 
 **Never** overwrite `.slipbox/evergreen/*.md`, `.slipbox/discussions/`, or any existing note during a re-run.
 
-**Done when:** `config.json` reflects only the mismatches the user resolved (including field_map drift) and re-validates against `assets/config.schema.json`, the user has seen the stated-profile diff, and `.slipbox/humanize-checklist.json` matches the current `assets/humanize-checklist.json`.
+**Done when:** `config.json` reflects only the mismatches the user resolved (including field_map drift) and re-validates against `assets/config.schema.json`, the user has seen the stated-profile diff, `.slipbox/humanize-checklist.json` matches the current `assets/humanize-checklist.json`, and `.slipbox/GLOSSARY.md`/`.slipbox/AGENTS.md` match their current package assets.
