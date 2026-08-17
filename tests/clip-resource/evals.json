@@ -78,11 +78,47 @@
     },
     {
       "prompt": "clip this article for me https://example.com/some-post",
-      "expected_output": "Stops before fetching anything, tells the user to run setup-slipbox first, and does not write any file or improvise conventions in config.json's absence — regardless of whether the vault has no .slipbox/ at all, has one with no config.json yet, or has an interrupted/partial setup. clip-resource only ever checks for config.json's presence, so all three states are equivalent from its point of view.",
+      "expected_output": "Stops before fetching anything, tells the user to run setup-slipbox first, and does not write any file or improvise conventions in .slipbox/AGENTS.md's absence — regardless of whether the vault has no .slipbox/ at all, has one with a partial set of artifacts, or has an interrupted setup that never reached the final AGENTS.md write. clip-resource only ever checks for .slipbox/AGENTS.md's presence, since setup-slipbox writes that file strictly last, so all three states are equivalent from its point of view.",
       "fixture_vault": "fixtures/vault-unconfigured",
       "assertions": [
         {"type": "file_not_created"},
         {"type": "contains", "text": "setup-slipbox"}
+      ]
+    },
+    {
+      "prompt": "clip these for me: https://nervegna.substack.com/p/claude-code-for-designers-a-practical and https://www.bbc.com/news/articles/cjrv77gl4deo and https://www.youtube.com/watch?v=V-jd3v9P-Ps",
+      "expected_output": "Accepts all three URLs from the one request, runs the fetch/extract/transform/write pipeline independently per URL (one subagent per URL where the harness supports it, sequential fall-back where it does not), writes three separate frozen Resource files with types article, news, and video, and reports the batch as a single table — never three stacked single-URL cards, and no closing question after it.",
+      "fixture_vault": "fixtures/vault-configured",
+      "_note": "Covers the multi-URL fan-out added to Step 1 in the writing-for-agents cleanup. The three URLs reuse fixtures already present for the single-URL article, news, and video cases, so no new fixture is needed.",
+      "assertions": [
+        {"type": "file_count_created", "expected_count": 3},
+        {"type": "contains", "text": "Clip Results"},
+        {"type": "contains", "text": "| URL | Type | Result |"},
+        {"type": "not_contains", "text": "Clip Saved"}
+      ]
+    },
+    {
+      "prompt": "clip both of these: https://www.bbc.com/news/articles/cjrv77gl4deo and https://youtube.com/watch?v=abc123 (that second one has no captions)",
+      "expected_output": "Processes both URLs independently — the news URL succeeds and writes a Resource, the captionless video fails cleanly and writes nothing. One URL's failure never aborts the other's pipeline. Reports both rows in the same batch table, the failed row carrying its own reason, and writes no file for the failure.",
+      "fixture_vault": "fixtures/vault-configured",
+      "_note": "Edge case for the multi-URL fan-out: partial failure. Verifies per-URL isolation and that the batch table reports mixed outcomes rather than collapsing to a single overall verdict.",
+      "assertions": [
+        {"type": "file_count_created", "expected_count": 1},
+        {"type": "contains", "text": "Clip Results"},
+        {"type": "contains", "text": "Failed"},
+        {"type": "contains", "text": "transcript"}
+      ]
+    },
+    {
+      "prompt": "clip this thread for me https://www.threads.net/@zudoplatov/post/DbPViUDEahD, and TinyFish is not available in this session",
+      "expected_output": "Reaches for TinyFish first for the Social fetch, finds it unavailable, and falls back to Firecrawl rather than stopping — Social clipping still fully functions Firecrawl-only. Writes a frozen Resource with type: social. Never attempts to install TinyFish itself, and never tells the user to install it as a CLI or library, since it is MCP-based and has no local install step.",
+      "fixture_vault": "fixtures/vault-configured",
+      "_no_web_clipper_diff": "Same continuation-gap reasoning as the other Social cases — no fair comparison possible.",
+      "_note": "Covers the TinyFish-first / Firecrawl-fallback fetch ladder added to references/extract-social.md, and the detect-and-report-only treatment of TinyFish in setup-slipbox. Threads is the platform TinyFish is the only option for, which makes it the case where the fallback matters most.",
+      "assertions": [
+        {"type": "frontmatter_field_equals", "field": "type", "value": "social"},
+        {"type": "not_contains", "text": "npm install"},
+        {"type": "not_contains", "text": "pip install"}
       ]
     }
   ]
