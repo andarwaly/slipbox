@@ -34,13 +34,12 @@ Run `/setup-slipbox` once per vault before anything else. It discovers your vaul
 
 - **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `slipbox` CLI install. Run once per vault.
 - **[clip-resource](./docs/clip-resource.md)**: fetches a URL and freezes it as a Resource, for anyone without a clipper tool.
-- **[find-terms](./docs/find-terms.md)**: scans literature notes to identify recurring terms without dedicated term notes yet.
-- **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links and sparked ideas across your notes.
-- **[grounding](./docs/grounding.md)**: the interview engine underneath every `ground-*` skill below.
+- **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links, sparked ideas, and Reference/Person/Location/Organization recurrence across your notes.
+- **[grounding](./docs/grounding.md)**: the Socratic-discussion engine underlying the note-writing skills.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
 - **[make-literature-note](./docs/make-literature-note.md)**: grounds a clipped source into a literature note, the source's own Claim, in your words.
 - **[write-reference](./docs/write-reference.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.
 - **[make-evergreen-note](./docs/make-evergreen-note.md)**: grounds a synthesis across notes into an evergreen note, your own original Take.
-- **write-checks**: internal. Checks a note draft against vault style before any `ground-*` skill writes it. Runs automatically, not invoked directly.
+- **write-checks**: internal. Checks a note draft against vault style before any note-writing skill commits it. Runs automatically, not invoked directly.
 
 For per-skill detail, see [docs/](./docs/README.md). For the domain vocabulary (Resource, Claim, Take, Atomicity, and the rest), see [CONTEXT.md](./CONTEXT.md).

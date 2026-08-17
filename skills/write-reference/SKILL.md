@@ -147,7 +147,7 @@ write — no field resolution needed here.
 ## Open
 
 - **Still unresolved as of this writing**: whether extending an existing Reference note
-  with a source that hasn't gone through `ground-the-claim` yet routes there
+  with a source that hasn't gone through `make-literature-note` yet routes there
   automatically (this skill triggering that flow itself) versus this skill simply
   stopping and telling the user to run it separately. This SKILL.md takes the
   stop-and-tell reading above as the safer default given the "no exception" rule, but

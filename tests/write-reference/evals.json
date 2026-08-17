@@ -2,7 +2,7 @@
   "test_cases": [
     {
       "prompt": "write-reference \"Zettelkasten Method\" — no Reference note exists yet; two literature notes' Key Concepts already wikilink to it, each with its own grounded characterization from a prior /grounding session",
-      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via ground-the-claim), reconciles them into one merged definition where they agree or add distinct facets, presents it for confirmation, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix.",
+      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one merged definition where they agree or add distinct facets, presents it for confirmation, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix.",
       "assertions": [
         {"type": "contains", "text": "reference"}
       ]
@@ -22,10 +22,10 @@
       ]
     },
     {
-      "prompt": "write-reference \"Compass of Zettelkasten Thinking\" where one of the three candidate literature notes has not gone through ground-the-claim yet — no grounded Key Concepts wikilink exists there",
-      "expected_output": "Stops synthesizing from that one ungrounded source and tells the user it needs to go through ground-the-claim first, but continues synthesizing and writing from the other two already-grounded sources rather than blocking the whole write.",
+      "prompt": "write-reference \"Compass of Zettelkasten Thinking\" where one of the three candidate literature notes has not gone through make-literature-note yet — no grounded Key Concepts wikilink exists there",
+      "expected_output": "Stops synthesizing from that one ungrounded source and tells the user it needs to go through make-literature-note first, but continues synthesizing and writing from the other two already-grounded sources rather than blocking the whole write.",
       "assertions": [
-        {"type": "contains", "text": "ground-the-claim"}
+        {"type": "contains", "text": "make-literature-note"}
       ]
     },
     {
