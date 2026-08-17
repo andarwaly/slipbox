@@ -48,7 +48,7 @@ _Avoid_: Resource type (no such field exists; the content type value fills `type
 
 **Core Idea**
 The source's central argument, one declarative sentence, every Claim in a literature note in service of it. Written once, on the note's first Claim.
-_Avoid_: Claim (one thing the source argues; the Core Idea is what the source is *for*, not one of the things it argues).
+_Avoid_: Claim (one thing the source argues; the Core Idea is what the source is *for*, not one of the things it argues); Core Thesis (ground-me's own closing-card label for a confirmed take from a freeform interview — a different context, not a synonym for a source's central argument).
 
 **Declarative-title test**
 Half of the Admission test: can the candidate concept compress into a subject-plus-verb claim with no "According to X..." framing.
@@ -181,6 +181,10 @@ _Avoid_: Link (a mechanical connection between two already-related notes, found 
 **Steelmanning**
 Stating the strongest possible version of an opposing case before attempting to break it, rather than a weak caricature. The practitioner form Challenge uses to keep Compass's EAST direction a genuine test.
 _Avoid_: Principle of charity (the general instruction Steelmanning applies specifically to an opposing, competing case).
+
+**Surface pass**
+The private, ungrounded first read-through of a Resource that make-literature-note runs on its own, before any claim is grounded with the user: identifies every distinct claim the source supports and builds the Private backlog from them.
+_Avoid_: Private backlog (the list this pass produces, not the pass itself); Grounding (the user-facing interview that follows, checking a statement against material — the Surface pass never involves the user).
 
 **Take**
 The user's own confirmed, synthesized position on an idea, requiring cross-source or cross-experience synthesis a single source can't provide. Lives only in an evergreen note; the lowercase "take" used mid-conversation before confirmation is the same concept, not a separate term.

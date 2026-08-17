@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
 ---
 
 # Make-evergreen-note
@@ -42,7 +42,7 @@ isn't guaranteed to be on `PATH`.
 
   Offer these; let the user choose one. This is how a flagged tension from
   `make-literature-note` — or a spawned Compass sub-idea from a prior
-  `make-evergreen-note` sitting — eventually gets picked up and turned
+  `make-evergreen-note` session — eventually gets picked up and turned
   into a real Take.
 
 ## Ground it

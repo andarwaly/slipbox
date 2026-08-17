@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # Make-literature-note
@@ -38,7 +38,7 @@ whose resolved `source` field (per `slipbox config get frontmatter.literature.so
 points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
-  to the Surface pass below with a fresh candidate backlog.
+  to the Surface pass below with a fresh Private backlog.
 - **A note already exists** — read it in full. Its existing `## Key
   Claims` `###` headings are claims already confirmed; the backlog below
   must not re-offer them.
@@ -59,7 +59,7 @@ are one claim, not two.
 This candidate list is **your own private backlog, not a menu presented to
 the user** — never surfaced as a checklist, never asked "which of these do
 you want grounded." It exists only to steer where the conversation still
-needs to go and to check coverage once the sitting winds down. It is
+needs to go and to check coverage once the session winds down. It is
 session-scoped only — discarded once the session ends, regardless of how
 much of it got covered.
 
@@ -88,14 +88,14 @@ backlog before continuing:
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
-## Knowing when the sitting is done
+## Knowing when the session is done
 
 Once the conversation's natural energy winds down, check the private
 backlog against what actually got covered (in whatever reshaped form).
 Anything genuinely untouched gets one nudge, never more: "you haven't
 mentioned [X] — is that not something the source argues, or should we
 leave it for now?" The user's own "I think that's everything" always ends
-the sitting regardless of what the backlog still shows uncovered — the
+the session regardless of what the backlog still shows uncovered — the
 nudge is a single offer, never an insistence.
 
 ## Write each claim, incrementally
@@ -115,7 +115,7 @@ toward the next one, if there is a next one:
   `references/writing-a-claim.md`); skip it on a second or later claim,
   it's already there.
 - Re-read the target path from disk right before writing (the note may
-  already hold earlier claims from this same sitting, or from a prior
+  already hold earlier claims from this same session, or from a prior
   one).
 - Assemble and review the claim per `references/writing-a-claim.md` — the
   declarative heading, condensed Evidence, the review checklist, quote
@@ -126,7 +126,7 @@ toward the next one, if there is a next one:
 
 ## Spot terms and entities
 
-Once the sitting ends, one batch pass — never mid-claim. Re-read the
+Once the session ends, one batch pass — never mid-claim. Re-read the
 finished note; re-read the source too if this is a resumed session and
 it's no longer in context. Compare the two and find anything a claim leans
 on — its weight actually resting on it, not just mentioned in passing —
@@ -156,7 +156,7 @@ resolution. Zero found is a complete, valid result.
 ## Done
 
 The literature note exists on disk with its Core Idea, every claim the
-sitting actually produced as its own `## Key Claims` entry, and any
+session actually produced as its own `## Key Claims` entry, and any
 confirmed Key Concepts (partial if the session stopped early — that's a
 complete, valid outcome), any flagged tensions are logged in the evergreen
 backlog, and the user is told the file path.

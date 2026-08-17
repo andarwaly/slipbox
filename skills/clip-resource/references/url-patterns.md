@@ -1,6 +1,6 @@
 # URL patterns by content type
 
-The URL pattern is the second branch in Step 2's detection logic. Use these patterns as a starting hypothesis. They're strong signals but not infallible, so always cross-check against schema.org and user-stated type before deciding.
+The URL pattern is the second branch in Detect the content type's detection logic. Use these patterns as a starting hypothesis. They're strong signals but not infallible, so always cross-check against schema.org and user-stated type before deciding.
 
 ## Article
 
