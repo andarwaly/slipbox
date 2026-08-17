@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # Setup Slipbox
@@ -33,7 +33,7 @@ Check the vault for existing signal before asking the user anything:
 
 - `.obsidian/` for a `templates/` folder and Templater plugin config (`.obsidian/plugins/templater-obsidian`), which show the vault's real template location and syntax.
 - Root `AGENTS.md` or `CLAUDE.md` for conventions the user already wrote down.
-- Existing `Literature`/`Reference`/`Evergreen` (or similarly named) folders — these are both a convention signal and a style corpus for Section B.
+- Existing `Literature`/`Reference`/`Evergreen` (or similarly named) folders — these are a convention signal, plus a general sense of the vault's existing formatting and structure, referenced for context, never analyzed as a sample set.
 - Whatever `tags` actually seems to be used for in this vault — note it in plain language for Section A's presentation (e.g. subtype-marker, topic/subject labels, a catch-all, a minimal signal, some mixture, or not used at all). This is descriptive narration only, never a mapping decision, and never forced into a fixed category list — real vaults don't fit a clean taxonomy, so describe what's actually observed. `tags` itself is never mapped onto or written to by any field_map resolution, regardless of what this narration finds.
 - An existing `.slipbox/` directory. Its presence branches three ways, not two:
   - `.slipbox/config.json` exists → this is a re-run; switch to the drift-check flow in Re-run semantics.
@@ -94,7 +94,7 @@ For each required field below, on a type the user chose to resolve now, resolve 
 
 ## Section B: stated note preferences
 
-Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus, infer a voice fingerprint, or create `stated_style.json`. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
+Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus or infer a voice fingerprint. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
 
 Start from `assets/style-profile.schema.json` and interview the user against its fixed sections:
 
@@ -108,7 +108,7 @@ Start from `assets/style-profile.schema.json` and interview the user against its
 
 Show the complete draft to the user. Let them edit or approve it. Verify preference-sensitive shape choices against an actual note where useful, but never treat that note as a corpus to analyze. Validate the approved profile against `assets/style-profile.schema.json` before writing `.slipbox/style-profile.json`.
 
-**Done when:** the user has approved one stated profile, it validates against the fixed schema, and `.slipbox/style-profile.json` is written. No corpus branch and no `stated_style.json` output exist.
+**Done when:** the user has approved one stated profile, it validates against the fixed schema, and `.slipbox/style-profile.json` is written. No corpus branch exists.
 
 ## Write `.slipbox/humanize-checklist.json`
 
@@ -138,7 +138,7 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 - `paths` — the resources/literature/evergreen/reference (`paths.reference`, renamed from `paths.term`) folder paths from Section A.
 - `filenames` — casing per note type (`filenames.reference`, renamed from `filenames.term`).
 - `prefixes` — the per-type title prefix (or `false`) from Section A.
-- `frontmatter` — the field_map from Section A, per type (literature/reference/evergreen); each entry carries `name`/`type`/`wikilink`/`zone`, `{"deferred": true}`, the bare string/`false` shorthand, validated against `assets/config.schema.json`.
+- `frontmatter` — the field_map from Section A, per type (literature/reference/evergreen), validated against `assets/config.schema.json` — see that file's own `description` field for the canonical shape each entry can take.
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
 - `templates` — seven explicit paths: `literature_path`, `reference_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Section A's clip config.
@@ -164,7 +164,7 @@ Propose (never write silently) a one-line pointer into the vault's own `AGENTS.m
 
 ## Re-run semantics (drift check, manual trigger only)
 
-Triggered only when the user explicitly asks to re-run, or when Explore finds an existing `.slipbox/`. Never runs automatically otherwise.
+Triggered only when the user explicitly asks to re-run, or when Explore finds `.slipbox/config.json` already present. Never runs automatically otherwise.
 
 1. Validate the existing `.slipbox/config.json` against `assets/config.schema.json` first, before doing anything else. A file that predates the schema or was hand-edited may not conform — surface any validation errors to the user before proceeding to the diff, rather than feeding a malformed file straight into it.
 2. Re-discover conventions and style the same way as Explore/Section A/Section B, using the current state of the vault.

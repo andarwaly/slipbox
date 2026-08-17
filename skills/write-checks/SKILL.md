@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Write-checks
@@ -23,8 +23,9 @@ Read `.slipbox/style-profile.json` as the user's stated note-shape and editing p
 Run the checklist's `detection.mechanical` section through
 `.slipbox/bin/slipbox humanize check <draft-path>`. When the draft or passage language is known,
 pass `--language LANG` so language-scoped signals skip non-English passages; without
-the override, the CLI uses the profile's configured languages. It never reads profile
-baselines and never dual-reads `stated_style.json`. Apply `detection.judgment` with
+the override, the CLI uses the profile's configured languages. It reads
+`style-profile.json` only for language-gating; it never uses the profile's voice,
+tone, or formatting fields as a detection threshold. Apply `detection.judgment` with
 reading comprehension. Respect each signal's `single` or `cluster` policy, and keep
 judgment signals out of CLI cross-signal counting.
 
@@ -44,12 +45,13 @@ Humanize only, skipping Frontmatter fields and Zone placement entirely.
 ## Frontmatter fields
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
-resolve each field via `slipbox config get frontmatter.<type>.<field>`:
+resolve each field via `slipbox config get frontmatter.<type>.<field>`. The stored
+shape for a resolved entry is defined canonically in `assets/config.schema.json`'s
+own `description` field — not restated here.
 
-- **Already resolved** (a bare string, `false`, or a full `{name, type, wikilink, zone}`
-  object) — write under the mapped property, the standard name if new, or skip if
-  `false`. No interactive step; this is the common case for every field `setup-slipbox`
-  already resolved upfront.
+- **Already resolved** — write under the mapped property, the standard name if new,
+  or skip per the schema's opt-out form. No interactive step; this is the common
+  case for every field `setup-slipbox` already resolved upfront.
 - **Deferred** (`{"deferred": true}`) — this is the first time this note type is being
   written. Run the same interactive resolution `setup-slipbox`'s own field_map step
   would run: check whether an existing user property already holds this field's data

@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
 ---
 
 # Make-evergreen-note
@@ -57,9 +57,8 @@ aimed at yourself instead of the user this time). This is the
 Fidelity-direction parameter you supply to `/grounding` when the session
 starts.
 
-Orient the take with `references/compass.md` (now living inside
-`grounding`, alongside its own supporting techniques) — reach for whichever
-direction the conversation calls for, no fixed order. Compass's own
+Orient the take with the Compass technique — reach for whichever direction
+the conversation calls for, no fixed order. Compass's own
 directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
 gets logged to the evergreen backlog the same way any other flagged tension
 does (see Compass's own Guardrail).

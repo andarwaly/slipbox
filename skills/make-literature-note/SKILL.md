@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # Make-literature-note
@@ -38,7 +38,7 @@ whose resolved `source` field (per `slipbox config get frontmatter.literature.so
 points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
-  to the surface pass below with a fresh candidate backlog.
+  to the Surface pass below with a fresh candidate backlog.
 - **A note already exists** — read it in full. Its existing `## Key
   Claims` `###` headings are claims already confirmed; the backlog below
   must not re-offer them.

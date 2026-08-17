@@ -1,10 +1,10 @@
 ---
 name: ground-me
-description: A bare, freeform grounding session — no note-type commitment, no sibling
-  routing.
+description: A bare, freeform grounding session — a freeform interview with no
+  note produced.
 disable-model-invocation: true
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Ground-me
