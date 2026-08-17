@@ -72,5 +72,5 @@ connections relating to just those notes, instead of a whole-vault scan.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/find-connections/) for the full agent-facing
+See the [skill source](../skills/find-connections/) for the full agent-facing
 instructions.

@@ -25,5 +25,5 @@ through.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/ground-me/) for the full agent-facing
+See the [skill source](../skills/ground-me/) for the full agent-facing
 instructions.

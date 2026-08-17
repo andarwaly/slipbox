@@ -56,5 +56,5 @@ every question.
 npx skills add andarwaly/slipbox
 ```
 
-See the [skill source](../../skills/slipbox/grounding/) for the full agent-facing
+See the [skill source](../skills/grounding/) for the full agent-facing
 instructions.

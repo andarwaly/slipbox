@@ -55,5 +55,5 @@ this skill should just stop and tell the user to run it separately, is still
 unresolved — see
 `discussion/slipbox/discussion-topics/find-terms-find-connections-merge.md`.
 
-See the [skill source](../../skills/slipbox/make-reference-note/) for the full
+See the [skill source](../skills/make-reference-note/) for the full
 agent-facing instructions.
