@@ -128,10 +128,12 @@ toward the next one, if there is a next one:
   auto-disambiguate. On a second or later claim for an existing note, the
   existing file is expected, not a collision.
 - Once written, tell the user in one short line that this claim landed —
-  "that's your second claim confirmed" or equivalent — before the
-  conversation moves on. Not a running counter or a formal progress
-  marker, just a natural acknowledgment tied to a real event (a claim
-  actually being written), so the user has some sense of where the
+  "that's your second claim confirmed" or equivalent — then move to the
+  next question, if there is one, on its own line rather than fused into
+  the same sentence (same split as `grounding/SKILL.md`'s
+  acknowledgment-before-question rule). Not a running counter or a formal
+  progress marker, just a natural acknowledgment tied to a real event (a
+  claim actually being written), so the user has some sense of where the
   session stands without every turn being labeled.
 
 ## Spot terms and entities

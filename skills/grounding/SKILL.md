@@ -45,6 +45,12 @@ not just one at a time:
 If the source or retrieved notes already say something, read it — don't ask the user to
 repeat what's already there.
 
+**Never quote the source before the user answers a question about it** — a pre-quote
+hands over the exact material the question was meant to draw out, the same violation
+**Never finish it for them** guards against, just delivered as a citation instead of a
+stated answer. A source quote belongs only *after* the user responds — confirming what
+they found, in Gate or elsewhere — never staged in advance as a hint.
+
 A caller may frame which direction Fidelity points before a session starts — most often
 whether to hold the user to the material (the default) or to hold yourself, the agent,
 to it instead. This is a parameter the caller supplies going in, never something the
@@ -96,7 +102,15 @@ declared.
 **Anything read as Hesitant, Blank, or Confused gets one short acknowledgment before the
 next question** — not a diagnosis, not the choice-offer above (that's Blank-specific and
 already covers its own case), just a genuine one-line nod that landing unsure is fine,
-then the question. Vary the wording; a fixed stock phrase repeated every time is its own
+then the question. Put the acknowledgment on its own line, the question on the next —
+fusing them into one sentence buries the question after a comma instead of letting it
+stand as the thing to actually respond to:
+
+> That's a fair place to get stuck — the source doesn't spell it out directly either.
+>
+> What does Tseng say the compass prompts help the brain find?
+
+Vary the acknowledgment wording; a fixed stock phrase repeated every time is its own
 kind of tell. This is tone, not tracking — it doesn't restate what technique is running
 or where the session is, and it never fires on a Confident answer, which needs no
 softening.
@@ -139,15 +153,25 @@ requires two things, not one:
   question just never invites a reflexive rubber-stamp.
   - **Wrong**: "Can you confirm this statement: [full agent-authored sentence]?"
   - **Right, and scannable for a compound claim** — show the raw parts first, then the
-    compressed statement, as two separate blockquotes, never folded into one paragraph:
+    compressed statement, never folded into one paragraph. Two or fewer parts stay one
+    blockquote line; three or more get their own bullet each — a comma-run of four
+    items in one line stops being scannable, which defeats the point:
 
     ```
     Here's what I've got from what you said:
-    > [part], [part], [part], [part].
+    - [part]
+    - [part]
+    - [part]
+    - [part]
+
     Putting that together:
     > [the compressed claim].
+
     What's missing or off?
     ```
+
+    Vary the connector line ("Putting that together," "So altogether," etc.) — a fixed
+    phrase repeated every Gate is the same tell a fixed acknowledgment phrase would be.
 - **A compound claim (multiple parts — several directions, several conditions) is built
   from the user's own already-stated parts, incrementally, not compressed into one
   agent-authored sentence at Gate time.** The more parts a claim has, the stronger the
