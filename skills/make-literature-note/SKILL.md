@@ -49,7 +49,7 @@ Read the whole source yourself — this is your own judgment, not a
 `/grounding` call; `/grounding` was never built for open-ended "what does
 this cover" scanning, only for probing something already anchored. Using
 Question/Evidence/Warrant as your own internal reasoning tool (see
-`references/qec-theory.md`) — never shown to the user in this form —
+`references/qew-theory.md`) — never shown to the user in this form —
 identify every distinct claim the source actually supports and the
 source's Core Idea, skipping anything an existing literature note (per
 Take the source above) already covers. Include the source's own
@@ -60,7 +60,9 @@ Apply the shared-Warrant merge test
 now, before proceeding: two candidates resting on the same inferential move
 are one claim, not two.
 
-This candidate list is **your own private backlog, not a menu presented to
+This candidate list measures coverage, not required output — a literature
+note may legitimately stay partial (see Knowing when the session is done,
+below). It is **your own private backlog, not a menu presented to
 the user** — never surfaced as a checklist, never asked "which of these do
 you want grounded." It exists only to steer where the conversation still
 needs to go and to check coverage once the session winds down. It is

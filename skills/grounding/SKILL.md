@@ -76,6 +76,16 @@ prior-knowledge disagreement with a source out of the statement. This heading
 is about the user — never doing the user's own work of supplying content,
 regardless of whether a source is even in play.
 
+**A probing question never pre-decomposes a source's own structure into
+sub-questions the user hasn't independently identified yet.** "What does each
+compass direction ask you to investigate?" hands over that there are
+directions, that each has its own question, and implicitly what shape the
+answer takes — before the user has said any of that themselves. Open wider
+first: "explain the Compass in your own words — what are the four
+directions doing?" Only if that genuinely stalls does a narrower follow-up
+on one specific direction become fair game — and even then, one direction at
+a time, never the full decomposition in one turn.
+
 ## Reading the answer
 
 Every session starts the same way: ask for a plain restatement — "what stood out to

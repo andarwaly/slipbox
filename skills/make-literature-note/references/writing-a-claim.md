@@ -1,6 +1,6 @@
 # Writing a claim
 
-See `qec-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
+See `qew-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
 and which of them ever reach the page (only Evidence and Conclusion do). This file covers
 the note's structure, the Core Idea line, how to review a claim before committing it to
 disk, and the formatting mechanics (quotes, Key Concepts wikilinks) that live inside a
@@ -49,7 +49,7 @@ which is `/write-checks`'s job, run separately.
   complete statement of the source's position?
 - Is it the source's position — no drift into the user's own reaction or synthesis (per
   `/grounding`'s "never your own opinion" and the literature note's purity rule)?
-- Warrant self-check (per `qec-theory.md`): can the "why" be stated in one sentence from
+- Warrant self-check (per `qew-theory.md`): can the "why" be stated in one sentence from
   the Evidence? If Conclusion and that one sentence would say the same thing, the
   Conclusion is still restating, not concluding — go back and sharpen it.
 - Does it stay in the source's own terms, or has a metaphor/framing crept in that the
@@ -66,7 +66,7 @@ which is `/write-checks`'s job, run separately.
 **The claim as a whole**
 - Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Key
   Claim, is there exactly one clear thing being cited — not a bundle of several source
-  points under one heading? (The shared-Warrant merge test in `qec-theory.md` should
+  points under one heading? (The shared-Warrant merge test in `qew-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
 - Everything this claim leans on present in Key Concepts, each with a correctly
   resolved wikilink (see Key Concepts wikilinks below)?
