@@ -4,14 +4,14 @@ description: Fetch a URL and write it as a frozen Resource, matching Obsidian We
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Clip Resource
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; the one file it reads from that directory is `.slipbox/config.json`, for template paths, filename/frontmatter conventions, and `transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
+For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `slipbox config get templates.<type>_path`, filename/frontmatter conventions via `slipbox config get filenames.<type>`, and transcript languages via `slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
 
 ## 0. Prerequisite: `.slipbox/AGENTS.md` must exist
 
@@ -79,7 +79,7 @@ There is no CSS-selector extraction rung for Social — this skill has no DOM ac
 
 ### Video is the one exception to "fetch the page"
 
-For Video, don't fetch the page HTML for the transcript. Use the **`youtube-transcript-api`** Python library directly (not the `ytt` CLI wrapper) to pull the transcript. Pass `languages` sourced from `.slipbox/config.json`'s `transcript_languages` ordered list.
+For Video, don't fetch the page HTML for the transcript. Use the **`youtube-transcript-api`** Python library directly (not the `ytt` CLI wrapper) to pull the transcript. Pass `languages` from `slipbox config get transcript_languages` in order.
 
 Failure taxonomy — these are not interchangeable:
 

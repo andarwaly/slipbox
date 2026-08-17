@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Make-literature-note
@@ -31,11 +31,11 @@ and never require the argument when the source is obvious from context.
 
 ## Take the source
 
-Check whether a literature note for this source already exists: read
-`paths.literature` from `.slipbox/config.json` and scan `*.md` under that
-folder — never assume a folder literally named `literature/` — for a note
-whose resolved `source` field (per `frontmatter.literature.source.name` in
-the same config) points at this resource.
+Check whether a literature note for this source already exists: use
+`slipbox config get paths.literature` to locate the folder and scan `*.md`
+under it — never assume a folder literally named `literature/` — for a note
+whose resolved `source` field (per `slipbox config get frontmatter.literature.source.name`)
+points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
   to the surface pass below with a fresh candidate backlog.
@@ -107,8 +107,8 @@ toward the next one, if there is a next one:
   list (`type`, `created`, `source`) — it resolves each field's mapping,
   formatting, zone placement, and title prefix, and checks the draft's
   style and humanize signals.
-- Write into `paths.literature` from `.slipbox/config.json`, filename per
-  that same config's casing convention for the literature type. The title
+- Write into the folder from `slipbox config get paths.literature`, filename per
+  `slipbox config get filenames.literature` casing convention. The title
   is source/topic-oriented (what the source is about), never claim-shaped
   — it doesn't change as more claims get added. On this note's first
   claim, write the Core Idea line too, directly under the title (see

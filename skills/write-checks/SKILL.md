@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Write-checks
@@ -44,7 +44,7 @@ Humanize only, skipping Frontmatter fields and Zone placement entirely.
 ## Frontmatter fields
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
-resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map:
+resolve each field via `slipbox config get frontmatter.<type>.<field>`:
 
 - **Already resolved** (a bare string, `false`, or a full `{name, type, wikilink, zone}`
   object) — write under the mapped property, the standard name if new, or skip if
@@ -58,18 +58,18 @@ resolve each field through `.slipbox/config.json`'s `frontmatter.<type>` map:
   explicit opt-out, following the same reserved-property guardrail (never `tags`,
   `aliases`, `cssclasses`, except Reference's `alt_names`→`aliases` carve-out) and the same
   type-mismatch check for multi-valued fields (`sources`, `derived-from`) that
-  `setup-slipbox` uses. Write the resolved mapping back into `.slipbox/config.json`'s
-  `frontmatter.<type>.<field>` before continuing — every subsequent write for this note
+  `setup-slipbox` uses. Write the resolved mapping back via
+  `slipbox config set frontmatter.<type>.<field> <value>` before continuing — every subsequent write for this note
   type finds it already resolved and skips this branch entirely.
 
 The field's own name is never the mapping. Format the value per the entry's recorded
 `type` (a `list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
-timestamp), and wrap in wikilink or markdown-link syntax per the top-level
-`links.style` when `wikilink: true`.
+timestamp), and wrap in wikilink or markdown-link syntax per
+`slipbox config get links.style` when `wikilink: true`.
 
 ## Note-type prefix
 
-Check `.slipbox/config.json`'s `prefixes.<type>` for this note type. If it's a string,
+Check `slipbox config get prefixes.<type>` for this note type. If it's a string,
 prepend it to the note's title (e.g. `§ Design Tokens`, not `Design Tokens`). If it's
 `false`, the title stays unprefixed. Never touch `resources/` — no prefix key exists for
 that type.

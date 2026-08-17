@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Write-reference
@@ -54,9 +54,9 @@ thought of it themselves or because `find-connections --references` surfaced it 
 recurrence candidate. There is no backlog this skill pulls from itself; recurrence is
 derived on demand by `find-connections`, not surfaced into a queue this skill owns.
 
-Per `.slipbox/config.json`'s `paths.reference` and `filenames.reference` casing
-convention, check whether a Reference note for this candidate already exists — under
-that configured folder, not an assumed `reference/` folder — before writing:
+Use `slipbox config get paths.reference` to locate the folder, checking for
+a Reference note for this candidate there — not an assumed `reference/` folder —
+before writing. Apply the `slipbox config get filenames.reference` casing convention:
 
 - **New reference** — no note exists. Proceed to gather characterizations.
 - **Extending** — a note already exists. Read it in full now. Its accumulated text is
@@ -110,8 +110,8 @@ Write fresh:
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
   mapping, formatting, zone placement, and title prefix, and checks the draft's style
   and humanize signals.
-- Write into `paths.reference` from `.slipbox/config.json`, filename per that same
-  config's `filenames.reference` casing convention.
+- Write into the folder from `slipbox config get paths.reference`, filename per
+  `slipbox config get filenames.reference` casing convention.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from write-checks' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.

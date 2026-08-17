@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Make-evergreen-note
@@ -88,8 +88,8 @@ notes said on their own.
   field's mapping, formatting, and zone placement, and checks the draft's
   style and humanize signals. `updated-at` gets `created`'s own timestamp
   on a first write, and is refreshed to the current time on a revisit.
-- Write into `paths.evergreen` from `.slipbox/config.json`, filename per
-  that same config's casing convention for the evergreen type.
+- Write into the folder from `slipbox config get paths.evergreen`, filename per
+  `slipbox config get filenames.evergreen` casing convention.
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from `write-checks`' returned fields and write
   the file — a full rewrite of existing content on a revisit, since unlike
