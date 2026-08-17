@@ -46,7 +46,7 @@ Humanize only, skipping Frontmatter fields and Zone placement entirely.
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
 resolve each field via `slipbox config get frontmatter.<type>.<field>`. The stored
-shape for a resolved entry is defined canonically in `assets/config.schema.json`'s
+shape for a resolved entry is defined canonically in `.slipbox/config.json`'s
 own `description` field — not restated here.
 
 - **Already resolved** — write under the mapped property, the standard name if new,

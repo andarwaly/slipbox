@@ -63,15 +63,15 @@ Read the template first — its location comes from the `templates.<type>_path` 
 
 ## Variable syntax (summary)
 
-Templates (see `.slipbox/config.json`'s `templates` paths for the four resource templates) use two variable forms, matching Obsidian Web Clipper's own convention. No new syntax invented. Full detail in `references/variable-glossary.md`; filters (`|wikilink`, `|date:"..."`, etc.) in `references/filter-glossary.md`.
+Templates (paths resolved via `slipbox config get templates.<type>_path`, per the scoped read above) use two variable forms, matching Obsidian Web Clipper's own convention. No new syntax invented. Full detail in `references/variable-glossary.md`; filters (`|wikilink`, `|date:"..."`, etc.) in `references/filter-glossary.md`.
 
 - Bare `{{variable}}`: a raw, mechanically-extracted **fact** (e.g. `{{author}}`, `{{title}}`). Each bare variable is resolved by whatever method fits it. Most use the Ladder in Fetch and extract above, but `{{transcript}}` is the exception: it's pulled via `youtube-transcript-api`, never the Ladder.
-- Quoted `{{"instruction"}}`: a **synthesis instruction**, freeform natural language executed inline by the same agent running this skill. No separate Interpreter service, no API key. Templates are user-authored (see `.slipbox/config.json`). This skill doesn't dictate what any given template's body variable looks like. A rewritten or summarized Article or News body is a quoted instruction the template's author writes, not something bare `{{content}}` does automatically.
+- Quoted `{{"instruction"}}`: a **synthesis instruction**, freeform natural language executed inline by the same agent running this skill. No separate Interpreter service, no API key. Templates are user-authored (paths resolved via `slipbox config get templates.<type>_path`). This skill doesn't dictate what any given template's body variable looks like. A rewritten or summarized Article or News body is a quoted instruction the template's author writes, not something bare `{{content}}` does automatically.
 - No template logic layer (`{% if %}`, `{% for %}`): the agent applies judgment directly. A rules-engine layer here would be redundant.
 
 ## Write
 
-Save the file using the filename and frontmatter conventions recorded in `.slipbox/config.json`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
+Save the file using the filename and frontmatter conventions resolved via `slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
 
 ## Report the outcome
 
