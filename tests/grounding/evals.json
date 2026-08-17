@@ -2,14 +2,14 @@
   "test_cases": [
     {
       "prompt": "ground this statement against a source: [source text] says X — is that right?",
-      "expected_output": "Holds the user to the source; if the user's phrasing drifts into their own opinion, asks whether that's the source's view or their own read, and does not fix the statement until explicitly confirmed.",
+      "expected_output": "Reads as a confident answer, so it runs verification.md: treats the statement as a hypothesis, checks it against the specific passage in the source, and only escalates to elenchus.md if that check surfaces a genuine mismatch.",
       "assertions": [
         {"type": "contains", "text": "source"}
       ]
     },
     {
-      "prompt": "ground this with no source and no retrieved notes, just a raw hunch",
-      "expected_output": "Says plainly that neither a source nor retrieved notes are present, and continues the session anyway — an ungrounded hunch is treated as a valid, complete outcome, not a failure.",
+      "prompt": "ground this with no source and no retrieved notes, just a raw hunch, and the user says 'I don't really know, I just have this feeling'",
+      "expected_output": "Reads as a blank answer with no source present, so it runs maieutic.md directly against the user's own experience or memory rather than offering to walk through a source that doesn't exist.",
       "assertions": [
         {"type": "not_contains", "text": "cannot proceed"}
       ]
@@ -22,10 +22,24 @@
       ]
     },
     {
-      "prompt": "ground this: [source text about design tokens] — I think design tokens are basically just CSS variables with extra branding, right?",
-      "expected_output": "Does not immediately present a finished draft statement for yes/no confirmation. Runs at least one open probe first (e.g. asking what distinguishes a token from a CSS variable) and only presents a draft once the user's own words have contributed to it, with the confirmation phrased as an open question ('what's missing or wrong?') rather than a bare yes/no.",
+      "prompt": "ground this: [source text about design tokens] — I think, um, design tokens are like... CSS variables? I'm not totally sure though",
+      "expected_output": "Reads as a hesitant answer, so it runs feynman.md: asks the user to explain the concept simply, finds where the explanation breaks down or leans on unexplained jargon, points at the specific source passage that fills the gap, and asks for the explanation again — never supplying the missing words itself.",
       "assertions": [
         {"type": "not_contains", "text": "yes or no"},
+        {"type": "contains", "text": "?"}
+      ]
+    },
+    {
+      "prompt": "ground this against the source, and the user's answer touches the material but contradicts something they said two turns earlier in the same session",
+      "expected_output": "Reads as confused, not blank, so it runs self-explanation.md: names the specific discrepancy between what was just said and what was said earlier, and lets the user reconcile it rather than resolving it for them.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    },
+    {
+      "prompt": "ground this source, and the user gives no substantive answer at all when asked what stood out",
+      "expected_output": "Reads as blank with a source present. Does not diagnose silently — offers a choice between walking through the source together (discovery-walk.md) or trying to explain what stood out first, and only after that first plain attempt already failed, never upfront.",
+      "assertions": [
         {"type": "contains", "text": "?"}
       ]
     }

@@ -2,7 +2,7 @@
   "test_cases": [
     {
       "prompt": "find-connections across the vault",
-      "expected_output": "Scans existing notes for two distinct outputs, presented separately: (a) mechanical link suggestions — two related but unlinked notes, presented as a batch for the user to approve/reject together, then written as both a links row and a [[wikilink]]; (b) sparked ideas — a genuinely new synthesis noticed between existing notes, not stated in either alone, routed into the evergreen candidate store for later ground-my-take grounding, never auto-written as a note itself.",
+      "expected_output": "Scans existing notes for two distinct outputs, presented separately: (a) mechanical link suggestions — two related but unlinked notes, presented as a batch for the user to approve/reject together, then written as both a links row and a [[wikilink]]; (b) sparked ideas — a genuinely new synthesis noticed between existing notes, not stated in either alone, routed into the evergreen candidate store for later make-evergreen-note grounding, never auto-written as a note itself.",
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
@@ -50,7 +50,7 @@
     },
     {
       "prompt": "find-connections --references where a wikilink target recurs across notes and turns out to be a person's name",
-      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no ground-the-claim/write-reference invocation happens on this entity's behalf.",
+      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no make-literature-note/write-reference invocation happens on this entity's behalf.",
       "assertions": [
         {"type": "not_contains", "text": "Reference candidate"},
         {"type": "not_contains", "text": "write-reference"}

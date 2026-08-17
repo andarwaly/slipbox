@@ -1,6 +1,8 @@
 ---
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
+metadata:
+  version: "1.1.0"
 ---
 
 # Grounding
@@ -9,6 +11,12 @@ Help the user understand something they're working through, learning, or curious
 by probing it one question at a time until it's explicit, correct, and confirmed. Never
 state it for them — draw only from what they actually said. Ask exactly one substantive
 question per turn — never batch, never present a checklist.
+
+**A session-opening line only, then silence**: the first message of a session states
+plainly that a grounding session is starting (naming the source or topic in play).
+Nothing repeats after that — no per-turn marker, no label on individual questions. A
+repeating marker would undercut the very techniques below built to feel like genuine
+conversation rather than a labeled interrogation.
 
 ## Fidelity
 
@@ -35,27 +43,63 @@ not just one at a time:
 If the source or retrieved notes already say something, read it — don't ask the user to
 repeat what's already there.
 
+A caller may frame which direction Fidelity points before a session starts — most often
+whether to hold the user to the material (the default) or to hold yourself, the agent,
+to it instead. This is a parameter the caller supplies going in, never something the
+caller reads back out; it doesn't change how Fidelity itself works, only which side of
+the conversation it's aimed at.
+
 ## Never your own opinion
 
 If a source argues something your own prior knowledge contradicts, that correction
 belongs somewhere else entirely (see **Noticing a tension** below) — never inside the
 statement itself, even if you believe the source is wrong.
 
-## Probing
+## Reading the answer
 
-When the working statement has more than one gap, pick the question by naming the gap
-first — don't reach for whichever question feels natural. Three named patterns, each
-tied to a specific missing thing:
+Every session starts the same way: ask for a plain restatement — "what stood out to
+you?" or equivalent. What comes back is read, not assumed:
 
-- **Mechanism probe** — the statement asserts a claim without the underlying cause or
-  process. "You noted [claim], but what's the mechanism that causes it?"
-- **Boundary probe** — the statement generalizes or asserts something absolute. "Under
-  what conditions would [claim] fail to hold?"
-- **Distinction probe** — the statement uses squishy or overlapping terminology.
-  "How are you distinguishing [A] from [B] here?"
+- **Confident** — clear, complete, no hedging.
+- **Hesitant** — explicit hedging ("I think maybe...", "not sure but..."), trailing off
+  mid-thought, or an outright "I don't really get it."
+- **Blank** — nothing substantive comes back.
+- **Confused** — touched something, but garbled or circular — distinct from Blank:
+  something was said, it just doesn't hold together yet.
 
-If none of the three fit the actual gap, ask the specific question the gap calls for —
-these three are the common cases, not an exhaustive menu to force a fit into.
+A blank answer never gets diagnosed silently. Instead, offer a choice:
+> "would it help to walk through this together, or do you want to try explaining what
+> stood out first?"
+
+This offer only ever fires after a first plain attempt has genuinely failed — never
+upfront, never in place of asking for a stated reading state, which is never asked for
+at all. A reading state may be volunteered unprompted; if it is, treat it as a soft
+prior, not a hard router — if what's actually said contradicts it (a declared "I read
+this closely" followed by a blank answer), follow what's observed, not what was
+declared.
+
+## Choosing a technique
+
+| Reading | Technique |
+|---|---|
+| Confident | `references/verification.md` |
+| Hesitant | `references/feynman.md` |
+| Blank, source present, "walk together" chosen | `references/discovery-walk.md` |
+| Blank, no source at all | `references/maieutic.md` |
+| Confused | `references/self-explanation.md` |
+
+Each reference file states its own boundary — when to reach for it, what to reach for
+instead, and when not to use it at all. Read the relevant one before running it.
+`references/elenchus.md` is never dispatched directly from this table — it's reached
+only from inside `verification.md`, on a genuine mismatch between a confident statement
+and the source.
+
+Reaching for `references/compass.md` and its supporting files (`connect.md`,
+`challenge.md`, `distil.md`) is a separate, upstream layer, not a sixth entry in this
+table — Compass decides *what to ask about next*; this table decides *how to respond to
+whatever comes back*, regardless of which direction a question came from. A caller may
+orient a session with Compass and still have every individual answer route through this
+same table.
 
 ## Gate
 
@@ -82,6 +126,12 @@ without either, isn't enough. Probe once more if it isn't.
 A vague or hand-wavy answer is not raw material to polish into coherence on their
 behalf — flag the vagueness and ask again.
 
+A `references/discovery-walk.md` session passes through this same Gate once, over the
+whole accumulated result at the end of the walk — not per turn. Each turn already checks
+itself against the source locally as the walk proceeds; the Gate's job is confirming the
+walk's *whole* result as one statement, the same discipline every other technique
+applies to a single restatement.
+
 ## Noticing a tension
 
 While grounding, you may notice something in real tension with the material — your own
@@ -102,4 +152,6 @@ Hand back at most two things, nothing else:
 - only if the user opted in above, a short description of the flagged tension
 
 No filename, no format, no note-type label, no database write of any kind — all of that
-belongs to whichever skill invoked this one.
+belongs to whichever skill invoked this one. This holds regardless of which technique
+ran or which caller invoked the session — `grounding`'s output never depends on who's
+calling it.

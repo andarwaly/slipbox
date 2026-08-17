@@ -20,8 +20,8 @@ slipbox --help | --version
 
 There is no `seeds` table and no `init`/`migrate` command — this CLI has never used a
 database. `evergreen` is a flagged tension or sparked idea, one YAML-frontmatter file
-per candidate under `.slipbox/evergreen/`, written by `ground-the-claim`, `ground-term`, or
-`find-connections` and read back by `ground-my-take`. `links` is an append-only JSONL
+per candidate under `.slipbox/evergreen/`, written by `make-literature-note`, `write-reference`, or
+`find-connections` and read back by `make-evergreen-note`. `links` is an append-only JSONL
 log of typed edges (`cites`, `extends`) — separate from, and in addition to, the
 `[[wikilink]]`s a note's own prose uses for Obsidian's backlink pane.
 

@@ -69,9 +69,9 @@ which is `/write-checks`'s job, run separately.
   resolved wikilink (see Key Concepts wikilinks below)?
 
 If any item fails, the claim isn't done — go back to `/grounding` and probe further
-(Mechanism, Boundary, or Distinction probe, per `grounding/SKILL.md`) rather than
-rewording at write time. A failed delete-test in particular means the interview closed
-its Gate too early, not that the wording needs polish.
+(whichever technique its answer-quality dispatch picks, per `grounding/SKILL.md`)
+rather than rewording at write time. A failed delete-test in particular means the
+interview closed its Gate too early, not that the wording needs polish.
 
 ## Quotes
 

@@ -18,13 +18,12 @@
   "skills": [
     "./skills/setup-slipbox",
     "./skills/clip-resource",
-    "./skills/find-terms",
     "./skills/find-connections",
     "./skills/grounding",
     "./skills/ground-me",
-    "./skills/ground-the-claim",
-    "./skills/ground-term",
-    "./skills/ground-my-take",
+    "./skills/make-literature-note",
+    "./skills/write-reference",
+    "./skills/make-evergreen-note",
     "./skills/write-checks"
   ]
 }

@@ -4,7 +4,7 @@ Synthesize an already-grounded Reference note from the literature notes that
 wikilink to it. There is no `/grounding` session in this skill — the
 citation-discipline work already happened upstream, at the claim level, inside
 whichever literature notes' `## Key Concepts` section wikilinks to this
-reference (`ground-the-claim`'s job). `write-reference` pulls those
+reference (`make-literature-note`'s job). `write-reference` pulls those
 already-grounded characterizations back out, reconciles them into one
 definition, presents for confirmation, and writes.
 
@@ -26,7 +26,7 @@ queue this skill owns.
   `## Key Concepts` wikilinks to this candidate, and read each one's already-
   grounded treatment of it. No re-interviewing the user — that's settled
   already, at the claim level. A source that hasn't been through
-  `ground-the-claim` yet is skipped here and routed there first.
+  `make-literature-note` yet is skipped here and routed there first.
 - **Synthesize and confirm** — reconcile agreeing, complementary, or
   conflicting characterizations into one coherent definition; surface
   conflicts rather than silently picking one; present for confirmation before
@@ -50,7 +50,7 @@ npx skills add andarwaly/slipbox
 ## Open
 
 Whether extending an existing Reference note with a source that hasn't gone
-through `ground-the-claim` yet should be auto-routed there by this skill, or
+through `make-literature-note` yet should be auto-routed there by this skill, or
 this skill should just stop and tell the user to run it separately, is still
 unresolved — see
 `discussion/slipbox/discussion-topics/find-terms-find-connections-merge.md`.

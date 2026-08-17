@@ -28,14 +28,14 @@ metadata:
 
 Grounding — holding the user to a source for a claim, via a `/grounding` session —
 already happened upstream, at the claim level, inside whichever literature notes'
-`## Key Concepts` section wikilinks to this reference. That's `ground-the-claim`'s
+`## Key Concepts` section wikilinks to this reference. That's `make-literature-note`'s
 job, not this skill's. `write-reference`'s own job starts after that: pull the
 already-grounded characterizations back out of those literature notes, reconcile them
 into one definition, present for confirmation, write.
 
 No exception to this. If a source that touches this reference hasn't been through
-`ground-the-claim` yet, it doesn't belong in this skill's synthesis step at all —
-route it through `ground-the-claim` first, exactly like any other new source, and
+`make-literature-note` yet, it doesn't belong in this skill's synthesis step at all —
+route it through `make-literature-note` first, exactly like any other new source, and
 only come back here once its relevant claim (and Key Concepts wikilink) exists. See
 "Extending an existing Reference note" below.
 
@@ -69,16 +69,16 @@ is what `find-connections --references` already surfaced recurrence over — re-
 or reuse that same set here). For each one:
 
 - Read the literature note's own grounded treatment of the term — the characterization
-  the user was already held to via `ground-the-claim`'s `/grounding` session for that
+  the user was already held to via `make-literature-note`'s `/grounding` session for that
   note. Do not re-interview the user about it; it's already settled at the claim
   level.
 - Note where two or more literature notes' characterizations agree, add distinct
   facets to each other, or appear to conflict.
 
-If a source touching this candidate has not gone through `ground-the-claim` (no
+If a source touching this candidate has not gone through `make-literature-note` (no
 literature note with a grounded Key Concepts wikilink to it exists yet) — stop that
 source here, do not synthesize from it, and tell the user it needs to go through
-`ground-the-claim` first. Continue synthesizing from whatever already-grounded sources
+`make-literature-note` first. Continue synthesizing from whatever already-grounded sources
 do exist; don't block the whole write on one ungrounded source unless it's the only
 one.
 
@@ -147,7 +147,7 @@ write — no field resolution needed here.
 ## Open
 
 - **Still unresolved as of this writing**: whether extending an existing Reference note
-  with a source that hasn't gone through `ground-the-claim` yet routes there
+  with a source that hasn't gone through `make-literature-note` yet routes there
   automatically (this skill triggering that flow itself) versus this skill simply
   stopping and telling the user to run it separately. This SKILL.md takes the
   stop-and-tell reading above as the safer default given the "no exception" rule, but

@@ -1,0 +1,47 @@
+{
+  "test_cases": [
+    {
+      "prompt": "/make-literature-note from resources/2026-08-08-design-tokens.md, a freshly clipped source with no literature note yet",
+      "expected_output": "Reads the whole source silently and builds a private backlog of candidate claims plus the Core Idea - never presents this list to the user as a menu to pick from. Runs one continuous, natural conversation about the source, holding the user to it. Whenever the conversation organically produces something matching a backlog candidate (in whatever reshaped form), runs it through grounding's own Gate and writes it incrementally - declarative heading plus condensed Evidence, not batched at the end. Ends with a nudge for anything genuinely untouched in the backlog, then a batch pass finding terms/entities.",
+      "assertions": [
+        {"type": "not_contains", "text": "which do you want grounded"},
+        {"type": "not_contains", "text": "surface-ideas"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note on resources/2026-08-08-design-tokens.md, where the literature note already has one confirmed claim from a prior session",
+      "expected_output": "Reads the existing literature note's ### claim headings first, excludes them from the private backlog, and does not re-write the Core Idea line.",
+      "assertions": [
+        {"type": "not_contains", "text": "menu"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note, invoked bare with no argument, but a resource was just clipped moments earlier in the same conversation",
+      "expected_output": "Infers the source from the just-clipped resource rather than asking the user to name it again.",
+      "assertions": [
+        {"type": "not_contains", "text": "which article"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note, invoked bare with no argument and nothing inferrable from context",
+      "expected_output": "Asks the user which source to ground rather than guessing.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note on a source, and the conversation winds down naturally with two backlog candidates never mentioned",
+      "expected_output": "Nudges once for the untouched candidates ('you haven't mentioned X - is that not something the source argues, or should we leave it?'), but if the user says 'I think that's everything,' ends the sitting regardless of what the backlog still shows uncovered.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note on a candidate whose derived filename already exists on disk with unrelated content",
+      "expected_output": "Stops and asks the user to reword the claim or confirm a genuine duplicate, rather than auto-disambiguating the filename.",
+      "assertions": [
+        {"type": "contains", "text": "?"}
+      ]
+    }
+  ]
+}

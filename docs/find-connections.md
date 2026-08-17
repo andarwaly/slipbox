@@ -56,7 +56,7 @@ connections relating to just those notes, instead of a whole-vault scan.
 2. **Link suggestions, presented as a batch** — every candidate shown together, approved
    or rejected in one pass, never one-at-a-time.
 3. **Sparked ideas, routed to the evergreen backlog** — never written as a note directly;
-   `ground-my-take` picks them up later.
+   `make-evergreen-note` picks them up later.
 
 ## Usage
 

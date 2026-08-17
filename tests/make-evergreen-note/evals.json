@@ -1,0 +1,32 @@
+{
+  "test_cases": [
+    {
+      "prompt": "make-evergreen-note: does note A on spaced repetition connect to note B on compound interest?",
+      "expected_output": "Runs a /grounding session (holding itself to the notes, not the user), orienting the take with compass.md (Connect on West, Challenge on East as needed, plain questions on North/South), running Distil once West and East both produce something. Applies the purity check before writing, writes an evergreen note citing both notes with stated reasons, and runs the sign-off (including its cited Matuschak/Ahrens Concept section) before finishing.",
+      "assertions": [
+        {"type": "contains", "text": "cites"}
+      ]
+    },
+    {
+      "prompt": "make-evergreen-note, just a bare hunch with nothing named yet",
+      "expected_output": "Searches for related existing notes before starting; if nothing relevant turns up, treats the ungrounded hunch as a valid, complete session per grounding's own handling of 'neither present.'",
+      "assertions": [
+        {"type": "not_contains", "text": "cannot proceed"}
+      ]
+    },
+    {
+      "prompt": "make-evergreen-note, revisiting an evergreen note written three months ago",
+      "expected_output": "Reads the existing note fresh from disk, and the resulting rewrite can replace its existing content wholesale rather than only appending.",
+      "assertions": [
+        {"type": "not_contains", "text": "append"}
+      ]
+    },
+    {
+      "prompt": "make-evergreen-note, and a Compass direction spawns a genuinely new sub-idea partway through that doesn't get pursued in this sitting",
+      "expected_output": "Logs the unpursued sub-idea to the evergreen backlog (slipbox evergreen add) rather than losing it or forcing it into the current session's Take.",
+      "assertions": [
+        {"type": "not_contains", "text": "cannot proceed"}
+      ]
+    }
+  ]
+}
