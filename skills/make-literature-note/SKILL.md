@@ -130,7 +130,11 @@ Once the session ends, one batch pass — never mid-claim. Re-read the
 finished note; re-read the source too if this is a resumed session and
 it's no longer in context. Compare the two and find anything a claim leans
 on — its weight actually resting on it, not just mentioned in passing —
-that Key Concepts doesn't yet cover. Wikilink liberally here: this step
+that neither `## Key Concepts` nor `## Mentioned` yet covers. This scan is
+type-blind: a person passing the load-bearing test (e.g. Niklas Luhmann, in
+a claim about the Zettelkasten method's origins) is found the same
+automatic way a concept is, in the same pass — never held back for the
+user to ask about separately. Wikilink liberally here: this step
 doesn't decide what the target will become (Reference note, Person,
 Location, Organization, or nothing at all) — that classification happens
 downstream, in `find-connections`, once cross-note evidence exists. The
@@ -138,25 +142,27 @@ author-exclusion stays unchanged: a source's own author still gets a bare,
 unresolved wikilink, never routed toward a Person note through this
 pipeline.
 
-For each candidate, also make a quick, cheap read — enough to pick a link
-*format*: does this look like a person, place, or organization (real or
-fictional), or a concept/term/method? Show the guess alongside each
-candidate so the user can correct a misread before anything is written.
+For each candidate, also make a quick, cheap read — enough to pick a
+*section and link format*: does this look like a person, place, or
+organization (real or fictional) — bound for `## Mentioned` — or a
+concept/term/method — bound for `## Key Concepts`? Show the guess alongside
+each candidate so the user can correct a misread before anything is written.
 
 Show what was found and why, in one message:
 
-> "Found these worth adding to Key Concepts: [list, each with a one-line
-> reason and its guessed kind]. Add all, some, or none — and flag any I've
-> read wrong."
+> "Found these worth adding: [list, each with a one-line reason, its
+> guessed kind, and which section it's headed for]. Add all, some, or
+> none — and flag any I've read wrong."
 
 On confirmation, run `/write-checks` again and append the confirmed entries
-to `## Key Concepts` per `references/writing-a-claim.md`'s wikilink
-resolution. Zero found is a complete, valid result.
+to `## Key Concepts` or `## Mentioned`, per candidate type, per
+`references/writing-a-claim.md`'s wikilink resolution. Zero found is a
+complete, valid result.
 
 ## Done
 
 The literature note exists on disk with its Core Idea, every claim the
 session actually produced as its own `## Key Claims` entry, and any
-confirmed Key Concepts (partial if the session stopped early — that's a
-complete, valid outcome), any flagged tensions are logged in the evergreen
-backlog, and the user is told the file path.
+confirmed Key Concepts and Mentioned entries (partial if the session
+stopped early — that's a complete, valid outcome), any flagged tensions are
+logged in the evergreen backlog, and the user is told the file path.

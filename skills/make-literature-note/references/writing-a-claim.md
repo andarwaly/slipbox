@@ -90,38 +90,40 @@ folded into the Evidence line itself:
 `[[Author Name]]` is a bare, intentionally-unresolved wikilink — no author-note entity
 exists in this family.
 
-## Key Concepts
+## Key Concepts and Mentioned
 
-Add or extend `## Key Concepts` with a wikilinked, 1-line gloss for anything this claim
-introduces or leans on — a term, a named person, tool, framework, place, or anything
-else. The test is always the same: is the claim's weight actually resting on it, or is
-it just mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten method's
-origins, passes this test; a place name mentioned once in an aside does not. This step
-wikilinks liberally and does not decide what the target will become — Reference note,
-Person, Location, Organization, or nothing — that classification happens entirely
-downstream, in `find-connections`, once cross-note evidence exists (see
-[[find-terms-find-connections-merge]]).
+Add or extend `## Key Concepts` (concept/term/framework/method candidates) or
+`## Mentioned` (person/place/organization candidates, real or fictional) with a
+wikilinked, 1-line gloss for anything this claim introduces or leans on. The test is
+always the same, for either section: is the claim's weight actually resting on it, or
+is it just mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten
+method's origins, passes this test and lands in `## Mentioned`; a place name mentioned
+once in an aside does not. Neither section decides what the target will become —
+Reference note, Person, Location, Organization, or nothing — that classification
+happens entirely downstream, in `find-connections`, once cross-note evidence exists
+(see [[find-terms-find-connections-merge]]).
 
 ```markdown
 - [[<note-filename>|Display Name]]: [what this source says about it, in one line]
 ```
 
-This section is load-bearing — `find-connections` scans it for recurrence detection, so
-everything the claim actually leans on must appear here.
+Both sections are load-bearing — `find-connections` scans `## Key Concepts` **and**
+`## Mentioned` for recurrence detection, so everything the claim actually leans on must
+appear in one or the other.
 
-**Two different questions, don't conflate them.** Which type of note this candidate
-eventually becomes (Reference, Person, Location, Organization, or nothing) is decided
-downstream, in `find-connections` — never here. But the wikilink still has to be
-*written* one way or the other right now, so a narrower question does need an answer
-at write time: does this candidate read as a person, place, or organization (real or
-fictional), or as a concept/term/method? That's a link-*format* decision only — Person/
-Location/Organization wikilinks are never prefixed, since slipbox never writes those
-three types and has no `paths.*`/`prefixes.*` config for them; a concept/term/method
-candidate uses the Reference-note format below, since that's what it becomes if and
-when it's promoted. Get this guess wrong and the link still just sits broken like any
-other unresolved candidate — nothing is lost, and the "spot terms and entities" batch
-confirmation is exactly where the user can catch and correct a misread before it's
-written.
+**Which section is a link-*format* decision, not a note-*type* decision.** Which type of
+note a candidate eventually becomes (Reference, Person, Location, Organization, or
+nothing) is decided downstream, in `find-connections` — never here. But the wikilink
+still has to be *written* somewhere right now, so a narrower question does need an
+answer at write time: does this candidate read as a person, place, or organization
+(real or fictional), or as a concept/term/method? A person/place/organization guess
+goes to `## Mentioned`, flat and unprefixed — slipbox never writes those three types
+and has no `paths.*`/`prefixes.*` config for them. A concept/term/method guess goes to
+`## Key Concepts` in the Reference-note format below, since that's what it becomes if
+and when it's promoted. Get this guess wrong and the link still just sits broken like
+any other unresolved candidate — nothing is lost, and the "spot terms and entities"
+batch confirmation is exactly where the user can catch and correct a misread before
+it's written.
 
 **Person/Location/Organization format** — flat, unprefixed, no config lookup needed:
 `[[Niklas Luhmann]]`, `[[Wano]]`, `[[Ship30]]` (as a brand/organization — see

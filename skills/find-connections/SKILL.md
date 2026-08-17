@@ -39,9 +39,9 @@ narrow scope to connections relating to just those notes, instead of a whole-vau
 
 ### Scan
 
-Scan literature notes' `## Key Concepts` sections **and** other mentions of the
-same or similar things elsewhere in notes' bodies — not just formally wikilinked Key
-Concepts entries. The same underlying idea can surface under different labels in
+Scan literature notes' `## Key Concepts` **and** `## Mentioned` sections **and** other
+mentions of the same or similar things elsewhere in notes' bodies — not just formally
+wikilinked Key Concepts/Mentioned entries. The same underlying idea can surface under different labels in
 different notes (`[[UI Design]]` in one note, `[[User Interface Design]]` in another)
 without either note's author intending them as distinct concepts, so a Key-Concepts-only
 scan would miss that.
