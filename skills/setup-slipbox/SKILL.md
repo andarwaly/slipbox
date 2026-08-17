@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # Setup Slipbox
@@ -52,7 +52,7 @@ Present what you found, one item at a time. Recommend a default and lead with it
 - **Templates**: three note templates (literature, reference, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
   - **The three note templates almost always already exist** — resolve their path and move on, same as any other convention item.
   - **The four resource templates usually don't** — the templates *folder* typically exists (from note-taking), but article/news/social/video `.md` files inside it typically don't, since clipping is a newer concept for most vaults than note-taking. For each one that's missing at its resolved path, offer to draft it together right there rather than asking the user to go write Obsidian template syntax cold:
-    1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `../clip-resource/references/variable-glossary.md` and `../clip-resource/references/filter-glossary.md`, but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
+    1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `variable-glossary.md` and `filter-glossary.md` (bundled with this skill, mirroring `clip-resource`'s own copies), but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
     2. Ask what they want captured in the note and in what order (title, source link, a raw excerpt, a synthesized summary, etc.).
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
