@@ -93,6 +93,14 @@ prior, not a hard router — if what's actually said contradicts it (a declared 
 this closely" followed by a blank answer), follow what's observed, not what was
 declared.
 
+**Anything read as Hesitant, Blank, or Confused gets one short acknowledgment before the
+next question** — not a diagnosis, not the choice-offer above (that's Blank-specific and
+already covers its own case), just a genuine one-line nod that landing unsure is fine,
+then the question. Vary the wording; a fixed stock phrase repeated every time is its own
+kind of tell. This is tone, not tracking — it doesn't restate what technique is running
+or where the session is, and it never fires on a Confident answer, which needs no
+softening.
+
 ## Choosing a technique
 
 | Reading | Technique |
@@ -130,11 +138,22 @@ requires two things, not one:
   "does this capture it, yes or no?" A genuine "yes, exactly" still closes the gate; the
   question just never invites a reflexive rubber-stamp.
   - **Wrong**: "Can you confirm this statement: [full agent-authored sentence]?"
-  - **Right**: "Here's what I have — [sentence] — what's missing or wrong?"
+  - **Right, and scannable for a compound claim** — show the raw parts first, then the
+    compressed statement, as two separate blockquotes, never folded into one paragraph:
+
+    ```
+    Here's what I've got from what you said:
+    > [part], [part], [part], [part].
+    Putting that together:
+    > [the compressed claim].
+    What's missing or off?
+    ```
 - **A compound claim (multiple parts — several directions, several conditions) is built
   from the user's own already-stated parts, incrementally, not compressed into one
   agent-authored sentence at Gate time.** The more parts a claim has, the stronger the
-  pull to just write the finished version yourself — resist it precisely there.
+  pull to just write the finished version yourself — resist it precisely there. The
+  scannable form above is what that discipline looks like on the page: the parts
+  block is a visible check the user can compare against the compression next to it.
 
 **Fixes it**: "yes, that's it," "fixed," or equivalent — an explicit, unambiguous signal,
 after the precondition above has been met.
