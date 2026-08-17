@@ -37,6 +37,12 @@ passes the test below). Two checks, run together:
 - **Declarative-title test** (Matuschak) — can it compress into a subject+verb claim, no
   "According to X..."?
 
+The same string can resolve to different types depending on how a given claim actually
+uses it: "Ship30" as a writing method someone teaches passes the reusability test and
+becomes a Reference note; "Ship30" as the brand/organization running that method is
+surfacing-only, per the entity-check above. Which one applies is decided by the claim's
+own usage, not by the string alone.
+
 **Classification order: entity-check runs before the reusability test.** A candidate
 wikilink is checked "is this a named person/place/organization?" first; only if not does
 it get evaluated against the deletion/declarative-title test. A person's name can

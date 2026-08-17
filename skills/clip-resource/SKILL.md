@@ -4,18 +4,20 @@ description: Fetch a URL and write it as a frozen Resource, matching Obsidian We
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Clip Resource
 
+Bold terms in this file are defined in `GLOSSARY.md`.
+
 For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; the one file it reads from that directory is `.slipbox/config.json`, for template paths, filename/frontmatter conventions, and `transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
 
-## 0. Prerequisite: `.slipbox/config.json` must exist
+## 0. Prerequisite: `.slipbox/AGENTS.md` must exist
 
-Check first, before anything else. This skill reads template paths, filename/frontmatter conventions, and `transcript_languages` from `.slipbox/config.json` — nothing here can proceed without it.
+Check first, before anything else. Its presence confirms `setup-slipbox` completed a full run — nothing here can proceed without it.
 
-If `.slipbox/config.json` is absent: stop. Do not proceed to any other step, and do not improvise conventions in its place. Tell the user to run `setup-slipbox` first, then re-run this skill.
+If `.slipbox/AGENTS.md` is absent: stop. Do not proceed to any other step, and do not improvise conventions in its place. Tell the user to run `setup-slipbox` first, then re-run this skill.
 
 ## 1. Take the URL
 

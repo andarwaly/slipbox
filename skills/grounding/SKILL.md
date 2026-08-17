@@ -2,10 +2,12 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Grounding
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 Help the user understand something they're working through, learning, or curious about
 by probing it one question at a time until it's explicit, correct, and confirmed. Never

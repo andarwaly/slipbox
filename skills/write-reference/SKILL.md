@@ -6,10 +6,12 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Write-reference
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## What these words mean
 
@@ -17,7 +19,7 @@ metadata:
   reusable label, independent of any one source (e.g. "confirmation bias," "CRDT,"
   "Zettelkasten Method") — admission is a reusability test (does the note survive if
   the source disappears; can it compress into a declarative, subject+verb title with
-  no "According to X..."), not an origin test. See `CONTEXT.md` for the full type
+  no "According to X..."), not an origin test. See `GLOSSARY.md` for the full type
   shape and the admission test's detail.
 - **Reference note** — the cumulative file a reference's definition lives in. Unlike a
   Claim, never one-shot: extended across however many sources touch this reference,
@@ -41,9 +43,8 @@ only come back here once its relevant claim (and Key Concepts wikilink) exists. 
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If it's missing,
-stop and say so. Same check for `.slipbox/bin/slipbox` — if it doesn't exist or isn't
-executable, stop and say so too. Every `slipbox` call below uses this same path,
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed
+a full run. If missing, stop and say so. Every `slipbox` call below uses this same path,
 `.slipbox/bin/slipbox` — never bare `slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Take the candidate

@@ -61,7 +61,7 @@ which is `/write-checks`'s job, run separately.
 - Traceable to the source, nothing added that isn't there?
 
 **The claim as a whole**
-- Citability test (`CONTEXT.md`'s atomicity rule): if another note cited this Key
+- Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Key
   Claim, is there exactly one clear thing being cited — not a bundle of several source
   points under one heading? (The shared-Warrant merge test in `qec-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
@@ -125,7 +125,7 @@ written.
 
 **Person/Location/Organization format** — flat, unprefixed, no config lookup needed:
 `[[Niklas Luhmann]]`, `[[Wano]]`, `[[Ship30]]` (as a brand/organization — see
-[[reference-note-admission-contract]] for when the same string reads as a method
+`GLOSSARY.md`'s Admission test entry for when the same string reads as a method
 instead).
 
 **Reference-note format** — resolving `<note-filename>` correctly here is not just

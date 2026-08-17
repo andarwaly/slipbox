@@ -3,7 +3,7 @@
 Every jargon term used across the slipbox skill family, flat and alphabetical. Each entry states what the term IS, not how to use it.
 
 **Admission test**
-The reusability check a candidate concept must pass to qualify for a Reference note: does the note survive if its source disappears (deletion test), and can it compress into a declarative, subject-plus-verb title (declarative-title test). Also called the reusability test.
+The reusability check a candidate concept must pass to qualify for a Reference note: does the note survive if its source disappears (deletion test), and can it compress into a declarative, subject-plus-verb title (declarative-title test). Also called the reusability test. The same string can resolve to different types depending on how a given claim uses it — e.g. "Ship30" as a writing method passes this test and becomes a Reference note, while "Ship30" as the brand/organization running that method is surfacing-only, decided by the entity-check that runs first, not by the string alone.
 _Avoid_: Origin test (the retired, superseded predecessor that gated on who coined the concept first; see its own entry, not this one).
 
 **Atomicity**

@@ -6,37 +6,19 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Make-literature-note
 
-## What these words mean
-
-- **Claim** — the source's own position on one specific question the source
-  answers, restated in the user's words and checked for fidelity, written
-  as a declarative sentence. Never the user's opinion — an object of
-  understanding, not agreement. A source usually holds several.
-- **Core Idea** — the source's central argument, one declarative sentence,
-  every Claim in the note in service of it. Distinct from a Claim: a Claim
-  is one thing the source argues, the Core Idea is what the source is
-  *for*. Written once per note, on its first Claim.
-- **Literature note** — the file a source's confirmed Claims get written
-  into. One per source clip, holding as many Key Claims as the source
-  actually supports — written incrementally as each is confirmed, never
-  revisited afterward except out-of-band manual fidelity corrections:
-  fixing a misreading, a transcription error, or wording that
-  misrepresents the source. Reaction, stance, or synthesis never enters; a
-  correction must move the note closer to the source. Slugs stay final
-  once written.
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If
-it's missing, stop and say so. Same check for `.slipbox/bin/slipbox` — if
-it doesn't exist or isn't executable, stop and say so too. Every `slipbox`
-call below uses this same path, `.slipbox/bin/slipbox` — never bare
-`slipbox`, which isn't guaranteed to be on `PATH`.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
+completed a full run. If missing, stop and say so. Every `slipbox` call below
+uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
+isn't guaranteed to be on `PATH`.
 
 ## Invocation
 

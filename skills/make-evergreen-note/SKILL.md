@@ -5,10 +5,12 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Make-evergreen-note
+
+Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## What these words mean
 
@@ -21,11 +23,10 @@ metadata:
 
 ## Prerequisite
 
-Requires `.slipbox/config.json` — same as every skill in this family. If
-it's missing, stop and say so. Same check for `.slipbox/bin/slipbox` — if
-it doesn't exist or isn't executable, stop and say so too. Every `slipbox`
-call below uses this same path, `.slipbox/bin/slipbox` — never bare
-`slipbox`, which isn't guaranteed to be on `PATH`.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
+completed a full run. If missing, stop and say so. Every `slipbox` call below
+uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
+isn't guaranteed to be on `PATH`.
 
 ## Take the material
 

@@ -3,15 +3,16 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.0.1"
+  version: "1.1.0"
 ---
 
 # Write-checks
 
+Bold terms in this file are defined in `GLOSSARY.md`.
+
 ## Prerequisite
 
-Requires `.slipbox/config.json`, `.slipbox/style-profile.json`, and
-`.slipbox/humanize-checklist.json` — all produced by `setup-slipbox`. If any is missing, stop and say so.
+Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed a full run, producing `.slipbox/config.json`, `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json` along with it. If missing, stop and say so.
 
 ## Style
 
