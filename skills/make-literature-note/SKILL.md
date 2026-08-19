@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Make-literature-note
@@ -121,13 +121,146 @@ format.
 
 ## Knowing when the session is done
 
-Once the conversation's natural energy winds down, check the private
-backlog against what actually got covered (in whatever reshaped form).
+Once the conversation's natural energy winds down, the close runs in a
+fixed order across the two sub-sections below, then the closing prompt:
+coverage first (what's missing — the backlog, then a fresh read of the
+source), shape second (what's there — density, then the Core Idea), and
+the user's own reaction last. Coverage precedes shape deliberately: both
+the density judgment and the Core Idea confirmation are judgments *over
+the final set of claims*, so anything that can still add a claim has to
+happen before them, or they'd be made against a set that's about to
+change. The opinion prompt sits after everything because its answer never
+touches the literature note at all.
+
+### Checking coverage — the backlog, then the source itself
+
+Check the private backlog against what actually got covered (in whatever
+reshaped form). Each candidate sits in one of three states, and the two
+non-covered states get different treatment:
+
+- **Covered** — reached Gate, confirmed, and written. Nothing to do.
+- **Drafted but unconfirmed** — raised in the conversation, worded or
+  half-worded, sometimes explicitly parked for later, but never taken
+  through Gate and never written. This is not the same as untouched, and
+  must not be nudged as though it were.
+- **Untouched** — never came up at all.
+
+Track the drafted-but-unconfirmed state as the conversation runs, not
+retroactively at the close: the moment a candidate gets a draft wording
+or a "let's come back to it," it leaves Untouched. Never resolve one by
+assuming it got folded into another claim — a Claim exists only if it
+passed Gate and was written.
+
+A drafted-but-unconfirmed item gets named specifically, not swept into a
+generic closing question:
+
+> "you drafted the clinical light-therapy point earlier and we parked
+> it — want to finish that one before we wrap?"
+
 Anything genuinely untouched gets one nudge, never more: "you haven't
 mentioned [X] — is that not something the source argues, or should we
-leave it for now?" The user's own "I think that's everything" always ends
-the session regardless of what the backlog still shows uncovered — the
-nudge is a single offer, never an insistence.
+leave it for now?"
+
+The user's own "I think that's everything" always ends the session
+regardless of what the backlog still shows uncovered — for both states.
+The nudge is a single offer, never an insistence.
+
+Then consider re-reading the source fresh — the whole source, not a
+targeted look at whatever the backlog flagged, since the point is to
+catch what the Surface pass and the conversation both missed, which by
+definition isn't on the backlog. This is a judgment call, not a mandatory
+step: skip it when the session already felt thorough — a short source
+worked through end to end, or a conversation that visibly exhausted what
+the source had. Reach for it when the conversation moved fast, jumped
+around, ran long, or left the sense that something got discussed and then
+dropped.
+
+When it runs, it follows the same batch-presentation pattern as Spot
+terms and entities below: re-read the source, compare it against the
+finished note, and show everything found in one message rather than
+raising each find as its own question.
+
+> "Re-reading the source, these look like things it argues that we never
+> captured: [list, each with a one-line note on what the source says].
+> Want to ground all of them, some, or none?"
+
+Whatever the user picks goes through `/grounding`'s Gate exactly as any
+other claim, and gets written the same way. Zero found is a complete,
+valid result.
+
+### Checking the shape — density, then the Core Idea
+
+With the claim set now final, read the note's `## Key Claims` as a whole
+and apply the shared-Warrant merge test from `references/qew-theory.md`
+once more, this time across confirmed claims rather than Surface-pass
+candidates: two claims resting on the same inferential move are one claim
+wearing two Questions. Claims split across a source's own list items are
+the common case — four bullets from one list usually share one Warrant.
+
+A note landing around six to eight claims is a useful reference point for
+this one pass's judgment, nothing more — not a hard gate, not a target to
+pad toward, and never a mid-conversation interrupt. A dense source can
+honestly support more; a short one can honestly support two. The number
+only prompts a harder look at overlap when the count runs well past it.
+Where the merge test does fire, offer the merge rather than performing
+it — the merged claim is a new statement, so it goes through Gate like
+any other.
+
+Then confirm the Core Idea. It was written on the note's first claim,
+before most of the conversation existed, so it's the one line on the page
+that has never been checked against the session as a whole. Confirming it
+is a Gate pass, and Gate's precondition holds: the user has to have said
+the thing before you can confirm it. So ask one genuine open question
+first, and wait for a real answer:
+
+> "having been through all of it — what do you think is the main idea
+> this source is arguing?"
+
+Read the answer as `/grounding` reads any answer. Only a Confident answer
+proceeds straight to confirmation; Hesitant, Blank, or Confused falls
+back to `/grounding`'s full reading-state dispatch table and runs the
+technique it names, exactly as anywhere else. There is no shortcut here
+because the Core Idea is already on the page.
+
+The final confirmation is open, never binary — the same shape a Claim's
+Gate takes. Not "is this still the Core Idea?" but:
+
+> "the note currently opens with [current Core Idea line] — how would you
+> put it now?"
+
+If what comes back differs, rewrite the Core Idea line. If it matches,
+leave it as it stands.
+
+### Closing with the user's own reaction
+
+Last, once the note itself is settled, ask what the user actually thinks:
+
+> "what do you think of this article?"
+
+Skip this only when a real opinion already surfaced during grounding and
+got routed there — `grounding`'s persistent-opinion case, where a
+restated opinion is already offered to the evergreen backlog. Asking
+again after that just re-collects something already handled.
+
+The answer never touches the literature note, in any form — not as a
+Claim, not as Evidence, not as an `## Open Questions` entry. A literature
+note holds the source's position only. The answer's one possible
+destination is the evergreen backlog, as a seed for a future Take.
+
+Offer before logging anything, never auto-save — the same shape as the
+persistent-opinion offer:
+
+> "want to capture that as its own idea for the evergreen backlog, or set
+> it aside for now?"
+
+Only on a yes:
+
+```bash
+.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the user's own reaction, in their words>"
+```
+
+A shrug, a "nothing really," or a decline is a complete, valid end to the
+session.
 
 ## Write each claim, incrementally
 
