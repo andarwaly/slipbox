@@ -97,7 +97,16 @@ which is `/write-checks`'s job, run separately.
   Conclusion is still restating, not concluding — go back and sharpen it.
 - Does it stay in the source's own terms, or has a metaphor/framing crept in that the
   source itself never used? A Conclusion that compresses cleanly into the agent's own
-  imagery rather than the source's is drift, not synthesis.
+  imagery rather than the source's is drift, not synthesis. Example: a source describing
+  a process as "layers building on each other" and the Conclusion rendering it as "a
+  ratchet that only turns one way" — the ratchet is the agent's image, not the source's.
+- Fidelity Signals check (per `source-architecture.md`'s Fidelity Signals group): does
+  the Conclusion upgrade the source's own hedged or comparative language into something
+  stronger than stated? Example: the source calls a window "most sensitive" to a signal
+  — a comparative claim about degree — and the Conclusion states it as "most effective,"
+  a claim about outcome the source never made. Same failure shape as epistemic-stance
+  drift (firming up a hedge), but distinct from the metaphor-drift check above: this one
+  is about smuggling in a stronger *claim*, not a foreign *image*.
 
 **Evidence**
 - Does it report what the source said or showed — not already a step toward what it
@@ -111,6 +120,13 @@ which is `/write-checks`'s job, run separately.
   Claim, is there exactly one clear thing being cited — not a bundle of several source
   points under one heading? (The shared-Warrant merge test in `qew-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
+- List-as-one-claim rule: when several claims on the table trace back to one
+  source-authored list (a bulleted or enumerated set the source itself presented as a
+  unit), default to one claim citing the list as a whole rather than one claim per item
+  — the items fold into Evidence instead of each spawning its own Key Claim heading. A
+  source's numbered list of five recommendations becomes one Conclusion ("the source
+  recommends five practices for X") with the five items condensed into the Evidence
+  line beneath it, not five separate Key Claims.
 - Everything this claim leans on present in Key Concepts, each with a correctly
   resolved wikilink (see Key Concepts wikilinks below)?
 
