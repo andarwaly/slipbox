@@ -42,6 +42,36 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "/make-literature-note on fixtures/sun-gating-and-morning-light.md, using fixtures/sun-gating-grounding-transcript.md as the session transcript, where the user notices mid-session that the source never actually settles whether indoor light exposure can substitute for outdoor light on a cloudy day",
+      "expected_output": "Captures the gap as a bullet in a top-level '## Open Questions' section, sibling to '## Key Claims', in plain declarative form naming what the source leaves unclear. Does not invent the open question itself or add one unprompted. If the user then offers their own guess at an answer, nests it as an '*Assumption*' bullet under that question, marked as the user's own guess, never written into a Key Claim.",
+      "assertions": [
+        {"type": "contains", "text": "Open Questions"},
+        {"type": "not_contains", "text": "Reaction"}
+      ]
+    },
+    {
+      "prompt": "/make-literature-note on fixtures/less-is-more.md, continuing a session where the user has already confirmed several claims that all rest on the same understanding/judgment-determines-what-to-keep move across different domains, plus four claims each promoting one item off the source's own single seven-bullet list",
+      "expected_output": "At the natural close of the session ('Knowing when the session is done'), flags the cross-claim overlap and checks the confirmed count against the 6-8 reference point rather than staying silent, and treats the four list-derived claims as one claim citing the list as a whole with its items folded into Evidence rather than one claim per item — never interrupting mid-claim to enforce this, only at the session-close sweep.",
+      "assertions": [
+        {"type": "not_contains", "text": "which do you want grounded"}
+      ]
+    },
+    {
+      "prompt": "/make-literature-note on fixtures/less-is-more.md, at the point in the session where the first claim is about to be drafted and the Core Idea line has not yet been written",
+      "expected_output": "Before showing any drafted Core Idea, asks a genuine open question first ('what do you think is the main idea this source is arguing?') rather than presenting a finished synthesis for a nod. Drafts the Core Idea silently at the first claim as before, but confirmation of it is deferred to the same 'Knowing when the session is done' pause used for density, and that confirmation is itself an open question, never a binary yes/no.",
+      "assertions": [
+        {"type": "contains", "text": "?"},
+        {"type": "not_contains", "text": "can you confirm"}
+      ]
+    },
+    {
+      "prompt": "/make-literature-note on fixtures/sun-gating-and-morning-light.md, using fixtures/sun-gating-grounding-transcript.md, where the source states the body is 'most sensitive to light' in the first 30-60 minutes and the user's restatement drifts toward calling that window 'most effective for setting the circadian clock'",
+      "expected_output": "The Conclusion-review check catches the epistemic-stance upgrade — a stated fact ('most sensitive') being strengthened into an unstated comparative-efficacy conclusion ('most effective') the source never makes — and holds the claim to the source's actual hedge/fact rather than letting the stronger wording through.",
+      "assertions": [
+        {"type": "not_contains", "text": "most effective for setting the circadian clock"}
+      ]
     }
   ]
 }
