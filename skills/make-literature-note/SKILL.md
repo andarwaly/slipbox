@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Make-literature-note
@@ -47,7 +47,15 @@ points at this resource.
 
 Read the whole source yourself — this is your own judgment, not a
 `/grounding` call; `/grounding` was never built for open-ended "what does
-this cover" scanning, only for probing something already anchored. Using
+this cover" scanning, only for probing something already anchored. Before
+or alongside claim discovery, read the source's architecture per
+`references/source-architecture.md` — its six optional lenses (Situation &
+Starting Point, Problem/Tension, Argument Movement, Support & Boundaries,
+Fidelity Signals, Resolution) feed Core Idea formation specifically. A
+Core Idea synthesized purely from a bag of already-discovered claims risks
+missing the source's own throughline; reading the source's own motivation,
+tension, and build-up first is what keeps the Core Idea from just
+echoing whichever claim got discovered first. Using
 Question/Evidence/Warrant as your own internal reasoning tool (see
 `references/qew-theory.md`) — never shown to the user in this form —
 identify every distinct claim the source actually supports and the

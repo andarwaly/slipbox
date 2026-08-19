@@ -1,10 +1,13 @@
 # Question / Evidence / Warrant — internal reasoning, never written to disk
 
 Q/E/W is how the agent thinks about a source before and during grounding — it identifies
-which passages are claim-worthy, finds the source's Core Idea, and checks a Conclusion
-before it's finalized. None of it becomes note content. The note holds only the Core
-Idea and each claim's declarative Conclusion (plus condensed Evidence, kept for later
-verification — see `writing-a-claim.md`). Question and Warrant never appear on the page.
+which passages are claim-worthy and checks a Conclusion before it's finalized. This
+file's scope is per-claim reasoning; whole-source reasoning about motivation, tension,
+and argument shape — the piece that feeds Core Idea formation — lives in
+`source-architecture.md` instead, a different grain from what's covered here. None of
+it becomes note content. The note holds only the Core Idea and each claim's declarative
+Conclusion (plus condensed Evidence, kept for later verification — see
+`writing-a-claim.md`). Question and Warrant never appear on the page.
 
 ## Question
 
