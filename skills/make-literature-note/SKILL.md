@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.9.0"
+  version: "1.10.0"
 ---
 
 # Make-literature-note
@@ -305,9 +305,11 @@ toward the next one, if there is a next one:
 
 An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
 bullet) writes to disk the same way, as soon as it's flagged — it isn't
-held back for the batch pass below, and unlike every other section it can
-still be appended to later in a subsequent session, since it's the one
-section exempt from the note's otherwise frozen-once-written rule.
+held back for the batch pass below, and unlike most other sections it can
+still be appended to later in a subsequent session, one of the note's
+three narrowly-scoped exemptions from the otherwise frozen-once-written
+rule (alongside the out-of-band fidelity correction and the session-close
+density merge above).
 
 ## Spot terms and entities
 

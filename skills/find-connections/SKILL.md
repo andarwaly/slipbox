@@ -4,7 +4,7 @@ description: Scan existing notes for missing links, sparked ideas, and Reference
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Find-connections

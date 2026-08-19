@@ -70,11 +70,13 @@ never auto-detected: no scanning across notes ever adds one on its own. If an
 `*Answered*` is added — the historical record of the original guess is worth keeping,
 not deleted.
 
-`## Open Questions` is the one section of a literature note not frozen once written —
-every other section is written once and never revisited except an out-of-band fidelity
-correction; appending an `*Answered*` bullet later is new information arriving after the
-fact, not a correction, so this section stays open to appends for as long as a question
-remains outstanding.
+`## Open Questions` carries its own exemption from the literature note's otherwise
+frozen-once-written rule — every other section is written once and never revisited
+except an out-of-band fidelity correction, an `## Open Questions` append, or the
+session-close density merge that folds two claims sharing a Warrant into one; appending
+an `*Answered*` bullet later is new information arriving after the fact, not a
+correction, so this section stays open to appends for as long as a question remains
+outstanding.
 
 ## Review checklist
 
