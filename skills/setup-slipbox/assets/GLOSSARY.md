@@ -123,7 +123,7 @@ The generic ordered-fallback-check pattern: try one method, and only on its fail
 _Avoid_: Extraction ladder (the same pattern, scoped to one specific sequence; say Ladder for the general pattern).
 
 **Literature note**
-The file a source's confirmed Claims get written into: source-oriented, anchored to exactly one source clip, holding as many Key Claims as that source supports. Written incrementally and never revisited afterward except an out-of-band fidelity correction.
+The file a source's confirmed Claims get written into: source-oriented, anchored to exactly one source clip, holding as many Key Claims as that source supports. Written incrementally and never revisited afterward except an out-of-band fidelity correction, an `## Open Questions` append, or the session-close density merge that folds two claims sharing a Warrant into one.
 _Avoid_: Reference note (concept-anchored, accumulates across many sources instead of one); Evergreen note (idea-oriented, freely revisited and rewritten).
 
 **Maieutic**
@@ -131,7 +131,7 @@ The grounding technique for a blank answer with no source at all: draw out a for
 _Avoid_: Discovery walk (the composite technique for a blank answer *with* a source present, which borrows Maieutic's drawing-out stance as one of three ingredients rather than running it alone).
 
 **Open Question**
-A user-flagged bullet in a literature note's `## Open Questions` section naming something the source itself leaves unclear, ambiguous, or unanswered. Never invented by the agent unprompted — captured only when the user notices the gap. May carry a nested Assumption bullet and, once a resolving claim exists elsewhere, a nested Answered bullet (a wikilink to that claim's heading, user-requested only, never auto-detected — no cross-note scanning).
+A user-flagged bullet in a literature note's `## Open Questions` section naming something the source itself leaves unclear, ambiguous, or unanswered. Never invented by the agent unprompted — captured only when the user notices the gap. May carry a nested *Assumption* bullet and, once a resolving claim exists elsewhere, a nested *Answered* bullet (a wikilink to that claim's heading, user-requested only, never auto-detected — no cross-note scanning).
 _Avoid_: Tension (the agent's own prior-knowledge conflict noticed against the material, routed to the evergreen Backlog — a different thing than a gap the source itself leaves unanswered).
 
 **Origin test**

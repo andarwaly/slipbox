@@ -204,7 +204,14 @@ honestly support more; a short one can honestly support two. The number
 only prompts a harder look at overlap when the count runs well past it.
 Where the merge test does fire, offer the merge rather than performing
 it — the merged claim is a new statement, so it goes through Gate like
-any other.
+any other. This session-close density merge is a third, narrowly-scoped
+exemption to the literature note's frozen-once-written rule — distinct
+from the out-of-band fidelity correction and from the `## Open Questions`
+append-only exemption, and reaching no further than this one pass. If the
+user confirms the merge, the superseded claim's own `## Key Claims`
+heading is removed and its content folded into the surviving merged
+claim, which then gets its own fresh Gate confirmation as the new
+statement it is.
 
 Then confirm the Core Idea. It was written on the note's first claim,
 before most of the conversation existed, so it's the one line on the page
