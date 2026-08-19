@@ -22,7 +22,7 @@ claim entry once it's written.
 
 - [plain declarative question naming a gap in the source]
   - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[Other Literature Note#the-claim-that-answers-it]]
+  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
 `{{prefix}}` resolves from `.slipbox/config.json`'s `prefixes.literature` for the vault
@@ -50,7 +50,7 @@ something the source itself leaves unclear, ambiguous, or unanswered:
 
 - [plain declarative question naming a gap in the source]
   - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[Other Literature Note#the-claim-that-answers-it]]
+  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
 **User-flagged only** — the agent never invents an open question unprompted; a question
@@ -69,6 +69,15 @@ never auto-detected: no scanning across notes ever adds one on its own. If an
 `*Assumption*` bullet already exists on the same question, it stays in place once
 `*Answered*` is added — the historical record of the original guess is worth keeping,
 not deleted.
+
+Before writing the `*Answered*` wikilink, resolve `prefixes.literature` from
+`.slipbox/config.json` the same way the Reference-note rule below resolves
+`prefixes.reference` — the target note is itself a literature note, and its actual
+filename on disk includes this prefix; a link built without it points at nothing if
+the vault's actual note carries the prefix. Prefix in the link target, clean name in
+the display alias: `[[§ Other Literature Note#the-claim-that-answers-it|Other
+Literature Note]]` for a vault using `§`. If `prefixes.literature` is `false`, the
+link stays unprefixed, same fallback logic as the Reference-note case.
 
 `## Open Questions` carries its own exemption from the literature note's otherwise
 frozen-once-written rule — every other section is written once and never revisited
