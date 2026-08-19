@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # Grounding
@@ -50,6 +50,29 @@ hands over the exact material the question was meant to draw out, the same viola
 **Never finish it for them** guards against, just delivered as a citation instead of a
 stated answer. A source quote belongs only *after* the user responds — confirming what
 they found, in Gate or elsewhere — never staged in advance as a hint.
+
+**The user restates their own opinion a second time, after a first push-back already
+happened** → stop pushing back again and offer to route it instead, immediately, not
+deferred to post-Gate the way a tension is:
+> "want to capture that as its own idea for the evergreen backlog, or set it aside for
+> now?"
+
+This offer is binary by design, and that's fine — it's a routing choice over words the
+user already produced, not a confirmation of anything the agent authored, so it doesn't
+fall under Gate's ban on binary confirmation questions below. That ban exists to stop a
+yes/no from standing in for confirming an agent-authored statement; this is a different
+question about a different kind of content, not an exception carved out of that rule.
+
+**The user asks something the source doesn't appear to cover** → check the source again
+before saying so. Stating "the source doesn't say that" without actually re-checking is
+its own Fidelity violation — the same kind of ungrounded claim this whole section exists
+to prevent, just aimed outward at the user instead of into the statement. Once genuinely
+confirmed absent, acknowledge the question before redirecting — reuse the same
+acknowledgment-line pattern used for a Hesitant, Blank, or Confused reading below, never
+a bare redirect:
+> That's a fair thing to wonder about — the source doesn't go there, though.
+>
+> [return to the question already in progress]
 
 A caller may frame which direction Fidelity points before a session starts — most often
 whether to hold the user to the material (the default) or to hold yourself, the agent,
