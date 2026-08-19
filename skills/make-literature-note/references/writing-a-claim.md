@@ -17,6 +17,12 @@ claim entry once it's written.
 
 ### [Conclusion, stated declaratively — this is the claim, and the heading]
 [Evidence, condensed — no separate "Evidence:" label, just the prose itself]
+
+## Open Questions
+
+- [plain declarative question naming a gap in the source]
+  - *Assumption*: [the user's own guess, marked, never a Claim]
+  - *Answered*: [[Other Literature Note#the-claim-that-answers-it]]
 ```
 
 `{{prefix}}` resolves from `.slipbox/config.json`'s `prefixes.literature` for the vault
@@ -32,6 +38,43 @@ touched on a second or later claim for the same note.
 follows it — that would just duplicate the heading. Evidence is the only other thing
 under the heading: condensed prose, no bullet marker, no hard length cap — governed by
 the vault's own `.slipbox/style-profile.json` the same as any other note content.
+
+## Open Questions
+
+A top-level section, sibling to `## Key Claims` and `## Key Concepts`/`## Mentioned` —
+never nested inside a claim. One bullet per question, plain declarative form, naming
+something the source itself leaves unclear, ambiguous, or unanswered:
+
+```markdown
+## Open Questions
+
+- [plain declarative question naming a gap in the source]
+  - *Assumption*: [the user's own guess, marked, never a Claim]
+  - *Answered*: [[Other Literature Note#the-claim-that-answers-it]]
+```
+
+**User-flagged only** — the agent never invents an open question unprompted; a question
+lands here only when the user notices the gap during grounding.
+
+**`*Assumption*`** is the one narrow, explicit exception to the note's purity rule (no
+personal stance, no reaction field of any kind, elsewhere unconditional): a marked
+nested bullet holding the user's own guess at an answer. It's never a Claim, never
+promoted to one, and this exception applies to this one bullet type, under this one
+section, only — everything else the purity rule bans stays exactly as forbidden as
+before.
+
+**`*Answered*`** is added later, once a different literature note grounds a claim that
+resolves the question — a wikilink to that claim's own heading. User-initiated only,
+never auto-detected: no scanning across notes ever adds one on its own. If an
+`*Assumption*` bullet already exists on the same question, it stays in place once
+`*Answered*` is added — the historical record of the original guess is worth keeping,
+not deleted.
+
+`## Open Questions` is the one section of a literature note not frozen once written —
+every other section is written once and never revisited except an out-of-band fidelity
+correction; appending an `*Answered*` bullet later is new information arriving after the
+fact, not a correction, so this section stays open to appends for as long as a question
+remains outstanding.
 
 ## Review checklist
 

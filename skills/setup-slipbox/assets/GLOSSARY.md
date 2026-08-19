@@ -6,6 +6,10 @@ Every jargon term used across the slipbox skill family, flat and alphabetical. E
 The reusability check a candidate concept must pass to qualify for a Reference note: does the note survive if its source disappears (deletion test), and can it compress into a declarative, subject-plus-verb title (declarative-title test). Also called the reusability test. The same string can resolve to different types depending on how a given claim uses it — e.g. "Ship30" as a writing method passes this test and becomes a Reference note, while "Ship30" as the brand/organization running that method is surfacing-only, decided by the entity-check that runs first, not by the string alone.
 _Avoid_: Origin test (the retired, superseded predecessor that gated on who coined the concept first; see its own entry, not this one).
 
+**Assumption** (the Open Question kind)
+A marked, nested bullet under an Open Question holding the user's own guess at an answer — the one narrow, explicit exception to the literature note's purity rule (no personal stance, no reaction field of any kind, otherwise unconditional). Scoped to this one bullet type, under this one section, never elsewhere in the note; never a Claim.
+_Avoid_: `{"deferred": true}` (an unrelated, JSON-schema-level marker on a Field map entry recording that a field mapping hasn't been resolved yet — a config-resolution state, not a note-body content type; no collision despite the surface similarity).
+
 **Atomicity**
 The rule that a note expresses exactly one independently citable thing: for an evergreen note, the whole note; for a literature note, each Key Claim individually, since one source clip can support several.
 _Avoid_: One-topic rule (a coarser reading; atomicity is about one citable claim, not one broad subject).
@@ -125,6 +129,10 @@ _Avoid_: Reference note (concept-anchored, accumulates across many sources inste
 **Maieutic**
 The grounding technique for a blank answer with no source at all: draw out a forming position through open questions aimed at memory or experience, then test whether what came out actually holds together.
 _Avoid_: Discovery walk (the composite technique for a blank answer *with* a source present, which borrows Maieutic's drawing-out stance as one of three ingredients rather than running it alone).
+
+**Open Question**
+A user-flagged bullet in a literature note's `## Open Questions` section naming something the source itself leaves unclear, ambiguous, or unanswered. Never invented by the agent unprompted — captured only when the user notices the gap. May carry a nested Assumption bullet and, once a resolving claim exists elsewhere, a nested Answered bullet (a wikilink to that claim's heading, user-requested only, never auto-detected — no cross-note scanning).
+_Avoid_: Tension (the agent's own prior-knowledge conflict noticed against the material, routed to the evergreen Backlog — a different thing than a gap the source itself leaves unanswered).
 
 **Origin test**
 The retired, superseded admission check that gated a Reference-note candidate on who argued or coined it first, replaced because it wrongly excluded a source's own newly introduced, genuinely reusable framework.

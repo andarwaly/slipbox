@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Make-literature-note
@@ -94,6 +94,23 @@ backlog before continuing:
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
 ```
 
+When the user notices a genuine gap in the source itself — something the
+source leaves unclear, ambiguous, or unanswered — offer to record it as an
+`## Open Questions` entry. Never invent one unprompted; this only fires on
+the user's own noticing. If the user wants a guess at an answer recorded
+too, append it as a nested `*Assumption*` bullet, clearly marked as the
+user's own guess — the one narrow exception to the note's purity rule,
+scoped to this one bullet type under this one section only. Never write an
+unmarked personal guess, and never let it read as a Claim. If the user
+names another literature note that already resolves the question, append a
+nested `*Answered*` bullet as a wikilink to that claim's own heading
+(`[[Other Literature Note#the-claim-that-answers-it]]`) — user-initiated
+only, never detected automatically; this family runs no cross-note scan for
+outstanding questions. An existing `*Assumption*` bullet stays in place
+once `*Answered*` is added alongside it. See
+`references/writing-a-claim.md`'s Open Questions section for the full
+format.
+
 ## Knowing when the session is done
 
 Once the conversation's natural energy winds down, check the private
@@ -138,6 +155,12 @@ toward the next one, if there is a next one:
   claim actually being written), so the user has some sense of where the
   session stands without every turn being labeled.
 
+An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
+bullet) writes to disk the same way, as soon as it's flagged — it isn't
+held back for the batch pass below, and unlike every other section it can
+still be appended to later in a subsequent session, since it's the one
+section exempt from the note's otherwise frozen-once-written rule.
+
 ## Spot terms and entities
 
 Once the session ends, one batch pass — never mid-claim. Re-read the
@@ -176,7 +199,9 @@ complete, valid result.
 ## Done
 
 The literature note exists on disk with its Core Idea, every claim the
-session actually produced as its own `## Key Claims` entry, and any
-confirmed Key Concepts and Mentioned entries (partial if the session
-stopped early — that's a complete, valid outcome), any flagged tensions are
-logged in the evergreen backlog, and the user is told the file path.
+session actually produced as its own `## Key Claims` entry, any confirmed
+Key Concepts and Mentioned entries, and any user-flagged `## Open
+Questions` entries with their `*Assumption*`/`*Answered*` bullets (partial
+if the session stopped early — that's a complete, valid outcome), any
+flagged tensions are logged in the evergreen backlog, and the user is told
+the file path.
