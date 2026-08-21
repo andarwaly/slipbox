@@ -4,12 +4,17 @@ description: A bare, freeform grounding session — a freeform interview with no
   note produced.
 disable-model-invocation: true
 metadata:
-  version: "1.1.1"
+  version: "1.2.0"
 ---
 
 # Ground-me
 
 Bold terms in this file are defined in `GLOSSARY.md`.
+
+## Prerequisite
+
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
 
 Run a /grounding session on whatever the user gave — an idea, notes, a source, an
 article, anything. If nothing was given, ask what they want to work through.
