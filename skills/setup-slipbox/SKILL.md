@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.2"
+  version: "1.5.3"
 ---
 
 # Setup Slipbox
@@ -118,7 +118,7 @@ Show the complete draft to the user. Let them edit or approve it. Verify prefere
 
 ### 04 - Write `.slipbox/humanize-checklist.json`
 
-Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. The snapshot records humanizer v2.8.0's detection, meaning-preserving rewrite, preference-context, and final-audit phases. Detection remains generic and fixed; it does not read profile baselines. The rewrite phase may read the stated profile through its `preference_context`. Explain that the file flags and guides but never rewrites automatically. Preserve its per-signal thresholds, language gating, false-positive guidance, and judgment-only signals. Re-copy it on every re-run so vaults receive package-level updates.
+Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. The snapshot records humanizer v2.8.0's detection, meaning-preserving rewrite, and final-audit phases, plus a preference-context config block read from `style-profile.json`. Detection remains generic and fixed; it does not read profile baselines. The rewrite phase may read the stated profile through its `preference_context`. Explain that the file flags and guides but never rewrites automatically. Preserve its per-signal thresholds, language gating, false-positive guidance, and judgment-only signals. Re-copy it on every re-run so vaults receive package-level updates.
 
 **Done when:** `.slipbox/humanize-checklist.json` matches `assets/humanize-checklist.json` exactly.
 
@@ -164,7 +164,7 @@ Two unconditionally-copied assets, same treatment as `humanize-checklist.json` a
 
 ## Done
 
-Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values).
+Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values). The CLI's full command surface — `evergreen`, `links`, `config`, `humanize` — is documented in the copied `.slipbox/AGENTS.md`, which other skills in this family read from directly.
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
