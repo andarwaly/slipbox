@@ -4,14 +4,14 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
 ---
 
 # Setup Slipbox
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `config.json` plus the `.slipbox/bin/slipbox` CLI, `style-profile.json`, and `humanize-checklist.json` through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (stated note preferences), humanizer workflow snapshot, CLI install, config write. Three of those outputs are built from fixed assets rather than composed fresh each run: `assets/config.schema.json`, `assets/humanize-checklist.json`, and `assets/style-profile.schema.json`. Re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `slipbox config get`/`slipbox config set` CLI (see Done).
+Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `style-profile.json`, `humanize-checklist.json`, the `.slipbox/bin/slipbox` CLI, and `config.json` — in that order — through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (stated note preferences), humanizer workflow snapshot, CLI install, config write. Three of those outputs are built from fixed assets rather than composed fresh each run: `assets/config.schema.json`, `assets/humanize-checklist.json`, and `assets/style-profile.schema.json`. Re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `slipbox config get`/`slipbox config set` CLI (see Done).
 
 ## Prerequisites
 
@@ -27,7 +27,9 @@ For each **required** dependency the report marks missing: stop, tell the user w
 
 **Done when:** every **required** dependency the report flagged has been either installed, explicitly deferred by the user, or the user has said they'll handle it themselves. `firecrawl` being unauthenticated, and TinyFish being unavailable, are never reasons to hold up completion.
 
-## Explore (no questions yet)
+## Workflow
+
+### 01 - Explore (no questions yet)
 
 Check the vault for existing signal before asking the user anything:
 
@@ -42,7 +44,7 @@ Check the vault for existing signal before asking the user anything:
 
 **Done when:** you know, for each check above, whether it found something or came up empty, and which of the three branches above applies.
 
-## Section A: conventions
+### 02 - Section A: conventions
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
@@ -58,33 +60,37 @@ Present what you found, one item at a time. Recommend a default and lead with it
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
 
-### field_map
+**field_map** — **first, one combined question**: "Want to resolve frontmatter field mappings for all three note types now, or defer any of them until you actually write one?" Any type the user defers gets `{"deferred": true}` recorded for each of its required fields in `config.json`, skipping the branches below entirely for that type — `write-checks` runs this same resolution logic the first time that type is actually written (see `write-checks/SKILL.md`'s "Frontmatter fields" section), and writes the resolved mapping back at that point.
 
-**First, one combined question**: "Want to resolve frontmatter field mappings for all three note types now, or defer any of them until you actually write one?" Any type the user defers gets `{"deferred": true}` recorded for each of its required fields in `config.json`, skipping the branch below entirely for that type — `write-checks` runs this same resolution logic the first time that type is actually written (see `write-checks/SKILL.md`'s "Frontmatter fields" section), and writes the resolved mapping back at that point.
+#### Mapping table
 
 For each required field below, on a type the user chose to resolve now, resolve one of (a) map onto an existing user property, (b) create the standard field, or (c) explicit opt-out. When mapping onto an EXISTING property, read its actual type from the note (Text/List/Number/Checkbox/Date/Date & Time) and record that discovered type in the field_map entry — don't assume a type. When creating a NEW field, assign the type that fits its semantic nature, per this table (still verify+record the discovered type instead when mapping onto an existing property), with a `zone` (top/bottom) alongside each type — zone only governs placement of fields being newly created, never fields mapped onto an existing property:
   - Literature: `type` → text, zone top; `created` → date, zone top; `source` → list + wikilink: true, zone bottom.
   - Reference: `type` → text, zone top; `created` → date, zone top; `sources` → list + wikilink: true, zone bottom; `alt_names` (optional) — default: map onto Obsidian's reserved `aliases` property (type `list`, no wikilink; record `list` directly, skip the live-read-type step since `aliases` is Obsidian-fixed, not vault-specific) — or create fresh as `alt_names` (list, no wikilink, zone bottom) if the user prefers to keep it separate from `aliases`.
   - Evergreen: `type` → text, zone top; `created` → date, zone top; `derived-from` → list + wikilink: true, zone bottom; `updated-at` → datetime (not bare date — multiple revisions can land the same day), no wikilink, zone bottom.
 
-  **`type`-occupancy check**, resolving the `type` field specifically (present in all three note types' field tables): this is a 3-way branch, not a simple create-or-map choice.
+These are the required fields for reference: Literature's `type: literature`, `created`, `source: [[resource]]`; Reference's `type: reference`, `created`, `sources: [...]` (array/multitext — grows with each extension), `alt_names: [...]` (optional); Evergreen's `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body), `updated-at` (written on first write, refreshed every time an existing evergreen note is revisited/rewritten).
+
+#### `type`-occupancy check
+
+Resolving the `type` field specifically (present in all three note types' field tables): this is a 3-way branch, not a simple create-or-map choice.
   - `type` is absent/unused in existing notes → create fresh with the standard name `type` (today's default, unchanged).
   - `type` already holds exactly the identity value needed (existing notes literally already have `type: literature`/`type: reference`/`type: evergreen`) → map onto the existing `type` property directly, no new field needed.
   - `type` already holds something unrelated (e.g. a base/umbrella value like `note`) → stop and ask: recommend mapping slipbox's own type-identity onto a new, differently-named field (e.g. `note-type`) instead of colliding with the existing `type`, leaving the existing `type` property untouched. Offer the user the choice of field name — don't hardcode `note-type` as the only option, it's just the recommended default.
 
-  **Type-mismatch check**, only for multi-valued fields (`source`s that grow: `sources`,
-  `derived-from` — never `source`, which is genuinely single-valued and fits into an
-  existing Text property fine): if the existing property's discovered type isn't List,
-  it structurally can't hold what the field needs to grow into. Stop and ask, recommending
-  mapping onto a new, standard-named List property instead and leaving the existing
-  property untouched — the same recommend-a-default pattern as every other item in this
-  section. Offer the other two answers too: point at a different existing property, or
-  override and accept the mismatch anyway (least recommended, never the silent default).
+#### Type-mismatch check
 
-  Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties — with exactly one named exception: Reference's optional `alt_names` may map onto `aliases`, since the two are semantically identical (both mean "other names for this thing"), and this is in fact the default recommendation for that field (see the Reference row above). No other field, on any note type, gets this carve-out. The required fields themselves, for reference:
-  - Literature: `type: literature`, `created`, `source: [[resource]]`.
-  - Reference: `type: reference`, `created`, `sources: [...]` (array/multitext — grows with each extension), `alt_names: [...]` (optional).
-  - Evergreen: `type: evergreen`, `created`, `derived-from: [[...]]` (bare wikilink list, no reasons attached — reasons stay in the note body), `updated-at` (written on first write, refreshed every time an existing evergreen note is revisited/rewritten).
+Only for multi-valued fields (`source`s that grow: `sources`,
+`derived-from` — never `source`, which is genuinely single-valued and fits into an
+existing Text property fine): if the existing property's discovered type isn't List,
+it structurally can't hold what the field needs to grow into. Stop and ask, recommending
+mapping onto a new, standard-named List property instead and leaving the existing
+property untouched — the same recommend-a-default pattern as every other item in this
+section. Offer the other two answers too: point at a different existing property, or
+override and accept the mismatch anyway (least recommended, never the silent default).
+
+Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` properties — with exactly one named exception: Reference's optional `alt_names` may map onto `aliases`, since the two are semantically identical (both mean "other names for this thing"), and this is in fact the default recommendation for that field (see the Reference row in the mapping table above). No other field, on any note type, gets this carve-out.
+
 - **Clip config** (folded into this same flow, not a separate gate):
   - All four resource content-types (article, news, social, video) are on by default. Ask only about exceptions the user wants to turn off.
   - Transcript language: ask which languages are wanted (multi-select). Only ask for a priority order if more than one language is selected.
@@ -92,7 +98,7 @@ For each required field below, on a type the user chose to resolve now, resolve 
 
 **Done when:** the user has explicitly confirmed or corrected every item above, including the field_map verification reads for any type resolved now (deferred types are explicitly not re-asked about here).
 
-## Section B: stated note preferences
+### 03 - Section B: stated note preferences
 
 Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus or infer a voice fingerprint. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
 
@@ -110,13 +116,13 @@ Show the complete draft to the user. Let them edit or approve it. Verify prefere
 
 **Done when:** the user has approved one stated profile, it validates against the fixed schema, and `.slipbox/style-profile.json` is written. No corpus branch exists.
 
-## Write `.slipbox/humanize-checklist.json`
+### 04 - Write `.slipbox/humanize-checklist.json`
 
 Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-checklist.json`. The snapshot records humanizer v2.8.0's detection, meaning-preserving rewrite, preference-context, and final-audit phases. Detection remains generic and fixed; it does not read profile baselines. The rewrite phase may read the stated profile through its `preference_context`. Explain that the file flags and guides but never rewrites automatically. Preserve its per-signal thresholds, language gating, false-positive guidance, and judgment-only signals. Re-copy it on every re-run so vaults receive package-level updates.
 
 **Done when:** `.slipbox/humanize-checklist.json` matches `assets/humanize-checklist.json` exactly.
 
-## Install the `slipbox` CLI
+### 05 - Install the `slipbox` CLI
 
 Runs identically on every invocation, first run or re-run — no conditional branch:
 
@@ -131,7 +137,7 @@ The script copy is always overwritten (versioned code, not user data — distinc
 
 **Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/` and `.slipbox/links.jsonl` exist.
 
-## Write `.slipbox/config.json`
+### 06 - Write `.slipbox/config.json`
 
 Draft the config from everything confirmed in Sections A and B, against the fields defined in `assets/config.schema.json`:
 
@@ -147,24 +153,24 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 **Done when:** `.slipbox/config.json` is written, matches the approved draft, and validates against `assets/config.schema.json`.
 
-## Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
+### 07 - Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
 
 Two unconditionally-copied assets, same treatment as `humanize-checklist.json` above:
 
 - Copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md`, verbatim, on every run.
-- Copy `assets/AGENTS.md` to `.slipbox/AGENTS.md`, verbatim, but only after every other artifact in this skill (`config.json`, `bin/slipbox`, `evergreen/`, `links.jsonl`, `style-profile.json`, `humanize-checklist.json`, `GLOSSARY.md`) has already succeeded. `.slipbox/AGENTS.md` is written strictly last — its existence is the completion sentinel every other skill in this family checks, so a partial or interrupted run must never leave it behind claiming success.
+- Copy `assets/AGENTS.md` to `.slipbox/AGENTS.md`, verbatim, but only after every other artifact in this skill (`style-profile.json`, `humanize-checklist.json`, `bin/slipbox`, `evergreen/`, `links.jsonl`, `config.json`, `GLOSSARY.md`) has already succeeded. `.slipbox/AGENTS.md` is written strictly last — its existence is the completion sentinel every other skill in this family checks, so a partial or interrupted run must never leave it behind claiming success.
 
 **Done when:** `.slipbox/GLOSSARY.md` matches `assets/GLOSSARY.md` exactly, and `.slipbox/AGENTS.md` matches `assets/AGENTS.md` exactly and was written only after every other artifact above already exists.
 
 ## Done
 
-Tell the user what was created: `.slipbox/config.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
+Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
 ## Re-run semantics (drift check, manual trigger only)
 
-Triggered only when the user explicitly asks to re-run, or when Explore finds `.slipbox/config.json` already present. Never runs automatically otherwise.
+This section sits outside the numbered `## Workflow` above — it never runs as part of a first-run pass. Triggered only when the user explicitly asks to re-run, or when Explore finds `.slipbox/config.json` already present. Never runs automatically otherwise.
 
 1. Validate the existing `.slipbox/config.json` against `assets/config.schema.json` first, before doing anything else. A file that predates the schema or was hand-edited may not conform — surface any validation errors to the user before proceeding to the diff, rather than feeding a malformed file straight into it.
 2. Re-discover conventions and style the same way as Explore/Section A/Section B, using the current state of the vault.
