@@ -4,7 +4,7 @@ description: Scan existing notes for missing links, sparked ideas, and Reference
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # Find-connections
@@ -76,15 +76,8 @@ in this order — entity-check first, then the reusability test:
      (per `GLOSSARY.md`). Report it the same way as a
      Reference candidate (recurrence threshold, batch-presented), just without ever
      attempting a write.
-   - Entity-status is checked first even though a person's name can technically also
-     pass the reusability test below (e.g. "Niklas Luhmann" survives independent of
-     any one source) — that's a coincidental technicality, not what the reusability
-     test exists to check. What kind of thing this is comes before whether it's a
-     reusable concept.
-2. **Reusability test** (only if not an entity). Apply both halves:
-   - **Deletion test** — does the note survive if the source disappears?
-   - **Declarative-title test** — can it compress into a subject+verb claim, no
-     "According to X..."?
+   - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
+2. **Reusability test** (only if not an entity; see `GLOSSARY.md` for deletion test and declarative-title test definitions).
    - Passes both: Reference-note candidate.
    - Fails either, or the check is never reached (cluster never crosses threshold):
      stays an unresolved broken wikilink indefinitely. This is a legitimate resting
@@ -97,7 +90,7 @@ Person/Location/Organization candidates alike — never auto-write. This matches
 existing mechanical-links batch-presentation discipline below. For each cluster, show
 its variant labels (`alt_names`), the count, and which notes mention it.
 
-For each approved Reference candidate, the user invokes `/make-reference-note` themselves,
+For each approved Reference candidate, the user invokes `make-reference-note` themselves,
 naming the candidate directly — `find-connections` does not write it.
 
 Zero clusters crossing the threshold is a complete, valid result — report it as such,
@@ -153,7 +146,7 @@ tension.
 
 **`--references`**: every cluster crossing threshold is reported — classified as
 Reference, Person, Location, or Organization — with its variant labels and source
-notes. Nothing is written; the user invokes `/make-reference-note` themselves for any
+notes. Nothing is written; the user invokes `make-reference-note` themselves for any
 approved Reference candidate. A cluster that fails classification, or never reaches
 threshold, stays a broken wikilink — expected, not an error.
 
