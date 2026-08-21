@@ -24,7 +24,9 @@ completed a full run. If missing, stop and say so. Every `slipbox` call below
 uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
 isn't guaranteed to be on `PATH`.
 
-## Take the material
+## Workflow
+
+### 01 - Take the material
 
 - **Named directly** → the user names specific existing notes to connect.
 - **Bare, just a hunch** → search for anything related before starting; a
@@ -41,7 +43,7 @@ isn't guaranteed to be on `PATH`.
   `make-evergreen-note` session — eventually gets picked up and turned
   into a real Take.
 
-## Ground it
+### 02 - Ground it
 
 Run a `/grounding` session, holding yourself to whatever notes are in
 play — the user's own answers are free here: personal experience, memory,
@@ -74,7 +76,7 @@ attributable to a single cited note's claim, unchanged? If yes for any
 sentence, the conversation isn't done — keep sharpening until the Take
 states something none of the individual notes said on their own.
 
-## Write
+### 03 - Write
 
 - Run a `/write-checks` session on the draft, passing the evergreen field
   list (`type`, `created`, `derived-from`, `updated-at`) — it resolves each
@@ -106,7 +108,7 @@ states something none of the individual notes said on their own.
   auto-disambiguate. On a revisit, the existing file is expected — not a
   collision.
 
-## Sign-off, shown to the user before finishing
+### 04 - Sign-off, shown to the user before finishing
 
 - The title is a complete claim.
 - Standalone-comprehensible by a future version of the user with no memory
