@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.5.0"
+  version: "1.5.1"
 ---
 
 # Grounding
@@ -101,13 +101,13 @@ regardless of whether a source is even in play.
 
 **A probing question never pre-decomposes a source's own structure into
 sub-questions the user hasn't independently identified yet.** "What does each
-compass direction ask you to investigate?" hands over that there are
-directions, that each has its own question, and implicitly what shape the
+of the source's three supporting arguments claim?" hands over that there are
+three arguments, that each has its own claim, and implicitly what shape the
 answer takes — before the user has said any of that themselves. Open wider
-first: "explain the Compass in your own words — what are the four
-directions doing?" Only if that genuinely stalls does a narrower follow-up
-on one specific direction become fair game — and even then, one direction at
-a time, never the full decomposition in one turn.
+first: "explain the source's argument in your own words — what is it actually
+claiming?" Only if that genuinely stalls does a narrower follow-up on one
+specific part become fair game — and even then, one part at a time, never the
+full decomposition in one turn.
 
 ## Reading the answer
 
@@ -253,3 +253,18 @@ No filename, no format, no note-type label, no database write of any kind — al
 belongs to whichever skill invoked this one. This holds regardless of which technique
 ran or which caller invoked the session — `grounding`'s output never depends on who's
 calling it.
+
+## References
+
+| File | Technique |
+|---|---|
+| `references/verification.md` | Confirms a confident restatement by checking it against the source as evidence. |
+| `references/elenchus.md` | Cross-examines a stated position on a genuine mismatch; reached only from inside Verification. |
+| `references/feynman.md` | Explain-then-patch loop for a hesitant answer. |
+| `references/discovery-walk.md` | Passage-by-passage walkthrough for a blank answer with a source present. |
+| `references/maieutic.md` | Draws out a first spoken form for a blank answer with no source at all. |
+| `references/self-explanation.md` | Open-ended sense-making repair for a confused answer. |
+| `references/compass.md` | Orients a synthesis session toward a direction to explore next (NORTH/WEST/SOUTH/EAST). |
+| `references/connect.md` | Executes Compass's WEST direction — what else already holds this idea. |
+| `references/challenge.md` | Executes Compass's EAST direction — what competes with or negates this idea. |
+| `references/distil.md` | Combines Connect's and Challenge's findings into a new claim. |

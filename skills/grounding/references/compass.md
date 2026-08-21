@@ -84,10 +84,12 @@ decides what the next question is about.
   answer that comes out of a direction can become its own new center idea,
   with its own SOUTH/EAST/WEST branches. This is real and worth noticing,
   but never mandatory to chase within the current session: a spawned
-  sub-idea that isn't pursued now gets logged to the evergreen backlog
-  (`slipbox evergreen add --slug <draft-slug> --reason "<what came up>"`)
+  sub-idea that isn't pursued now is flagged for the evergreen backlog
+  (e.g. `slipbox evergreen add --slug <draft-slug> --reason "<what came up>"`)
   for a later, separate session — the same way any other flagged tension
-  gets carried forward, not lost.
+  gets carried forward, not lost. Compass itself performs no database write
+  of any kind; that write, like every other one in this family, belongs to
+  whichever skill invoked this one.
 
 ## Worked example
 
@@ -98,7 +100,8 @@ EAST answer is itself a candidate for a fresh Compass session later — its
 own SOUTH might be "land-value taxation as one response," its own EAST
 might be "does regulation actually worsen scarcity?" None of that gets
 chased down in the current session unless the user wants to; if not, it's
-logged to the backlog as its own future starting point.
+flagged for whichever skill invoked this one to log to the backlog as its
+own future starting point.
 
 ## Guardrail
 
@@ -106,5 +109,5 @@ Forcing every direction on every take produces a rote interview, not a
 sharpened one — the compass is a portable thinking tool, not a required
 pass. The same discipline applies to recursion: a sub-idea spawned by a
 direction is optional to chase, never force-completed within the current
-session, and never silently dropped either — it goes to the backlog if it
-isn't pursued now.
+session, and never silently dropped either — it's flagged for the backlog,
+via whichever skill invoked this one, if it isn't pursued now.
