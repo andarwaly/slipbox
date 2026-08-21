@@ -4,32 +4,31 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.2"
+  version: "1.3.3"
 ---
 
 # Clip Resource
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `slipbox config get templates.<type>_path`, filename/frontmatter conventions via `slipbox config get filenames.<type>`, and transcript languages via `slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
+For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `.slipbox/bin/slipbox config get templates.<type>_path`, filename/frontmatter conventions via `.slipbox/bin/slipbox config get filenames.<type>`, and transcript languages via `.slipbox/bin/slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
 
-## Prerequisite: `.slipbox/AGENTS.md` must exist
+## Prerequisite
 
-Check first, before anything else. Its presence confirms `setup-slipbox` completed a full run. Nothing here can proceed without it.
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- MUST: All dependencies (Defuddle, Firecrawl, `youtube-transcript-api`, TinyFish) are available — check at step-entry, not here.
+- NEVER: proceed without either. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: install a missing dependency yourself — that's `setup-slipbox`'s job. Point the user there instead.
 
-Tell the user to run `setup-slipbox` first, then re-run this skill, if `.slipbox/AGENTS.md` is absent. Do not improvise conventions in its place while waiting.
+## Workflow
 
-### Missing dependency: the same shape every time
-
-Defuddle, Firecrawl, `youtube-transcript-api`, and TinyFish each get used somewhere below. Whichever one turns out missing or unauthenticated, the response is identical: stop the affected step, tell the user which dependency is missing and what it's for, point them at `setup-slipbox`, and do not install it yourself — that's `setup-slipbox`'s job alone, never this skill's. Each dependency's own mention further down states only what's different about that one case.
-
-## Take the URL(s)
+### 01 - Take the URL(s)
 
 Ask for one or more URLs: articles, news stories, social/forum threads, or video links, any mix. There is no paste-the-text fallback. If the user hands you raw text instead of a link, tell them this skill only takes URLs and ask for one.
 
 For more than one URL, spawn one subagent per URL. Each subagent runs the full fetch/extract/transform/write pipeline (Detect the content type through Write) independently, in parallel, for its own URL only. If no subagent capability exists in this harness, process each URL sequentially instead. Either way, one URL's failure never blocks or corrupts another's — each is fetched, extracted, transformed, and written on its own, and reported on its own in the Report the outcome step's batch table.
 
-## Detect the content type
+### 02 - Detect the content type
 
 Determine which of the four content types applies, in this priority order:
 
@@ -41,7 +40,7 @@ Determine which of the four content types applies, in this priority order:
 
 The four content types: **Article**, **News**, **Social/Forum thread**, **Video**.
 
-## Fetch and extract
+### 03 - Fetch and extract
 
 Note what you actually got back: full content, a truncated snippet, or nothing. Extraction splits by content type. Use the reference file matching the type detected in Detect the content type.
 
@@ -53,27 +52,21 @@ Note what you actually got back: full content, a truncated snippet, or nothing. 
 
 Read the reference file for your type; it covers the full extraction logic, tooling, error taxonomy, and fallback paths specific to that content type.
 
-## Transform
+### 04 - Transform
 
 `clip-resource` has no opinion on what any template's body should contain. Every template is 100% user-authored via `setup-slipbox`, and there is no shipped/default treatment implied by content type. This skill resolves bare variables verbatim and executes quoted instructions exactly as written (see `references/variable-glossary.md`), for every content type equally. A template author may write bare `{{content}}` for Article, a quoted cleanup instruction for News, `{{root_post}}` plus `{{continuation}}` for Social, bare `{{transcript}}` for Video, entity sections (People/Tools/Resources/Definition) or none at all — this skill fills in whatever the actual template asks for, without assuming a "typical" shape per type.
 
-Read the template first — its location comes from the `templates.<type>_path` scoped read described above — then resolve its variables and filters against the reference files. Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly — `article`, `news`, `social`, or `video`. Never a generic `"resource"` value; being a Resource is implied by folder location. `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the Ladder in Fetch and extract for Social, same as any other bare fact for that type.
+Read the template first — its location comes from the `templates.<type>_path` scoped read described above — then resolve its variables and filters against the reference files. Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly (see `GLOSSARY.md` for the Resource type-field rule). `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the Ladder in Fetch and extract for Social, same as any other bare fact for that type.
 
 `clip-resource` fills in only what the template's own variables and filters ask for — see `references/variable-glossary.md` and `references/filter-glossary.md`. Nothing beyond that: no line naming an idea worth pursuing, no conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
 
 ## Variable syntax (summary)
 
-Templates (paths resolved via `slipbox config get templates.<type>_path`, per the scoped read above) use two variable forms, matching Obsidian Web Clipper's own convention. No new syntax invented. Full detail in `references/variable-glossary.md`; filters (`|wikilink`, `|date:"..."`, etc.) in `references/filter-glossary.md`.
+### 05 - Write
 
-- Bare `{{variable}}`: a raw, mechanically-extracted **fact** (e.g. `{{author}}`, `{{title}}`). Each bare variable is resolved by whatever method fits it. Most use the Ladder in Fetch and extract above, but `{{transcript}}` is the exception: it's pulled via `youtube-transcript-api`, never the Ladder.
-- Quoted `{{"instruction"}}`: a **synthesis instruction**, freeform natural language executed inline by the same agent running this skill. No separate Interpreter service, no API key. Templates are user-authored (paths resolved via `slipbox config get templates.<type>_path`). This skill doesn't dictate what any given template's body variable looks like. A rewritten or summarized Article or News body is a quoted instruction the template's author writes, not something bare `{{content}}` does automatically.
-- No template logic layer (`{% if %}`, `{% for %}`): the agent applies judgment directly. A rules-engine layer here would be redundant.
+Save the file using the filename and frontmatter conventions resolved via `.slipbox/bin/slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
 
-## Write
-
-Save the file using the filename and frontmatter conventions resolved via `slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
-
-## Report the outcome
+### 06 - Report the outcome
 
 For a single URL, two valid endings, both explicit:
 
@@ -110,3 +103,18 @@ Clip Results — 3 URLs
 ```
 
 No closing prompt or question after either shape. State the outcome and end.
+
+## Variable syntax (summary)
+
+Templates (paths resolved via `.slipbox/bin/slipbox config get templates.<type>_path`, per the scoped read above) use two variable forms, matching Obsidian Web Clipper's own convention. No new syntax invented. Full detail in `references/variable-glossary.md` (bare variables, quoted instructions, and filters); see `references/filter-glossary.md` for the filter vocabulary (`|wikilink`, `|date:"..."`, etc.).
+
+## References
+
+| File | Purpose | Triggering condition |
+|---|---|---|
+| `references/extract-article-news.md` | Extraction ladder, fallback paths for Article and News types | Content type is Article or News |
+| `references/extract-social.md` | Extraction method for social/forum threads (schema.org, meta tags, LLM fallback) | Content type is Social/Forum thread |
+| `references/extract-video.md` | Transcript extraction for video | Content type is Video |
+| `references/filter-glossary.md` | Filter vocabulary and application rules | Template uses any filter (`\|wikilink`, `\|date`, etc.) |
+| `references/url-patterns.md` | Domain and path patterns for content-type detection | Detecting content type from URL shape |
+| `references/variable-glossary.md` | Variable definitions, bare vs. quoted forms, and when to use each | Resolving any template variable |
