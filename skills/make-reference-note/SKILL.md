@@ -6,40 +6,20 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # Make-reference-note
 
-Bold terms in this file are defined in `GLOSSARY.md`.
+Bold terms in this file are defined in `GLOSSARY.md`. This skill never runs
+`/grounding` — that already happened upstream, at the claim level, inside the
+literature notes whose `## Key Concepts` wikilink to this reference; this skill only
+pulls those already-grounded characterizations back out, reconciles them, and writes.
 
 ## What these words mean
 
-- **Reference** — a named concept, method, tool, framework, or stable fact with a
-  reusable label, independent of any one source (e.g. "confirmation bias," "CRDT,"
-  "Zettelkasten Method") — admission is a reusability test (does the note survive if
-  the source disappears; can it compress into a declarative, subject+verb title with
-  no "According to X..."), not an origin test. See `GLOSSARY.md` for the full type
-  shape and the admission test's detail.
-- **Reference note** — the cumulative file a reference's definition lives in. Unlike a
-  Claim, never one-shot: extended across however many sources touch this reference,
-  over however many separate sessions. Only ever appends or extends — never
-  overwrites what's already there.
-
-## This skill never runs /grounding
-
-Grounding — holding the user to a source for a claim, via a `/grounding` session —
-already happened upstream, at the claim level, inside whichever literature notes'
-`## Key Concepts` section wikilinks to this reference. That's `make-literature-note`'s
-job, not this skill's. `make-reference-note`'s own job starts after that: pull the
-already-grounded characterizations back out of those literature notes, reconcile them
-into one definition, present for confirmation, write.
-
-No exception to this. If a source that touches this reference hasn't been through
-`make-literature-note` yet, it doesn't belong in this skill's synthesis step at all —
-route it through `make-literature-note` first, exactly like any other new source, and
-only come back here once its relevant claim (and Key Concepts wikilink) exists. See
-"Extending an existing Reference note" below.
+- **Reference**
+- **Reference note**
 
 ## Prerequisite
 
@@ -54,9 +34,9 @@ thought of it themselves or because `find-connections --references` surfaced it 
 recurrence candidate. There is no backlog this skill pulls from itself; recurrence is
 derived on demand by `find-connections`, not surfaced into a queue this skill owns.
 
-Use `slipbox config get paths.reference` to locate the folder, checking for
+Use `.slipbox/bin/slipbox config get paths.reference` to locate the folder, checking for
 a Reference note for this candidate there — not an assumed `reference/` folder —
-before writing. Apply the `slipbox config get filenames.reference` casing convention:
+before writing. Apply the `.slipbox/bin/slipbox config get filenames.reference` casing convention:
 
 - **New reference** — no note exists. Proceed to gather characterizations.
 - **Extending** — a note already exists. Read it in full now. Its accumulated text is
@@ -106,14 +86,14 @@ Reconcile the gathered characterizations into one definition:
 
 Write fresh:
 
-- Run a /write-checks session on the draft, passing the Reference field list (`type`,
+- Run a `/write-checks` session on the draft, passing the Reference field list (`type`,
   `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
   mapping, formatting, zone placement, and title prefix, and checks the draft's style
   and humanize signals.
-- Write into the folder from `slipbox config get paths.reference`, filename per
-  `slipbox config get filenames.reference` casing convention.
+- Write into the folder from `.slipbox/bin/slipbox config get paths.reference`, filename per
+  `.slipbox/bin/slipbox config get filenames.reference` casing convention.
 - Re-read the target path from disk right before writing.
-- Assemble the frontmatter from write-checks' returned fields and write the file.
+- Assemble the frontmatter from `/write-checks`' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.
 
 ## Write — extending an existing reference
@@ -123,7 +103,7 @@ Write fresh:
 `sources` already has its resolved mapping and formatting from the reference's first
 write — no field resolution needed here.
 
-1. Run a /write-checks session on the draft in its checks-only mode (no field list).
+1. Run a `/write-checks` session on the draft in its checks-only mode (no field list).
 2. Re-read the file from disk immediately before writing (state can have changed since
    the read in "Take the candidate").
 3. Append the new resource(s) to the `sources` frontmatter array, formatted per the
