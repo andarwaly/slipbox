@@ -25,8 +25,8 @@ claim entry once it's written.
   - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
-`{{prefix}}` resolves from `.slipbox/config.json`'s `prefixes.literature` for the vault
-in question — never hardcode a literal character.
+`{{prefix}}` resolves from `prefixes.literature` — see Resolving a note-type prefix
+below, never hardcode a literal character.
 
 **Core Idea** — one sentence stating the source's central argument, everything else in
 the note in service of it. Positional, not labeled: it's always the line directly after
@@ -38,6 +38,41 @@ touched on a second or later claim for the same note.
 follows it — that would just duplicate the heading. Evidence is the only other thing
 under the heading: condensed prose, no bullet marker, no hard length cap — governed by
 the vault's own `.slipbox/style-profile.json` the same as any other note content.
+
+## Resolving a note-type prefix
+
+Building a wikilink to a note of type `<type>` (`literature`, `reference`, or any
+future note type this family adds) is not just casing. Three `.slipbox/config.json`
+keys apply together, never assume any of them:
+
+- `paths.<type>` — which folder the note lives in (a vault may have no dedicated
+  folder at all, e.g. everything under `Notes/`).
+- `filenames.<type>` — the casing convention (kebab-case, Title Case, snake_case,
+  per vault).
+- `prefixes.<type>` — a title-prefix character (e.g. `※` for Reference notes, `§` for
+  literature notes), if the vault uses one. The note's actual filename on disk includes
+  this prefix; a link built without it points at a file that doesn't exist. If
+  `prefixes.<type>` is `false`, the link stays unprefixed instead.
+
+Prefix in the link target, clean name in the display alias.
+
+**Correct**, vault using `※` prefix and Title Case for Reference notes: `[[※
+Confirmation Bias|Confirmation Bias]]`.
+
+**Incorrect**: `[[confirmation-bias|Confirmation Bias]]` — hardcoded kebab-case, no
+`paths.reference` folder, no prefix. Points at nothing if the vault's actual Reference
+notes live at `Notes/※ Confirmation Bias.md`.
+
+A vault with no reference folder and no prefix links flat and unprefixed, e.g. `[[Strong
+Opinions, Weakly Held]]` — read all three keys, don't assume any one of them based on
+what another vault does. (This can look identical to the Person/Location/Organization
+format below for a vault with no reference prefix — the distinction is still meaningful
+once the vault does configure one.)
+
+This same resolution governs the note's own title prefix (`{{prefix}}` in Structure
+above, from `prefixes.literature`) and any cross-note link this file builds — an
+`*Answered*` Open Questions bullet pointing at another literature note, or a Key
+Concepts wikilink pointing at a Reference-note candidate.
 
 ## Open Questions
 
@@ -53,39 +88,16 @@ something the source itself leaves unclear, ambiguous, or unanswered:
   - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
-**User-flagged only** — the agent never invents an open question unprompted; a question
-lands here only when the user notices the gap during grounding.
+See `SKILL.md`'s "Ground the source" section for the policy this format serves — when
+an `## Open Questions` entry gets recorded, and the `*Assumption*`/`*Answered*` bullet
+mechanics (user-flagged only, the purity-rule exception, no auto-detection). What's
+specific to this file: the template above, and that an `*Answered*` wikilink resolves a
+note-type prefix the same way any other cross-note link does — see Resolving a
+note-type prefix above, treating `literature` as the `<type>`.
 
-**`*Assumption*`** is the one narrow, explicit exception to the note's purity rule (no
-personal stance, no reaction field of any kind, elsewhere unconditional): a marked
-nested bullet holding the user's own guess at an answer. It's never a Claim, never
-promoted to one, and this exception applies to this one bullet type, under this one
-section, only — everything else the purity rule bans stays exactly as forbidden as
-before.
-
-**`*Answered*`** is added later, once a different literature note grounds a claim that
-resolves the question — a wikilink to that claim's own heading. User-initiated only,
-never auto-detected: no scanning across notes ever adds one on its own. If an
-`*Assumption*` bullet already exists on the same question, it stays in place once
-`*Answered*` is added — the historical record of the original guess is worth keeping,
-not deleted.
-
-Before writing the `*Answered*` wikilink, resolve `prefixes.literature` from
-`.slipbox/config.json` the same way the Reference-note rule below resolves
-`prefixes.reference` — the target note is itself a literature note, and its actual
-filename on disk includes this prefix; a link built without it points at nothing if
-the vault's actual note carries the prefix. Prefix in the link target, clean name in
-the display alias: `[[§ Other Literature Note#the-claim-that-answers-it|Other
-Literature Note]]` for a vault using `§`. If `prefixes.literature` is `false`, the
-link stays unprefixed, same fallback logic as the Reference-note case.
-
-`## Open Questions` carries its own exemption from the literature note's otherwise
-frozen-once-written rule — every other section is written once and never revisited
-except an out-of-band fidelity correction, an `## Open Questions` append, or the
-session-close density merge that folds two claims sharing a Warrant into one; appending
-an `*Answered*` bullet later is new information arriving after the fact, not a
-correction, so this section stays open to appends for as long as a question remains
-outstanding.
+This section also carries the append-only exemption from the literature note's
+otherwise frozen-once-written rule — see `SKILL.md`'s "Checking the shape" section for
+the full list of exemptions.
 
 ## Review checklist
 
@@ -209,25 +221,4 @@ it's written.
 instead).
 
 **Reference-note format** — resolving `<note-filename>` correctly here is not just
-casing. Three `.slipbox/config.json` keys apply together, never assume any of them:
-
-- `paths.reference` — which folder the note lives in (a vault may have no dedicated
-  folder at all, e.g. everything under `Notes/`).
-- `filenames.reference` — the casing convention (kebab-case, Title Case, snake_case,
-  per vault).
-- `prefixes.reference` — a title-prefix character (e.g. `※`), if the vault uses one.
-  The note's actual filename on disk includes this prefix; a link built without it
-  points at a file that doesn't exist.
-
-**Correct**, vault using `※` prefix and Title Case: `[[※ Confirmation Bias|Confirmation
-Bias]]` — prefix in the link target, clean name in the display alias.
-
-**Incorrect**: `[[confirmation-bias|Confirmation Bias]]` — hardcoded kebab-case,
-no `paths.reference` folder, no prefix. Points at nothing if the vault's actual
-Reference notes live at `Notes/※ Confirmation Bias.md`.
-
-A vault with no reference folder and no prefix links flat and unprefixed, e.g.
-`[[Strong Opinions, Weakly Held]]` — read all three keys, don't assume any one of them
-based on what another vault does. (Note this can look identical to the
-Person/Location/Organization format above for a vault with no reference prefix — the
-distinction is still meaningful once the vault does configure one.)
+casing; see Resolving a note-type prefix above, treating `reference` as the `<type>`.

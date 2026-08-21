@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.10.0"
+  version: "1.10.1"
 ---
 
 # Make-literature-note
@@ -32,9 +32,9 @@ and never require the argument when the source is obvious from context.
 ## Take the source
 
 Check whether a literature note for this source already exists: use
-`slipbox config get paths.literature` to locate the folder and scan `*.md`
+`.slipbox/bin/slipbox config get paths.literature` to locate the folder and scan `*.md`
 under it — never assume a folder literally named `literature/` — for a note
-whose resolved `source` field (per `slipbox config get frontmatter.literature.source.name`)
+whose resolved `source` field (per `.slipbox/bin/slipbox config get frontmatter.literature.source.name`)
 points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
@@ -80,7 +80,7 @@ much of it got covered.
 ## Ground the source — one continuous conversation, not one session per claim
 
 Run a single, continuous `/grounding` session on the source, holding the
-user to it (`grounding`'s own default Fidelity direction for a
+user to it (`/grounding`'s own default Fidelity direction for a
 source-present session — no parameter to supply here). Do not present the
 backlog. Do not ask the user to pick claims from a list. Let the
 conversation proceed naturally.
@@ -118,6 +118,47 @@ outstanding questions. An existing `*Assumption*` bullet stays in place
 once `*Answered*` is added alongside it. See
 `references/writing-a-claim.md`'s Open Questions section for the full
 format.
+
+## Write each claim, incrementally
+
+As soon as one claim is confirmed — before continuing the conversation
+toward the next one, if there is a next one:
+
+- Run a `/write-checks` session on the draft, passing the literature field
+  list (`type`, `created`, `source`) — it resolves each field's mapping,
+  formatting, zone placement, and title prefix, and checks the draft's
+  style and humanize signals.
+- Write into the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
+  `.slipbox/bin/slipbox config get filenames.literature` casing convention. The title
+  is source/topic-oriented (what the source is about), never claim-shaped
+  — it doesn't change as more claims get added. On this note's first
+  claim, write the Core Idea line too, directly under the title (see
+  `references/writing-a-claim.md`); skip it on a second or later claim,
+  it's already there.
+- Re-read the target path from disk right before writing (the note may
+  already hold earlier claims from this same session, or from a prior
+  one).
+- Assemble and review the claim per `references/writing-a-claim.md` — the
+  declarative heading, condensed Evidence, the review checklist, quote
+  formatting, and Key Concepts wikilink resolution.
+- Filename collision on the note's first claim → stop and ask, never
+  auto-disambiguate. On a second or later claim for an existing note, the
+  existing file is expected, not a collision.
+- Once written, tell the user in one short line that this claim landed —
+  "that's your second claim confirmed" or equivalent — then move to the
+  next question, if there is one, on its own line rather than fused into
+  the same sentence (same split as `/grounding`'s SKILL.md
+  acknowledgment-before-question rule). Not a running counter or a formal
+  progress marker, just a natural acknowledgment tied to a real event (a
+  claim actually being written), so the user has some sense of where the
+  session stands without every turn being labeled.
+
+An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
+bullet) writes to disk the same way, as soon as it's flagged — it isn't
+held back for the batch pass below, and unlike most other sections it can
+still be appended to later in a subsequent session, one of the note's
+three narrowly-scoped exemptions from the otherwise frozen-once-written
+rule (full list under Checking the shape, below).
 
 ## Knowing when the session is done
 
@@ -175,10 +216,11 @@ the source had. Reach for it when the conversation moved fast, jumped
 around, ran long, or left the sense that something got discussed and then
 dropped.
 
-When it runs, it follows the same batch-presentation pattern as Spot
-terms and entities below: re-read the source, compare it against the
-finished note, and show everything found in one message rather than
-raising each find as its own question.
+When it runs, re-read the source, compare it against the finished note,
+and show everything found in one message rather than raising each find as
+its own question — the same batch-diff-and-present mechanic Spot terms and
+entities below reuses, aimed here at whole missing claims instead of
+concepts and entities.
 
 > "Re-reading the source, these look like things it argues that we never
 > captured: [list, each with a one-line note on what the source says].
@@ -244,8 +286,8 @@ Last, once the note itself is settled, ask what the user actually thinks:
 
 > "what do you think of this article?"
 
-Skip this only when a real opinion already surfaced during grounding and
-got routed there — `grounding`'s persistent-opinion case, where a
+Skip this only when a real opinion already surfaced during a `/grounding`
+session and got routed there — `/grounding`'s persistent-opinion case, where a
 restated opinion is already offered to the evergreen backlog. Asking
 again after that just re-collects something already handled.
 
@@ -269,73 +311,32 @@ Only on a yes:
 A shrug, a "nothing really," or a decline is a complete, valid end to the
 session.
 
-## Write each claim, incrementally
-
-As soon as one claim is confirmed — before continuing the conversation
-toward the next one, if there is a next one:
-
-- Run a `/write-checks` session on the draft, passing the literature field
-  list (`type`, `created`, `source`) — it resolves each field's mapping,
-  formatting, zone placement, and title prefix, and checks the draft's
-  style and humanize signals.
-- Write into the folder from `slipbox config get paths.literature`, filename per
-  `slipbox config get filenames.literature` casing convention. The title
-  is source/topic-oriented (what the source is about), never claim-shaped
-  — it doesn't change as more claims get added. On this note's first
-  claim, write the Core Idea line too, directly under the title (see
-  `references/writing-a-claim.md`); skip it on a second or later claim,
-  it's already there.
-- Re-read the target path from disk right before writing (the note may
-  already hold earlier claims from this same session, or from a prior
-  one).
-- Assemble and review the claim per `references/writing-a-claim.md` — the
-  declarative heading, condensed Evidence, the review checklist, quote
-  formatting, and Key Concepts wikilink resolution.
-- Filename collision on the note's first claim → stop and ask, never
-  auto-disambiguate. On a second or later claim for an existing note, the
-  existing file is expected, not a collision.
-- Once written, tell the user in one short line that this claim landed —
-  "that's your second claim confirmed" or equivalent — then move to the
-  next question, if there is one, on its own line rather than fused into
-  the same sentence (same split as `grounding/SKILL.md`'s
-  acknowledgment-before-question rule). Not a running counter or a formal
-  progress marker, just a natural acknowledgment tied to a real event (a
-  claim actually being written), so the user has some sense of where the
-  session stands without every turn being labeled.
-
-An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
-bullet) writes to disk the same way, as soon as it's flagged — it isn't
-held back for the batch pass below, and unlike most other sections it can
-still be appended to later in a subsequent session, one of the note's
-three narrowly-scoped exemptions from the otherwise frozen-once-written
-rule (alongside the out-of-band fidelity correction and the session-close
-density merge above).
-
 ## Spot terms and entities
 
-Once the session ends, one batch pass — never mid-claim. Re-read the
-finished note; re-read the source too if this is a resumed session and
-it's no longer in context. Compare the two and find anything a claim leans
-on — its weight actually resting on it, not just mentioned in passing —
-that neither `## Key Concepts` nor `## Mentioned` yet covers. This scan is
-type-blind: a person passing the load-bearing test (e.g. Niklas Luhmann, in
-a claim about the Zettelkasten method's origins) is found the same
-automatic way a concept is, in the same pass — never held back for the
-user to ask about separately. Wikilink liberally here: this step
-doesn't decide what the target will become (Reference note, Person,
-Location, Organization, or nothing at all) — that classification happens
-downstream, in `find-connections`, once cross-note evidence exists. The
-author-exclusion stays unchanged: a source's own author still gets a bare,
-unresolved wikilink, never routed toward a Person note through this
-pipeline.
+Once the session ends, one batch pass — never mid-claim — using the same
+batch-diff-and-present mechanic as Checking coverage above: re-read the
+finished note (and the source too, if this is a resumed session and it's
+no longer in context), compare, and surface findings together in one
+message rather than asking about each one separately.
+
+Here the scan targets anything a claim leans on — its weight actually
+resting on it, not just mentioned in passing — that neither
+`## Key Concepts` nor `## Mentioned` yet covers. This scan is type-blind: a
+person passing the load-bearing test (e.g. Niklas Luhmann, in a claim about
+the Zettelkasten method's origins) is found the same automatic way a
+concept is, in the same pass — never held back for the user to ask about
+separately. Wikilink liberally here: this step doesn't decide what the
+target will become (Reference note, Person, Location, Organization, or
+nothing at all) — that classification happens downstream, in
+`find-connections`, once cross-note evidence exists. The author-exclusion
+stays unchanged: a source's own author still gets a bare, unresolved
+wikilink, never routed toward a Person note through this pipeline.
 
 For each candidate, also make a quick, cheap read — enough to pick a
 *section and link format*: does this look like a person, place, or
 organization (real or fictional) — bound for `## Mentioned` — or a
 concept/term/method — bound for `## Key Concepts`? Show the guess alongside
 each candidate so the user can correct a misread before anything is written.
-
-Show what was found and why, in one message:
 
 > "Found these worth adding: [list, each with a one-line reason, its
 > guessed kind, and which section it's headed for]. Add all, some, or
@@ -355,3 +356,11 @@ Questions` entries with their `*Assumption*`/`*Answered*` bullets (partial
 if the session stopped early — that's a complete, valid outcome), any
 flagged tensions are logged in the evergreen backlog, and the user is told
 the file path.
+
+## References
+
+| File | Purpose | Triggering condition |
+|---|---|---|
+| `references/qew-theory.md` | Question/Evidence/Warrant/Conclusion — per-claim internal reasoning for deciding claim-worthiness and checking a Conclusion before it's finalized | Surface pass claim discovery; reviewing a claim before writing it |
+| `references/source-architecture.md` | Six optional whole-source lenses (Situation & Starting Point, Problem/Tension, Argument Movement, Support & Boundaries, Fidelity Signals, Resolution) feeding Core Idea formation | Reading the source's own architecture, before or alongside claim discovery |
+| `references/writing-a-claim.md` | Note structure, Core Idea line placement, the review checklist, quote formatting, and Key Concepts/Mentioned wikilink resolution | Assembling and writing a confirmed claim, or resolving any note-type wikilink |
