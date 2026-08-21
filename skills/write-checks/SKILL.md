@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
 ---
 
 # Write-checks
@@ -12,7 +12,15 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Prerequisite
 
-Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed a full run, producing `.slipbox/config.json`, `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json` along with it. If missing, stop and say so.
+- MUST: `.slipbox/AGENTS.md`, `.slipbox/config.json`, `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json` all exist — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without all four. Stop and tell the user to run `setup-slipbox` first.
+
+## Invocation modes
+
+Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
+Zone placement — the full pass below. Called with no field list (already-resolved
+fields, e.g. a Reference-note extension re-using its first write's mapping), it runs Style and
+Humanize only, skipping Frontmatter fields and Zone placement entirely.
 
 ## Style
 
@@ -23,9 +31,7 @@ Read `.slipbox/style-profile.json` as the user's stated note-shape and editing p
 Run the checklist's `detection.mechanical` section through
 `.slipbox/bin/slipbox humanize check <draft-path>`. When the draft or passage language is known,
 pass `--language LANG` so language-scoped signals skip non-English passages; without
-the override, the CLI uses the profile's configured languages. It reads
-`style-profile.json` only for language-gating; it never uses the profile's voice,
-tone, or formatting fields as a detection threshold. Apply `detection.judgment` with
+the override, the CLI uses the profile's configured languages. It reads `.slipbox/style-profile.json` only for language-gating (see Style section above for the rationale). Apply `detection.judgment` with
 reading comprehension. Respect each signal's `single` or `cluster` policy, and keep
 judgment signals out of CLI cross-signal counting.
 
@@ -35,17 +41,10 @@ the stated profile through `workflow.preference_context`. Then execute the requi
 `audit` phase and revise again if the audit finds a remaining pattern. The checklist
 guides the workflow; it never rewrites a file automatically.
 
-## Invocation modes
-
-Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
-Zone placement — the full pass below. Called with no field list (already-resolved
-fields, e.g. a Reference-note extension re-using its first write's mapping), it runs Style and
-Humanize only, skipping Frontmatter fields and Zone placement entirely.
-
 ## Frontmatter fields
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
-resolve each field via `slipbox config get frontmatter.<type>.<field>`. The stored
+resolve each field via `.slipbox/bin/slipbox config get frontmatter.<type>.<field>`. The stored
 shape for a resolved entry is defined canonically in `.slipbox/config.json`'s
 own `description` field — not restated here.
 
@@ -61,18 +60,18 @@ own `description` field — not restated here.
   `aliases`, `cssclasses`, except Reference's `alt_names`→`aliases` carve-out) and the same
   type-mismatch check for multi-valued fields (`sources`, `derived-from`) that
   `setup-slipbox` uses. Write the resolved mapping back via
-  `slipbox config set frontmatter.<type>.<field> <value>` before continuing — every subsequent write for this note
+  `.slipbox/bin/slipbox config set frontmatter.<type>.<field> <value>` before continuing — every subsequent write for this note
   type finds it already resolved and skips this branch entirely.
 
 The field's own name is never the mapping. Format the value per the entry's recorded
 `type` (a `list` type is a YAML array, a `date`/`datetime` type is `YYYY-MM-DD` or a full
 timestamp, written bare/unquoted — never `"YYYY-MM-DD"` — consistent across every note
 of that type), and wrap in wikilink or markdown-link syntax per
-`slipbox config get links.style` when `wikilink: true`.
+`.slipbox/bin/slipbox config get links.style` when `wikilink: true`.
 
 ## Note-type prefix
 
-Check `slipbox config get prefixes.<type>` for this note type. If it's a string,
+Check `.slipbox/bin/slipbox config get prefixes.<type>` for this note type. If it's a string,
 prepend it to the note's title (e.g. `§ Design Tokens`, not `Design Tokens`). If it's
 `false`, the title stays unprefixed. Never touch `resources/` — no prefix key exists for
 that type.
