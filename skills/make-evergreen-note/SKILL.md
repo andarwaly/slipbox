@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.3.2"
+  version: "1.4.0"
 ---
 
 # Make-evergreen-note
@@ -14,12 +14,8 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## What these words mean
 
-- **Take** — the user's own position on an idea, requiring synthesis across
-  sources or experience. Lives only in an evergreen note — never restates
-  a single cited note unchanged.
-- **Evergreen note** — the file a confirmed Take gets written into. Unlike
-  a literature note, can be revisited: a later session may rewrite its
-  content wholesale, not just add to it.
+- **Take**
+- **Evergreen note**
 
 ## Prerequisite
 
@@ -73,12 +69,10 @@ evergreen backlog this skill itself reads from:
 
 before moving on to writing.
 
-## Purity check, before writing
-
-Test each sentence in the draft: is it attributable to a single cited note's
-claim, unchanged? If yes for any sentence, the conversation isn't done —
-keep sharpening until the Take states something none of the individual
-notes said on their own.
+Before writing, run a purity check on the draft: test each sentence — is it
+attributable to a single cited note's claim, unchanged? If yes for any
+sentence, the conversation isn't done — keep sharpening until the Take
+states something none of the individual notes said on their own.
 
 ## Write
 
@@ -87,10 +81,10 @@ notes said on their own.
   field's mapping, formatting, and zone placement, and checks the draft's
   style and humanize signals. `updated-at` gets `created`'s own timestamp
   on a first write, and is refreshed to the current time on a revisit.
-- Write into the folder from `slipbox config get paths.evergreen`, filename per
-  `slipbox config get filenames.evergreen` casing convention.
+- Write into the folder from `.slipbox/bin/slipbox config get paths.evergreen`, filename per
+  `.slipbox/bin/slipbox config get filenames.evergreen` casing convention.
 - Re-read the target path from disk right before writing.
-- Assemble the frontmatter from `write-checks`' returned fields and write
+- Assemble the frontmatter from `/write-checks`' returned fields and write
   the file — a full rewrite of existing content on a revisit, since unlike
   a literature note this doesn't mean starting a new file.
 - Cite every note it draws on, each with a one-line reason. Never link
@@ -114,51 +108,16 @@ notes said on their own.
 
 ## Sign-off, shown to the user before finishing
 
-### Concept
-
-These five criteria draw on Matuschak's evergreen-notes practice (verbatim,
-primary — `notes.andymatuschak.org`) and Ahrens' permanent-note rules
-(*How to Take Smart Notes*), cross-verified independently across two
-research passes:
-
-- **Atomic** — "notes which are only about one thing—but which, as much as
-  possible, capture the entirety of that thing" (Matuschak). Not a brevity
-  rule: both over-broad and over-fragmented notes are failure modes, "a
-  bunch of tradeoffs," not a fixed litmus test.
-- **Concept-oriented** — factored by idea, never by source/author/project.
-  Matuschak's own reasoning: source-factored notes on the same concept
-  never accumulate into anything stronger, "just a scattered set of
-  notes... perhaps referring to it by different names."
-- **Titles as claims** — "declarative or imperative phrases making a
-  strong claim... titles are like APIs." Difficulty titling a note is
-  itself diagnostic — a sign the thinking is muddy or the note covers more
-  than one thing, not a wording problem to push through.
-- **Densely linked, every link labeled** — linking is "deliberate
-  sense-making pressure," not filing; "prefer labeled associations" over a
-  bare "X relates to Y."
-
-**A real tension, not resolved by picking a side quietly**: Ahrens'
-permanent-note rule states notes should be written "as if for someone
-else — full sentences, precise, clear." Matuschak argues the opposite:
-"write notes for yourself by default, disregarding audience" — writing for
-a reader during note-writing itself "substantially increases the
-overhead... often to the point of producing blockage."
-
-This skill's own "standalone-comprehensible by a future version of the
-user" criterion sides with Matuschak, not Ahrens — deliberately: the
-audience is explicitly *future you*, not a general reader, which keeps
-Ahrens' actual goal (a note that doesn't need the original context to make
-sense) without adopting his audience-first framing, which Matuschak argues
-creates blockage.
-
-### Criteria
-
 - The title is a complete claim.
 - Standalone-comprehensible by a future version of the user with no memory
   of this session.
 - About one thing, entirely.
 - Every link has a stated reason.
 - The note answers, or spawns, a "so what / what's next."
+
+These five criteria draw on Matuschak's and Ahrens' evergreen/permanent-note
+theory, including a real tension between the two the skill deliberately
+sides on — see `references/sign-off-theory.md` for the rationale.
 
 ## Done
 
@@ -179,3 +138,9 @@ Rename the slug too if this was a first write — same pattern as
 rather than a first write. The note's own `updated-at` frontmatter field
 was already set in the Write section above — `created`'s timestamp on a
 first write, refreshed to current time on a revisit.
+
+## References
+
+| File | Purpose | Triggering condition |
+|---|---|---|
+| `references/sign-off-theory.md` | Matuschak's/Ahrens' evergreen/permanent-note theory the Sign-off criteria draw on, including the audience-tension the skill deliberately sides on | Rationale lookup when a Sign-off criterion needs justifying, not routine sign-off itself |
