@@ -256,15 +256,15 @@ calling it.
 
 ## References
 
-| File | Technique |
-|---|---|
-| `references/verification.md` | Confirms a confident restatement by checking it against the source as evidence. |
-| `references/elenchus.md` | Cross-examines a stated position on a genuine mismatch; reached only from inside Verification. |
-| `references/feynman.md` | Explain-then-patch loop for a hesitant answer. |
-| `references/discovery-walk.md` | Passage-by-passage walkthrough for a blank answer with a source present. |
-| `references/maieutic.md` | Draws out a first spoken form for a blank answer with no source at all. |
-| `references/self-explanation.md` | Open-ended sense-making repair for a confused answer. |
-| `references/compass.md` | Orients a synthesis session toward a direction to explore next (NORTH/WEST/SOUTH/EAST). |
-| `references/connect.md` | Executes Compass's WEST direction — what else already holds this idea. |
-| `references/challenge.md` | Executes Compass's EAST direction — what competes with or negates this idea. |
-| `references/distil.md` | Combines Connect's and Challenge's findings into a new claim. |
+| File | Purpose | Triggering condition |
+|---|---|---|
+| `references/verification.md` | Confirms a confident restatement by checking it against the source as evidence. | Reading state = Confident. |
+| `references/elenchus.md` | Cross-examines a stated position with six question moves, exposing where its own logic doesn't hold. | Reached only from inside `verification.md`, on a genuine mismatch between a confident statement and the source — never dispatched directly from Choosing a technique. |
+| `references/feynman.md` | Explain-then-patch loop: explain in plain language, notice where it breaks down, patch that specific gap. | Reading state = Hesitant. |
+| `references/discovery-walk.md` | Passage-by-passage walkthrough, one question asked before each next passage is revealed. | Reading state = Blank, a source is present, and the user chooses "walk through this together" over trying to explain first. |
+| `references/maieutic.md` | Draws out a first spoken form from nothing articulated yet, then tests what came out. | Reading state = Blank, no source at all. |
+| `references/self-explanation.md` | Open-ended sense-making repair for a mental model that doesn't yet hold together. | Reading state = Confused. |
+| `references/compass.md` | Orients a synthesis session toward a direction to explore next (NORTH/WEST/SOUTH/EAST) — a separate, upstream layer from the dispatch table above. | A session is building toward a synthesized position (multiple sources, or an unwritten hunch) and needs a direction to explore next, rather than a response to something already said. |
+| `references/connect.md` | Executes Compass's WEST direction — surfaces what else already holds this idea. | Orienting a synthesis session WEST. |
+| `references/challenge.md` | Executes Compass's EAST direction — seeks the condition under which the claim would be false. | Orienting a synthesis session EAST. |
+| `references/distil.md` | Combines Connect's and Challenge's findings into one new claim. | Both Connect (WEST) and Challenge (EAST) have already produced something in the current session. |
