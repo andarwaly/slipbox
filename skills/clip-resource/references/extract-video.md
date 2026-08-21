@@ -1,6 +1,6 @@
 # Video extraction
 
-Don't fetch the page HTML for the transcript. Use the **`youtube-transcript-api`** Python library directly (not the `ytt` CLI wrapper) to pull the transcript. Pass `languages` from `slipbox config get transcript_languages` in order.
+Don't fetch the page HTML for the transcript. Use the **`youtube-transcript-api`** Python library directly (not the `ytt` CLI wrapper) to pull the transcript. Pass `languages` from `.slipbox/bin/slipbox config get transcript_languages` in order.
 
 Failure taxonomy. These are not interchangeable:
 

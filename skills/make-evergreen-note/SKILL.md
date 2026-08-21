@@ -5,24 +5,18 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # Make-evergreen-note
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-## What these words mean
-
-- **Take**
-- **Evergreen note**
-
 ## Prerequisite
 
-Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
-completed a full run. If missing, stop and say so. Every `slipbox` call below
-uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
-isn't guaranteed to be on `PATH`.
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: call bare `slipbox` — always `.slipbox/bin/slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Workflow
 

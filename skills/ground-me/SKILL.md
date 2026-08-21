@@ -4,7 +4,7 @@ description: A bare, freeform grounding session — a freeform interview with no
   note produced.
 disable-model-invocation: true
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Ground-me
@@ -16,13 +16,15 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 - MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
 - NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
 
-Run a /grounding session on whatever the user gave — an idea, notes, a source, an
+## Run the session
+
+Run a `/grounding` session on whatever the user gave — an idea, notes, a source, an
 article, anything. If nothing was given, ask what they want to work through.
 
 ## Done
 
-Once /grounding confirms, present a plain closing card — no emoji, no invented fields
-beyond what /grounding actually hands back (one confirmed statement, at most one flagged
+Once `/grounding` confirms, present a plain closing card — no emoji, no invented fields
+beyond what `/grounding` actually hands back (one confirmed statement, at most one flagged
 tension):
 
 ```

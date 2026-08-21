@@ -4,7 +4,7 @@ description: Scan existing notes for missing links, sparked ideas, and Reference
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # Find-connections
@@ -13,9 +13,9 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Prerequisite
 
-Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed
-a full run. If missing, tell the user to run `setup-slipbox` first; do not proceed. Every
-`slipbox` call below uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`.
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: call bare `slipbox` — always `.slipbox/bin/slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Pick a mode
 

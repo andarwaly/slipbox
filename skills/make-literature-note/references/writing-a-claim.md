@@ -42,17 +42,18 @@ the vault's own `.slipbox/style-profile.json` the same as any other note content
 ## Resolving a note-type prefix
 
 Building a wikilink to a note of type `<type>` (`literature`, `reference`, or any
-future note type this family adds) is not just casing. Three `.slipbox/config.json`
-keys apply together, never assume any of them:
+future note type this family adds) is not just casing. Three invocations resolve
+together, never assume any of them:
 
-- `paths.<type>` — which folder the note lives in (a vault may have no dedicated
-  folder at all, e.g. everything under `Notes/`).
-- `filenames.<type>` — the casing convention (kebab-case, Title Case, snake_case,
-  per vault).
-- `prefixes.<type>` — a title-prefix character (e.g. `※` for Reference notes, `§` for
-  literature notes), if the vault uses one. The note's actual filename on disk includes
-  this prefix; a link built without it points at a file that doesn't exist. If
-  `prefixes.<type>` is `false`, the link stays unprefixed instead.
+- `.slipbox/bin/slipbox config get paths.<type>` — which folder the note lives in (a
+  vault may have no dedicated folder at all, e.g. everything under `Notes/`).
+- `.slipbox/bin/slipbox config get filenames.<type>` — the casing convention
+  (kebab-case, Title Case, snake_case, per vault).
+- `.slipbox/bin/slipbox config get prefixes.<type>` — a title-prefix character (e.g.
+  `※` for Reference notes, `§` for literature notes), if the vault uses one. The
+  note's actual filename on disk includes this prefix; a link built without it points
+  at a file that doesn't exist. If this returns `false`, the link stays unprefixed
+  instead.
 
 Prefix in the link target, clean name in the display alias.
 

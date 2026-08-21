@@ -4,16 +4,16 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.1"
+  version: "1.5.2"
 ---
 
 # Setup Slipbox
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `style-profile.json`, `humanize-checklist.json`, the `.slipbox/bin/slipbox` CLI, and `config.json` — in that order — through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (stated note preferences), humanizer workflow snapshot, CLI install, config write. Three of those outputs are built from fixed assets rather than composed fresh each run: `assets/config.schema.json`, `assets/humanize-checklist.json`, and `assets/style-profile.schema.json`. Re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `slipbox config get`/`slipbox config set` CLI (see Done).
+Every other skill in this family reads `.slipbox/config.json` before it writes anything, and fails fast with "run setup-slipbox first" if it's absent. This skill produces `style-profile.json`, `humanize-checklist.json`, the `.slipbox/bin/slipbox` CLI, and `config.json` — in that order — through the steps below: prerequisite check, explore, Section A (conventions + clip config), Section B (stated note preferences), humanizer workflow snapshot, CLI install, config write. Three of those outputs are built from fixed assets rather than composed fresh each run: `assets/config.schema.json`, `assets/humanize-checklist.json`, and `assets/style-profile.schema.json`. Re-running this skill on different vaults produces structurally consistent files, not just similarly-worded ones. `config.json` can also be edited after this first setup without re-running the whole interview, via the `.slipbox/bin/slipbox config get`/`.slipbox/bin/slipbox config set` CLI (see Done).
 
-## Prerequisites
+## Prerequisite
 
 This is the only place in the slipbox family that installs anything — every other skill that hits a missing dependency stops and points back here rather than installing it inline.
 
@@ -60,7 +60,7 @@ Present what you found, one item at a time. Recommend a default and lead with it
     4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
 
-**field_map** — **first, one combined question**: "Want to resolve frontmatter field mappings for all three note types now, or defer any of them until you actually write one?" Any type the user defers gets `{"deferred": true}` recorded for each of its required fields in `config.json`, skipping the branches below entirely for that type — `write-checks` runs this same resolution logic the first time that type is actually written (see `write-checks/SKILL.md`'s "Frontmatter fields" section), and writes the resolved mapping back at that point.
+**field_map** — **first, one combined question**: "Want to resolve frontmatter field mappings for all three note types now, or defer any of them until you actually write one?" Any type the user defers gets `{"deferred": true}` recorded for each of its required fields in `config.json`, skipping the branches below entirely for that type — `/write-checks` runs this same resolution logic the first time that type is actually written (see `write-checks/SKILL.md`'s "Frontmatter fields" section), and writes the resolved mapping back at that point.
 
 #### Mapping table
 
@@ -164,7 +164,7 @@ Two unconditionally-copied assets, same treatment as `humanize-checklist.json` a
 
 ## Done
 
-Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `slipbox config set <dotted.path> <value>` (and `slipbox config get` to inspect current values).
+Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values).
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
@@ -180,7 +180,7 @@ This section sits outside the numbered `## Workflow` above — it never runs as 
 6. **Field_map drift check** — for each *resolved* (non-deferred) `field_map` entry, re-read the mapped-onto property's current type from the vault and compare against what's recorded:
    - **Type changed** (e.g. was List, now reads Text) — report the specific mismatch by field name and both values, ask which side wins: re-resolve to match reality, or override and keep the recorded mapping.
    - **Property gone entirely** (deleted from every note in the vault) — re-trigger the *original* resolution branch for that field (map onto a different property, create fresh, or opt-out); the old mapping now points at nothing.
-   - **Deferred entries are skipped by this check entirely** — nothing's resolved yet to drift from; they stay `{"deferred": true}` until `write-checks` resolves them lazily at first write.
+   - **Deferred entries are skipped by this check entirely** — nothing's resolved yet to drift from; they stay `{"deferred": true}` until `/write-checks` resolves them lazily at first write.
 7. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
 8. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
 9. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.

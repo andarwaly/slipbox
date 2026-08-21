@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.10.1"
+  version: "1.10.2"
 ---
 
 # Make-literature-note
@@ -15,10 +15,9 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Prerequisite
 
-Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox`
-completed a full run. If missing, stop and say so. Every `slipbox` call below
-uses this same path, `.slipbox/bin/slipbox` — never bare `slipbox`, which
-isn't guaranteed to be on `PATH`.
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: call bare `slipbox` — always `.slipbox/bin/slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Invocation
 

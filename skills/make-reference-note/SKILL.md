@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # Make-reference-note
@@ -16,16 +16,11 @@ Bold terms in this file are defined in `GLOSSARY.md`. This skill never runs
 literature notes whose `## Key Concepts` wikilink to this reference; this skill only
 pulls those already-grounded characterizations back out, reconciles them, and writes.
 
-## What these words mean
-
-- **Reference**
-- **Reference note**
-
 ## Prerequisite
 
-Requires `.slipbox/AGENTS.md` to exist — its presence confirms `setup-slipbox` completed
-a full run. If missing, stop and say so. Every `slipbox` call below uses this same path,
-`.slipbox/bin/slipbox` — never bare `slipbox`, which isn't guaranteed to be on `PATH`.
+- MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
+- NEVER: proceed without it. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: call bare `slipbox` — always `.slipbox/bin/slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Take the candidate
 
