@@ -1,6 +1,6 @@
 # clip-resource
 
-Fetch a URL and write it as a frozen Resource file, matching Obsidian Web Clipper's own output shape — for anyone who doesn't have Web Clipper, Readwise, or any other clipper tool installed.
+Fetch one or more URLs and write each as a frozen Resource file, matching Obsidian Web Clipper's own output shape — for anyone who doesn't have Web Clipper, Readwise, or any other clipper tool installed.
 
 ## When to use
 
@@ -10,20 +10,30 @@ It only handles content it can fetch cleanly. Paywalled articles and login-gated
 
 For Article and News, if the default fetcher gets blocked by bot detection (some Medium articles, for example) rather than the page genuinely not existing, it retries once via Firecrawl before giving up — optional, only used for this one case, most sources never need it.
 
+## Prerequisite
+
+This skill won't run until `setup-slipbox` has completed: it needs `.slipbox/AGENTS.md` to exist, plus every dependency `setup-slipbox` checks for (Defuddle, Firecrawl, `youtube-transcript-api`, TinyFish). If either is missing, it stops and points you at `setup-slipbox` rather than improvising a convention or installing anything itself.
+
 ## How it works
 
-1. **Take the URL** — a single article or video link. No pasted-text fallback; if you hand it raw text, it asks for a URL instead.
+1. **Take the URL(s)** — one or more article or video links, any mix of content types. No pasted-text fallback; if you hand it raw text, it asks for a URL instead. Handed several URLs, it spawns one subagent per URL and works through them in parallel, falling back to a plain sequential pass if the harness has no subagent capability. Either way, one URL's failure never blocks or corrupts another's.
 2. **Fetch and detect** — retrieves the page or video content directly (Article/News fall back to Firecrawl once if the default fetch is blocked, never for content that simply doesn't exist). Detects content type (article, news clip, social post, or video).
-3. **Extract facts** — resolves author, title, publish date, and other metadata via an extraction ladder: schema.org JSON-LD first, then `<meta>` tags (Open Graph and standard), then LLM-read fallback on the fetched content. No CSS-selector extraction — that requires a headless browser, which isn't available here yet.
+3. **Extract facts** — resolves author, title, publish date, and other metadata, but the method differs by content type rather than following one universal recipe. Article and News go through a two-rung ladder: Defuddle first, Firecrawl as fallback when the fetch is blocked; the `published` date for these two comes straight out of Defuddle's own output, not from any further extraction step. Social/Forum threads go through a separate three-rung ladder instead: schema.org JSON-LD first, then `<meta>` tags (Open Graph and standard), then LLM-read fallback on the fetched content. No CSS-selector extraction for either path — that requires a headless browser, which isn't available here yet.
 4. **Transform** — fills in whatever your own template asks for: mechanical frontmatter (`type`, `link`, `author`, `published`, `tags`) always applies, but the body itself has no built-in default — verbatim content, a rewrite, a summary, entity sections, none of it is assumed by this skill. It only does what your template's variables tell it to. It deliberately stops there — no "Bud candidate" or "Further exploration" section. Forming an opinion about the content is a separate skill's job (`make-literature-note`), run later. `make-literature-note` does its own surface pass over the source to identify discussion-worthy claims.
-5. **Write** — saves the file using the conventions `setup-slipbox` recorded. Once written, the file is frozen: this skill never reopens it, and neither does any other skill in the family.
-6. **Report** — either the Resource file exists at its path, or the fetch failed (or came back as a paywall teaser/login wall) and that failure is reported plainly. Both are complete, valid outcomes; a half-written Resource file is not.
+5. **Write** — saves the file using the conventions `setup-slipbox` recorded. If the template resolved a quoted instruction for this clip — meaning the agent synthesized or rewrote content rather than dropping it in verbatim — a `/write-checks` session runs first, in its checks-only mode, before the file is saved. A clip that only filled in bare variables skips this, since nothing was synthesized to check. Once written, the file is frozen: this skill never reopens it, and neither does any other skill in the family.
+6. **Report** — for a single URL, either the Resource file exists at its path, or the fetch failed (or came back as a paywall teaser/login wall) and that failure is reported plainly. Both are complete, valid outcomes; a half-written Resource file is not. When several URLs were clipped in one run, the outcomes are reported together as one batch table — URL, detected type, and result (saved path or failure reason) for each — rather than as separate reports per URL.
+
+The skill's own reference files spell out the extraction ladders, variable syntax, and filter vocabulary in full; see the [skill source](../skills/clip-resource/) for that listing.
 
 ## Usage
 
 Invoke it by name with a URL:
 
 > Clip this article: https://example.com/some-article
+
+It also takes several URLs at once:
+
+> Clip these: https://example.com/a, https://example.com/b, https://example.com/c
 
 ## Installation
 
