@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.10.2"
+  version: "1.11.0"
 ---
 
 # Make-literature-note
@@ -247,8 +247,9 @@ Where the merge test does fire, offer the merge rather than performing
 it — the merged claim is a new statement, so it goes through Gate like
 any other. This session-close density merge is a third, narrowly-scoped
 exemption to the literature note's frozen-once-written rule — distinct
-from the out-of-band fidelity correction and from the `## Open Questions`
-append-only exemption, and reaching no further than this one pass. If the
+from the out-of-band fidelity correction (covered next) and from the
+`## Open Questions` append-only exemption above, and reaching no further
+than this one pass. If the
 user confirms the merge, the superseded claim's own `## Key Claims`
 heading is removed and its content folded into the surviving merged
 claim, which then gets its own fresh Gate confirmation as the new
@@ -309,6 +310,34 @@ Only on a yes:
 
 A shrug, a "nothing really," or a decline is a complete, valid end to the
 session.
+
+## Out-of-band fidelity correction
+
+The third and last exemption to the note's frozen-once-written rule fires
+outside any of the flows above, on no fixed schedule — whenever the user,
+during this session or a later one, notices that an already-written Key
+Claim entry misreads, mistranscribes, or misrepresents the source. Like
+the other two exemptions, it never fires on the agent's own initiative:
+the agent doesn't re-audit written claims against the source looking for
+drift, it only acts once the user points at a specific inaccuracy.
+
+The fix this exemption allows is narrow: it exists to move the note
+closer to the source, nothing else. Correcting a misquote, a swapped
+name, or a claim that quietly drifted from what the source actually said
+is in scope; sharpening a claim's phrasing for its own sake, folding in a
+nuance the source didn't prompt, or any other new synthesis is not — that
+belongs to a new claim through the ordinary Gate-then-write path, not
+this one. If what the user is asking for reads as more than a fidelity
+fix, say so and route it there instead of stretching this exemption to
+cover it.
+
+Once the user has named the inaccuracy and what the corrected wording
+should say, run that corrected wording through `/grounding`'s Gate exactly
+as any other claim gets confirmed — a correction earns no shortcut past
+the discipline every other statement in the note holds to. Only once Gate
+confirms it, edit the existing `## Key Claims` entry in place: this is the
+one case in the whole file where an already-written entry is legitimately
+reopened rather than superseded by a new heading.
 
 ## Spot terms and entities
 
