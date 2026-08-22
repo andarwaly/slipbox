@@ -179,10 +179,12 @@ check_exit "--help exits 0" 0 "$SLIPBOX" --help
 assert_contains "--help prints the usage block" "Usage:" "$SCRATCH/slipbox-test-out"
 check_exit "-h exits 0" 0 "$SLIPBOX" -h
 assert_contains "-h prints the usage block" "slipbox — CLI" "$SCRATCH/slipbox-test-out"
+EXPECTED_VERSION=$(sed -n 's/^CLI_VERSION="\(.*\)"$/\1/p' "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox")
+[ -n "$EXPECTED_VERSION" ] || { echo "FAIL - could not read CLI_VERSION from the slipbox script"; fail=1; }
 check_exit "--version exits 0" 0 "$SLIPBOX" --version
-assert_contains "--version prints the CLI version" "slipbox 2.1.0" "$SCRATCH/slipbox-test-out"
+assert_contains "--version prints the CLI version" "slipbox $EXPECTED_VERSION" "$SCRATCH/slipbox-test-out"
 check_exit "-v exits 0" 0 "$SLIPBOX" -v
-assert_contains "-v prints the CLI version" "slipbox 2.1.0" "$SCRATCH/slipbox-test-out"
+assert_contains "-v prints the CLI version" "slipbox $EXPECTED_VERSION" "$SCRATCH/slipbox-test-out"
 check_exit "no arguments prints help and exits 2" 2 "$SLIPBOX"
 assert_contains "no arguments prints the usage block" "Usage:" "$SCRATCH/slipbox-test-out"
 for group in evergreen links config humanize; do
