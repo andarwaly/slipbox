@@ -11,9 +11,18 @@ skill, no backlog-checking.
 
 ## How it works
 
+Requires that `setup-slipbox` has already run — it checks for `.slipbox/AGENTS.md`
+before doing anything, and stops with a pointer back to `setup-slipbox` if it's missing.
+
 Runs a `/grounding` session on whatever you hand it — an idea, notes, a source, an
 article, anything at all. If you give it nothing, it asks what you want to work
 through.
+
+Once the session settles, it closes with a plain "Crystalized Thought" card: a
+**Core Thesis** line quoting the confirmed statement verbatim, an optional
+**Flagged for later** line for a tension the session surfaced — left out entirely
+when nothing was flagged, never shown as an empty placeholder — and one closing
+question asking whether to keep exploring, move on, or call it done.
 
 ## Usage
 

@@ -12,6 +12,13 @@ existing notes that were never made explicit, or ideas that only emerge when two
 are read together. This is a heavier, whole-corpus pass, not something tied to any single
 capture.
 
+## Prerequisite
+
+Requires that `setup-slipbox` has already run — it checks for `.slipbox/AGENTS.md`
+before doing anything, and stops with a pointer back to `setup-slipbox` if it's missing.
+Every `slipbox` CLI call this skill makes uses the full `.slipbox/bin/slipbox` path,
+never a bare `slipbox`, since it isn't guaranteed to be on `PATH`.
+
 ## Pick a mode
 
 An explicit mode flag is required — `--references` or `--evergreen`. Neither given means
@@ -31,14 +38,17 @@ connections relating to just those notes, instead of a whole-vault scan.
 
 ## How `--references` works
 
-1. **Scan** — reads literature notes' `## Key Concepts` sections and other mentions of
-   the same or similar things elsewhere in notes' bodies, not just formally wikilinked
-   Key Concepts entries — the same idea can surface under different labels in different
-   notes (`[[UI Design]]` vs. `[[User Interface Design]]`).
+1. **Scan** — reads literature notes' `## Key Concepts` and `## Mentioned` sections and
+   other mentions of the same or similar things elsewhere in notes' bodies, not just
+   formally wikilinked entries — the same idea can surface under different labels in
+   different notes (`[[UI Design]]` vs. `[[User Interface Design]]`). This scan does
+   not extend to `## Open Questions` — that section is read back directly by the user,
+   not surfaced through this skill.
 2. **Cluster before counting** — semantic clustering runs first, grouping variant labels
    that refer to the same underlying thing into one cluster. Recurrence is then counted
    per cluster, not per exact string, so two single-mention variant labels can jointly
-   cross the threshold together.
+   cross the threshold together, with the variant labels themselves carried forward as
+   `alt_names` candidates on write.
 3. **Classify each cluster crossing threshold** — entity-check first (is this a person,
    place, or organization, real or fictional?), then the reusability test (deletion test
    + declarative-title test) for anything that isn't an entity.
@@ -52,11 +62,21 @@ connections relating to just those notes, instead of a whole-vault scan.
 ## How `--evergreen` works
 
 1. **Scan** — reads across literature, reference, and evergreen notes for two distinct
-   things: link candidates (mechanical) and sparked ideas (generative).
+   things: link candidates (mechanical) and sparked ideas (generative). Before
+   suggesting a link, checks `.slipbox/bin/slipbox links find --source <slug>` first,
+   so an already-linked pair is never re-suggested.
 2. **Link suggestions, presented as a batch** — every candidate shown together, approved
-   or rejected in one pass, never one-at-a-time.
+   or rejected in one pass, never one-at-a-time. Each approved link is written with
+   `.slipbox/bin/slipbox links add --source <slug> --target <slug> --rel cites`.
 3. **Sparked ideas, routed to the evergreen backlog** — never written as a note directly;
-   `make-evergreen-note` picks them up later.
+   logged with `.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the
+   spark, described>"`, and `make-evergreen-note` picks them up from there later.
+
+## Done
+
+`--references` reports every cluster crossing threshold, classified and never written.
+`--evergreen` writes every approved link and logs every sparked idea to the backlog,
+then reports what was added and what was routed.
 
 ## Usage
 
