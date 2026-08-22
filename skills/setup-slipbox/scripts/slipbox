@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.1.1"
+CLI_VERSION="2.2.0"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
