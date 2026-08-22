@@ -30,6 +30,14 @@ A vault typically moves through these skills in this order, though any skill can
 
 `GLOSSARY.md` and this file are copied verbatim from `setup-slipbox`'s own bundled assets on every run, first run or re-run alike, so a vault always carries the current package version of both.
 
+## When a `slipbox` command fails
+
+Check the exit code of every `.slipbox/bin/slipbox` call before using its output, and read stderr when it's nonzero — the CLI prints one JSON object there, `{"error": "..."}`, and never a bare traceback.
+
+- Exit `2` is a usage error: the invocation was wrong (bad flag, missing value, unknown dotted path). Fix the invocation; don't retry it unchanged and don't route around it by editing `.slipbox/` files by hand.
+- Exit `1` is a runtime failure: something on disk is missing, corrupt, or unwritable. Stop the step that needed it and tell the user what the error said, verbatim. Never treat a failed `evergreen add`/`links add` as recorded, and never continue a note-write on the assumption that bookkeeping landed.
+- Exit `0` with a `{"warning": "..."}` line on stderr means the command succeeded on incomplete input — a corrupt evergreen candidate was skipped, or a checklist signal wasn't evaluated. Use the result, and surface the warning to the user in the same breath rather than reporting a clean run.
+
 ## Terms
 
 Every bolded term used across this skill family (Resource, Literature note, Reference note, Evergreen note, Claim, Take, Session, Backlog, Candidate, Gate, and the rest) is defined in `.slipbox/GLOSSARY.md`. Read it before treating any bolded term as self-explanatory.

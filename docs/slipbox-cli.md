@@ -37,9 +37,17 @@ The JSON result includes per-signal hits, signals that passed their own threshol
 
 Every command prints JSON by default. `find`/`get`-family commands accept `--format table` for a human-readable alternative. Exit code `2` means a usage error (bad flags, missing required argument); exit code `1` means a runtime failure (file not found, duplicate slug, etc.).
 
+Every failure prints one JSON object on stderr — `{"error": "..."}`, message-escaped so a path or slug containing a quote still leaves stderr parseable. Nothing ever reaches the caller as a raw Python traceback: unreadable and non-UTF-8 files, unparsable `config.json`/`humanize-checklist.json`/`style-profile.json`, malformed evergreen frontmatter, a corrupt `links.jsonl` line (named by line number), an uncompilable checklist regex (named by signal id), and a write into an unwritable directory each become one of these.
+
+A survivable problem — one that doesn't invalidate the result — prints `{"warning": "..."}` on stderr and still exits `0`. Two cases exist: `evergreen find` skipping a file whose frontmatter won't parse, and `humanize check` meeting a signal type it doesn't implement (that signal is reported as `"skipped": "unsupported_type"` in the result, never counted as zero hits). A corrupt `links.jsonl`, by contrast, fails outright — a silently filtered edge would leave the caller a plausible-looking but incomplete result set with no way to notice.
+
+An unrecognized flag, a misspelled one, a stray positional argument, a flag given without a value, a non-integer `--iteration`, and a `--format` other than `json`/`table` are all usage errors. None of them is ignored: `evergreen find --stat to-discuss` exits `2` rather than quietly dropping the filter and returning every row.
+
 ## Atomicity
 
-`evergreen add` and `evergreen update` write via a temp file in the same directory, then an atomic rename (`os.replace`) — a write either fully lands or doesn't happen at all, never leaves a half-written file behind. `links add` appends a single line, which is atomic at the filesystem level for a line this short.
+`evergreen add`, `evergreen update`, and `config set` write via a temp file in the same directory, then an atomic rename (`os.replace`) — a write either fully lands or doesn't happen at all, never leaves a half-written file or a truncated `config.json` behind. A failed write cleans up its own temp file. `links add` appends a single line, which is atomic at the filesystem level for a line this short.
+
+The one non-atomic step left is `evergreen update --slug NEW`, a write of the new file followed by a delete of the old one. If the delete fails, the command reports that both slugs now exist instead of reporting a clean rename.
 
 ## Installation
 
