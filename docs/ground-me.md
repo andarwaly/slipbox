@@ -5,7 +5,7 @@ A bare, freeform grounding session — no note-type commitment, no sibling routi
 ## When to use
 
 Reach for this when you just want to think something through out loud, with no
-intention (yet, or ever) of turning it into a Claim, a Term note, or a Take. It's the
+intention (yet, or ever) of turning it into a Claim, a Reference note, or a Take. It's the
 `grilling`-family equivalent of `grill-me`: no classification, no offering another
 skill, no backlog-checking.
 
