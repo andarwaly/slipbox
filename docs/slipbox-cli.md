@@ -43,4 +43,4 @@ Every command prints JSON by default. `find`/`get`-family commands accept `--for
 
 ## Installation
 
-`slipbox` is a bash script wrapping Python 3's standard library — no SQLite, no `PyYAML`, no dependency beyond what's already required for `config get/set` and `humanize check`. It's copied into a vault by `setup-slipbox`, never installed standalone — see [setup-slipbox.md](setup-slipbox.md).
+`slipbox` is a bash script wrapping Python 3's standard library — no SQLite, no `PyYAML`, no dependency beyond what's already required for `config get/set` and `humanize check`. Every command's Python body is run through one `py` wrapper that prepends a shared helper prelude (frontmatter parse/serialize, atomic write, row output, error exit), so the whole CLI stays a single copyable file with one implementation of each of those. It's copied into a vault by `setup-slipbox`, never installed standalone — see [setup-slipbox.md](setup-slipbox.md).

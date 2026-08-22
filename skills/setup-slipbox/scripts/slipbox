@@ -11,6 +11,11 @@
 # exists at all: literature/term tracking is now derived on demand from
 # existing notes' own frontmatter and wikilinks, not surfaced into a queue.
 #
+# Every command's Python body runs through `py`, which prepends the $PY_HELPERS
+# prelude — frontmatter parse/serialize, atomic write, row output, error exit.
+# The file stays a single self-contained script, since setup-slipbox installs
+# it by copying this one path.
+#
 # Portability note: macOS ships bash 3.2 by default (GPL licensing) — this file
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
@@ -43,6 +48,118 @@ get_flag() {
   return 1
 }
 
+# dispatch <group> "<action> ..." "$@" — routes "slipbox <group> <action>" to
+# cmd_<group>_<action>, one shape for every command group.
+dispatch() {
+  local group="$1" actions="$2"; shift 2
+  [ $# -ge 1 ] || usage_err "$group requires an action: $(echo "$actions" | tr ' ' ',' | sed 's/,/, /g')"
+  local action="$1"; shift
+  case " $actions " in
+    *" $action "*) "cmd_${group}_${action}" "$@" ;;
+    *) usage_err "unknown $group action: $action" ;;
+  esac
+}
+
+# py — runs a Python body read from stdin, with $PY_HELPERS prepended.
+py() { { printf '%s\n' "$PY_HELPERS"; cat; } | python3 -; }
+
+PY_HELPERS=$(cat <<'PYEOF'
+import glob, json, os, re, sys, tempfile
+from datetime import datetime, timezone
+
+
+def env(name, default=""):
+    return os.environ.get(name, default)
+
+
+def now_utc():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def fail(message, code=1):
+    print(json.dumps({"error": message}), file=sys.stderr)
+    sys.exit(code)
+
+
+def read_text(path):
+    with open(path) as f:
+        return f.read()
+
+
+def read_json(path):
+    with open(path) as f:
+        return json.load(f)
+
+
+def parse_frontmatter(text):
+    """Flat `key: value` YAML frontmatter → (fields, key order), or (None, []) if absent."""
+    match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
+    if not match:
+        return None, []
+    fields, order = {}, []
+    for line in match.group(1).splitlines():
+        if ":" not in line:
+            continue
+        key, _, raw = line.partition(":")
+        key = key.strip()
+        raw = raw.strip()
+        order.append(key)
+        if raw == "":
+            fields[key] = None
+        elif raw.startswith('"'):
+            fields[key] = json.loads(raw)
+        elif raw.lstrip("-").isdigit():
+            fields[key] = int(raw)
+        else:
+            fields[key] = raw
+    return fields, order
+
+
+def serialize_frontmatter(fields, order):
+    lines = ["---"]
+    for key in order:
+        value = fields[key]
+        if value is None:
+            lines.append(f"{key}:")
+        elif isinstance(value, str):
+            lines.append(f"{key}: {json.dumps(value)}")
+        else:
+            lines.append(f"{key}: {value}")
+    lines.append("---")
+    return "\n".join(lines) + "\n"
+
+
+def write_atomic(path, text):
+    """Temp file in the target's own directory, then os.replace — never a half-written file."""
+    directory = os.path.dirname(path) or "."
+    prefix = f".{os.path.splitext(os.path.basename(path))[0]}-"
+    fd, tmp_path = tempfile.mkstemp(dir=directory, prefix=prefix, suffix=".tmp")
+    with os.fdopen(fd, "w") as f:
+        f.write(text)
+    os.replace(tmp_path, path)
+
+
+def emit_rows(rows, fmt):
+    if fmt != "table":
+        print(json.dumps(rows, indent=2))
+    elif not rows:
+        print("(no rows)")
+    else:
+        cols = list(rows[0].keys())
+        print("\t".join(cols))
+        for row in rows:
+            print("\t".join(str(row.get(c, "")) for c in cols))
+
+
+def walk_dotted(node, parts, dotted):
+    for part in parts:
+        if not isinstance(node, dict) or part not in node:
+            fail(f"unknown path: {dotted}", 2)
+        node = node[part]
+    return node
+PYEOF
+)
+
 print_help() {
   cat <<'EOF'
 slipbox — CLI for .slipbox/evergreen/*.md, .slipbox/links.jsonl, and .slipbox/config.json
@@ -71,24 +188,19 @@ cmd_evergreen_add() {
   reason=$(get_flag reason "$@") || reason=""
   [ -n "$slug" ] || usage_err "evergreen add requires --slug"
   [ -n "$reason" ] || usage_err "evergreen add requires --reason"
-  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" python3 - <<'PYEOF'
-import json, os, sys, tempfile
-from datetime import datetime, timezone
-
-evergreen_dir = os.environ["EVERGREEN_DIR"]
-slug = os.environ["SLUG"]
-reason = os.environ["REASON"]
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" py <<'PYEOF'
+evergreen_dir = env("EVERGREEN_DIR")
+slug = env("SLUG")
 path = os.path.join(evergreen_dir, f"{slug}.md")
 
 if os.path.exists(path):
-    print(json.dumps({"error": f"evergreen slug already exists: {slug}"}), file=sys.stderr)
-    sys.exit(1)
+    fail(f"evergreen slug already exists: {slug}")
 
-now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+now = now_utc()
 order = ["status", "reason", "discussion_path", "note_path", "iteration", "created_at", "updated_at"]
 fields = {
     "status": "to-discuss",
-    "reason": reason,
+    "reason": env("REASON"),
     "discussion_path": None,
     "note_path": None,
     "iteration": 1,
@@ -96,23 +208,7 @@ fields = {
     "updated_at": now,
 }
 
-def serialize(fields, order):
-    lines = ["---"]
-    for key in order:
-        value = fields[key]
-        if value is None:
-            lines.append(f"{key}:")
-        elif isinstance(value, str):
-            lines.append(f"{key}: {json.dumps(value)}")
-        else:
-            lines.append(f"{key}: {value}")
-    lines.append("---")
-    return "\n".join(lines) + "\n"
-
-fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{slug}-", suffix=".md.tmp")
-with os.fdopen(fd, "w") as f:
-    f.write(serialize(fields, order))
-os.replace(tmp_path, path)
+write_atomic(path, serialize_frontmatter(fields, order))
 
 print(json.dumps({"slug": slug, **fields}, indent=2))
 PYEOF
@@ -123,38 +219,13 @@ cmd_evergreen_find() {
   local status format
   status=$(get_flag status "$@") || status=""
   format=$(get_flag format "$@") || format="json"
-  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" python3 - <<'PYEOF'
-import glob, json, os, re
-
-evergreen_dir = os.environ["EVERGREEN_DIR"]
-status_filter = os.environ.get("STATUS_FILTER", "")
-fmt = os.environ.get("FORMAT", "json")
-
-def parse_frontmatter(text):
-    match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
-    if not match:
-        return None, []
-    fields, order = {}, []
-    for line in match.group(1).splitlines():
-        if ":" not in line:
-            continue
-        key, _, raw = line.partition(":")
-        key = key.strip()
-        raw = raw.strip()
-        order.append(key)
-        if raw == "":
-            fields[key] = None
-        elif raw.startswith('"'):
-            fields[key] = json.loads(raw)
-        elif raw.lstrip("-").isdigit():
-            fields[key] = int(raw)
-        else:
-            fields[key] = raw
-    return fields, order
+  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" py <<'PYEOF'
+evergreen_dir = env("EVERGREEN_DIR")
+status_filter = env("STATUS_FILTER")
 
 rows = []
 for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
-    fields, _ = parse_frontmatter(open(path).read())
+    fields, _ = parse_frontmatter(read_text(path))
     if fields is None:
         continue
     slug = os.path.splitext(os.path.basename(path))[0]
@@ -165,16 +236,7 @@ for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
 
 rows.sort(key=lambda r: r.get("created_at") or "", reverse=True)
 
-if fmt == "table":
-    if not rows:
-        print("(no rows)")
-    else:
-        cols = list(rows[0].keys())
-        print("\t".join(cols))
-        for row in rows:
-            print("\t".join(str(row.get(c, "")) for c in cols))
-else:
-    print(json.dumps(rows, indent=2))
+emit_rows(rows, env("FORMAT", "json"))
 PYEOF
 }
 
@@ -192,34 +254,16 @@ cmd_evergreen_update() {
   fi
   local path="$EVERGREEN_DIR/$slug.md"
   [ -f "$path" ] || runtime_err "evergreen slug not found: $slug"
-  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" NEW_SLUG="$new_slug" STATUS="$status" NOTE_PATH="$note_path" ITERATION="$iteration" python3 - <<'PYEOF'
-import json, os, re, sys, tempfile
-from datetime import datetime, timezone
-
-evergreen_dir = os.environ["EVERGREEN_DIR"]
-slug = os.environ["SLUG"]
-new_slug = os.environ.get("NEW_SLUG", "")
-status = os.environ.get("STATUS", "")
-note_path = os.environ.get("NOTE_PATH", "")
-iteration = os.environ.get("ITERATION", "")
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" NEW_SLUG="$new_slug" STATUS="$status" NOTE_PATH="$note_path" ITERATION="$iteration" py <<'PYEOF'
+evergreen_dir = env("EVERGREEN_DIR")
+slug = env("SLUG")
+new_slug = env("NEW_SLUG")
+status = env("STATUS")
+note_path = env("NOTE_PATH")
+iteration = env("ITERATION")
 
 path = os.path.join(evergreen_dir, f"{slug}.md")
-text = open(path).read()
-match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
-fields, order = {}, []
-for line in match.group(1).splitlines():
-    key, _, raw = line.partition(":")
-    key = key.strip()
-    raw = raw.strip()
-    order.append(key)
-    if raw == "":
-        fields[key] = None
-    elif raw.startswith('"'):
-        fields[key] = json.loads(raw)
-    elif raw.lstrip("-").isdigit():
-        fields[key] = int(raw)
-    else:
-        fields[key] = raw
+fields, order = parse_frontmatter(read_text(path))
 
 if status:
     fields["status"] = status
@@ -227,31 +271,14 @@ if note_path:
     fields["note_path"] = note_path
 if iteration:
     fields["iteration"] = int(iteration)
-fields["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-def serialize(fields, order):
-    lines = ["---"]
-    for key in order:
-        value = fields[key]
-        if value is None:
-            lines.append(f"{key}:")
-        elif isinstance(value, str):
-            lines.append(f"{key}: {json.dumps(value)}")
-        else:
-            lines.append(f"{key}: {value}")
-    lines.append("---")
-    return "\n".join(lines) + "\n"
+fields["updated_at"] = now_utc()
 
 final_slug = new_slug or slug
 final_path = os.path.join(evergreen_dir, f"{final_slug}.md")
 if new_slug and os.path.exists(final_path):
-    print(json.dumps({"error": f"evergreen slug already exists: {new_slug}"}), file=sys.stderr)
-    sys.exit(1)
+    fail(f"evergreen slug already exists: {new_slug}")
 
-fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{final_slug}-", suffix=".md.tmp")
-with os.fdopen(fd, "w") as f:
-    f.write(serialize(fields, order))
-os.replace(tmp_path, final_path)
+write_atomic(final_path, serialize_frontmatter(fields, order))
 if new_slug and new_slug != slug:
     os.remove(path)
 
@@ -269,18 +296,14 @@ cmd_links_add() {
   [ -n "$target" ] || usage_err "links add requires --target"
   [ -n "$rel" ] || usage_err "links add requires --rel"
   case "$rel" in cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
-  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" python3 - <<'PYEOF'
-import json, os
-from datetime import datetime, timezone
-
-links_file = os.environ["LINKS_FILE"]
+  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
 row = {
-    "source_id": os.environ["SOURCE"],
-    "target_id": os.environ["TARGET"],
-    "rel_type": os.environ["REL"],
-    "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "source_id": env("SOURCE"),
+    "target_id": env("TARGET"),
+    "rel_type": env("REL"),
+    "created_at": now_utc(),
 }
-with open(links_file, "a") as f:
+with open(env("LINKS_FILE"), "a") as f:
     f.write(json.dumps(row) + "\n")
 print(json.dumps({"status": "ok", **row}))
 PYEOF
@@ -292,14 +315,13 @@ cmd_links_find() {
   target=$(get_flag target "$@") || target=""
   rel=$(get_flag rel "$@") || rel=""
   format=$(get_flag format "$@") || format="json"
-  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" python3 - <<'PYEOF'
-import json, os
-
-links_file = os.environ["LINKS_FILE"]
-source_filter = os.environ.get("SOURCE_FILTER", "")
-target_filter = os.environ.get("TARGET_FILTER", "")
-rel_filter = os.environ.get("REL_FILTER", "")
-fmt = os.environ.get("FORMAT", "json")
+  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" py <<'PYEOF'
+links_file = env("LINKS_FILE")
+filters = {
+    "source_id": env("SOURCE_FILTER"),
+    "target_id": env("TARGET_FILTER"),
+    "rel_type": env("REL_FILTER"),
+}
 
 rows = []
 if os.path.exists(links_file):
@@ -309,24 +331,10 @@ if os.path.exists(links_file):
             if not line:
                 continue
             row = json.loads(line)
-            if source_filter and row.get("source_id") != source_filter:
-                continue
-            if target_filter and row.get("target_id") != target_filter:
-                continue
-            if rel_filter and row.get("rel_type") != rel_filter:
-                continue
-            rows.append(row)
+            if all(not value or row.get(key) == value for key, value in filters.items()):
+                rows.append(row)
 
-if fmt == "table":
-    if not rows:
-        print("(no rows)")
-    else:
-        cols = list(rows[0].keys())
-        print("\t".join(cols))
-        for row in rows:
-            print("\t".join(str(row.get(c, "")) for c in cols))
-else:
-    print(json.dumps(rows, indent=2))
+emit_rows(rows, env("FORMAT", "json"))
 PYEOF
 }
 
@@ -334,19 +342,10 @@ PYEOF
 cmd_config_get() {
   require_config
   local path="${1:-}"
-  CONFIG_PATH="$CONFIG" DOTTED="$path" python3 - <<'PYEOF'
-import json, os, sys
-with open(os.environ["CONFIG_PATH"]) as f:
-    data = json.load(f)
-dotted = os.environ.get("DOTTED", "")
-node = data
-if dotted:
-    for part in dotted.split("."):
-        if not isinstance(node, dict) or part not in node:
-            print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-            sys.exit(2)
-        node = node[part]
-print(json.dumps(node, indent=2))
+  CONFIG_PATH="$CONFIG" DOTTED="$path" py <<'PYEOF'
+data = read_json(env("CONFIG_PATH"))
+dotted = env("DOTTED")
+print(json.dumps(walk_dotted(data, dotted.split(".") if dotted else [], dotted), indent=2))
 PYEOF
 }
 
@@ -354,15 +353,12 @@ cmd_config_set() {
   require_config
   [ $# -ge 2 ] || usage_err "config set requires <dotted.path> <value>"
   local dotted="$1" value="$2"
-  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" python3 - <<'PYEOF'
-import json, os, sys
+  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" py <<'PYEOF'
+config_path = env("CONFIG_PATH")
+dotted = env("DOTTED")
+raw = env("VALUE")
 
-config_path = os.environ["CONFIG_PATH"]
-dotted = os.environ["DOTTED"]
-raw = os.environ["VALUE"]
-
-with open(config_path) as f:
-    data = json.load(f)
+data = read_json(config_path)
 
 try:
     value = json.loads(raw)
@@ -370,16 +366,10 @@ except json.JSONDecodeError:
     value = raw
 
 parts = dotted.split(".")
-node = data
-for part in parts[:-1]:
-    if not isinstance(node, dict) or part not in node:
-        print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-        sys.exit(2)
-    node = node[part]
+node = walk_dotted(data, parts[:-1], dotted)
 leaf = parts[-1]
 if not isinstance(node, dict) or leaf not in node:
-    print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-    sys.exit(2)
+    fail(f"unknown path: {dotted}", 2)
 node[leaf] = value
 
 with open(config_path, "w") as f:
@@ -413,15 +403,10 @@ cmd_humanize_check() {
   local style="$SELF_DIR/style-profile.json"
   [ -f "$style" ] || runtime_err "style-profile.json not found — run setup-slipbox first"
 
-  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" python3 - <<'PYEOF'
-import json, os, re
-
-with open(os.environ["FILE_PATH"]) as f:
-    text = f.read()
-with open(os.environ["CHECKLIST_PATH"]) as f:
-    checklist = json.load(f)
-with open(os.environ["STYLE_PATH"]) as f:
-    style = json.load(f)
+  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" py <<'PYEOF'
+text = read_text(env("FILE_PATH"))
+checklist = read_json(env("CHECKLIST_PATH"))
+style = read_json(env("STYLE_PATH"))
 
 language = style.get("language", {})
 allowed_langs = {
@@ -430,7 +415,7 @@ allowed_langs = {
 }
 allowed_langs.update(str(value) for value in language.get("additional", []))
 allowed_langs = {value.lower() for value in allowed_langs if value}
-passage_language = os.environ.get("PASSAGE_LANGUAGE", "").lower()
+passage_language = env("PASSAGE_LANGUAGE").lower()
 english_ok = bool({"en", "english"} & ({passage_language} if passage_language else allowed_langs))
 
 def language_allowed(signal):
@@ -524,47 +509,9 @@ PYEOF
 case "$1" in
   --help|-h) print_help; exit 0 ;;
   --version|-v) echo "slipbox $CLI_VERSION"; exit 0 ;;
-  evergreen)
-    shift
-    [ $# -ge 1 ] || usage_err "evergreen requires an action: find, add, update"
-    action="$1"; shift
-    case "$action" in
-      find) cmd_evergreen_find "$@" ;;
-      add) cmd_evergreen_add "$@" ;;
-      update) cmd_evergreen_update "$@" ;;
-      *) usage_err "unknown evergreen action: $action" ;;
-    esac
-    ;;
-  links)
-    shift
-    [ $# -ge 1 ] || usage_err "links requires an action: add, find"
-    action="$1"; shift
-    case "$action" in
-      add) cmd_links_add "$@" ;;
-      find) cmd_links_find "$@" ;;
-      *) usage_err "unknown links action: $action" ;;
-    esac
-    ;;
-  config)
-    shift
-    [ $# -ge 1 ] || usage_err "config requires an action: get, set"
-    action="$1"; shift
-    case "$action" in
-      get) cmd_config_get "$@" ;;
-      set) cmd_config_set "$@" ;;
-      *) usage_err "unknown config action: $action" ;;
-    esac
-    ;;
-  humanize)
-    shift
-    [ $# -ge 1 ] || usage_err "humanize requires an action: check"
-    action="$1"; shift
-    case "$action" in
-      check) cmd_humanize_check "$@" ;;
-      *) usage_err "unknown humanize action: $action" ;;
-    esac
-    ;;
-  *)
-    usage_err "unknown command: $1"
-    ;;
+  evergreen) shift; dispatch evergreen "find add update" "$@" ;;
+  links) shift; dispatch links "add find" "$@" ;;
+  config) shift; dispatch config "get set" "$@" ;;
+  humanize) shift; dispatch humanize "check" "$@" ;;
+  *) usage_err "unknown command: $1" ;;
 esac
