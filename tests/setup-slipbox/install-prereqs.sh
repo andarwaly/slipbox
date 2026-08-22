@@ -111,7 +111,7 @@ assert_log_exact() {
     echo "ok   - $desc"
   else
     echo "FAIL - $desc"
-    printf 'expected:\\n%s\\nactual:\\n%s\\n' "$expected" "$actual"
+    printf 'expected:\n%s\nactual:\n%s\n' "$expected" "$actual"
     fail=1
   fi
 }
