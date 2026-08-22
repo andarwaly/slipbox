@@ -38,6 +38,7 @@ slipbox/                    ← repo root, this file's location
 └── tests/
     └── {{skill-name}}/
         ├── evals.json         ← test cases: prompt, expected_output, assertions
+        ├── *.sh               ← mechanical tests for executable skill code, when present
         └── {{skill-name}}-workspace/   ← run outputs, one subfolder per iteration
 ```
 
@@ -53,7 +54,7 @@ slipbox/                    ← repo root, this file's location
 - **Writing a skill or a change to one**: two phases, don't skip the second.
   - *Write*: draft grounded in the skill's own domain rules (`CONTEXT.md`) and this repo's format conventions above.
   - *Review*: is this skill stateless (pure input → output, no filesystem writes) or stateful (saves to the filesystem, improves across sessions)? Confirm the choice was deliberate. Then audit completion criteria, leading words, information hierarchy (what's inline in `SKILL.md` vs. pushed to `references/`).
-- **Evals**: every skill carries `tests/{{skill-name}}/evals.json` — `prompt`, `expected_output`, optional `files`, and objective `assertions` (reserve subjective quality judgments for human review, not an assertion). Start with 2-3 varied prompts including one edge case; add assertions after seeing a first run's output. Run with the skill and without (or against the previous version) in a clean context each time. Track the with/without delta — pass rate, time, tokens.
+- **Evals and mechanical tests**: every skill carries `tests/{{skill-name}}/evals.json` — `prompt`, `expected_output`, optional `files`, and objective `assertions` (reserve subjective quality judgments for human review, not an assertion). Skills with executable code also carry plain pass/fail test scripts there; `tests/setup-slipbox/*.sh` covers the setup-slipbox CLI and prerequisite scripts. Start evals with 2-3 varied prompts including one edge case; add assertions after seeing a first run's output. Run evals with the skill and without (or against the previous version) in a clean context each time. Track the with/without delta — pass rate, time, tokens.
 
 ## Guardrails
 
