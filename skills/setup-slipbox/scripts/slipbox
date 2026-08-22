@@ -71,6 +71,38 @@ flag() {
   printf '%s' "$FLAG_VALUE"
 }
 
+# resolve_format "$@" — reads --format, defaulting to json, and rejects anything
+# other than the two the CLI knows how to print. Result lands in FORMAT.
+FORMAT="json"
+resolve_format() {
+  get_flag format "$@" || FLAG_VALUE=""
+  FORMAT="${FLAG_VALUE:-json}"
+  case "$FORMAT" in json|table) ;; *) usage_err "--format must be one of json, table" ;; esac
+}
+
+# require_rel <value> <required|optional> — the two link relation types, checked
+# the same way whether the flag is mandatory (links add) or a filter (links find).
+require_rel() {
+  case "$1" in
+    cites|extends) ;;
+    '') [ "$2" = "optional" ] || usage_err "links add requires --rel" ;;
+    *) usage_err "--rel must be one of cites, extends" ;;
+  esac
+}
+
+# dispatch <group> "<action> ..." "$@" — routes "slipbox <group> <action>" to
+# cmd_<group>_<action>, so every command group shares one shape and one pair of
+# error messages.
+dispatch() {
+  local group="$1" actions="$2"; shift 2
+  [ $# -ge 1 ] || usage_err "$group requires an action: $(printf '%s' "$actions" | sed 's/ /, /g')"
+  local action="$1"; shift
+  case " $actions " in
+    *" $action "*) "cmd_${group}_${action}" "$@" ;;
+    *) usage_err "unknown $group action: $action" ;;
+  esac
+}
+
 # reject_unknown_flags "<allowed names>" "$@" — an unrecognized or misspelled
 # flag is a usage error, never a silently ignored argument (`--stat discussing`
 # used to read as "no status filter at all" and quietly return every row).
@@ -211,6 +243,28 @@ def atomic_write(path, text, label="file"):
                 os.unlink(tmp_path)
             except OSError:
                 pass
+
+
+def emit_rows(rows, fmt):
+    """The one row printer every find command shares — JSON by default, TSV for --format table."""
+    if fmt != "table":
+        print(json.dumps(rows, indent=2))
+    elif not rows:
+        print("(no rows)")
+    else:
+        cols = list(rows[0].keys())
+        print("\t".join(cols))
+        for row in rows:
+            print("\t".join(str(row.get(c, "")) for c in cols))
+
+
+def walk_dotted(node, parts, dotted):
+    """Descends a dotted config path, failing as a usage error on the first missing key."""
+    for part in parts:
+        if not isinstance(node, dict) or part not in node:
+            fail(f"unknown path: {dotted}", USAGE_EXIT)
+        node = node[part]
+    return node
 EOF
 }
 py() { { py_prelude; cat; } | python3 -; }
@@ -275,12 +329,10 @@ PYEOF
 cmd_evergreen_find() {
   require_evergreen_dir
   reject_unknown_flags "status format" "$@"
-  local status format
+  local status
   status=$(flag status "$@")
-  format=$(flag format "$@")
-  [ -n "$format" ] || format="json"
-  case "$format" in json|table) ;; *) usage_err "--format must be one of json, table" ;; esac
-  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" py <<'PYEOF'
+  resolve_format "$@"
+  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$FORMAT" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 status_filter = os.environ.get("STATUS_FILTER", "")
 fmt = os.environ.get("FORMAT", "json")
@@ -302,16 +354,7 @@ for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
 
 rows.sort(key=lambda r: r.get("created_at") or "", reverse=True)
 
-if fmt == "table":
-    if not rows:
-        print("(no rows)")
-    else:
-        cols = list(rows[0].keys())
-        print("\t".join(cols))
-        for row in rows:
-            print("\t".join(str(row.get(c, "")) for c in cols))
-else:
-    print(json.dumps(rows, indent=2))
+emit_rows(rows, fmt)
 PYEOF
 }
 
@@ -388,8 +431,7 @@ cmd_links_add() {
   rel=$(flag rel "$@")
   [ -n "$source" ] || usage_err "links add requires --source"
   [ -n "$target" ] || usage_err "links add requires --target"
-  [ -n "$rel" ] || usage_err "links add requires --rel"
-  case "$rel" in cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
+  require_rel "$rel" required
   LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 row = {
@@ -411,15 +453,13 @@ PYEOF
 
 cmd_links_find() {
   reject_unknown_flags "source target rel format" "$@"
-  local source target rel format
+  local source target rel
   source=$(flag source "$@")
   target=$(flag target "$@")
   rel=$(flag rel "$@")
-  format=$(flag format "$@")
-  [ -n "$format" ] || format="json"
-  case "$format" in json|table) ;; *) usage_err "--format must be one of json, table" ;; esac
-  case "$rel" in ''|cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
-  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" py <<'PYEOF'
+  resolve_format "$@"
+  require_rel "$rel" optional
+  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$FORMAT" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 source_filter = os.environ.get("SOURCE_FILTER", "")
 target_filter = os.environ.get("TARGET_FILTER", "")
@@ -449,16 +489,7 @@ if os.path.exists(links_file):
             continue
         rows.append(row)
 
-if fmt == "table":
-    if not rows:
-        print("(no rows)")
-    else:
-        cols = list(rows[0].keys())
-        print("\t".join(cols))
-        for row in rows:
-            print("\t".join(str(row.get(c, "")) for c in cols))
-else:
-    print(json.dumps(rows, indent=2))
+emit_rows(rows, fmt)
 PYEOF
 }
 
@@ -471,13 +502,7 @@ cmd_config_get() {
   CONFIG_PATH="$CONFIG" DOTTED="$path" py <<'PYEOF'
 data = load_json(os.environ["CONFIG_PATH"], "config.json")
 dotted = os.environ.get("DOTTED", "")
-node = data
-if dotted:
-    for part in dotted.split("."):
-        if not isinstance(node, dict) or part not in node:
-            fail(f"unknown path: {dotted}", USAGE_EXIT)
-        node = node[part]
-print(json.dumps(node, indent=2))
+print(json.dumps(walk_dotted(data, dotted.split(".") if dotted else [], dotted), indent=2))
 PYEOF
 }
 
@@ -499,11 +524,7 @@ except json.JSONDecodeError:
     value = raw
 
 parts = dotted.split(".")
-node = data
-for part in parts[:-1]:
-    if not isinstance(node, dict) or part not in node:
-        fail(f"unknown path: {dotted}", USAGE_EXIT)
-    node = node[part]
+node = walk_dotted(data, parts[:-1], dotted)
 leaf = parts[-1]
 if not isinstance(node, dict) or leaf not in node:
     fail(f"unknown path: {dotted}", USAGE_EXIT)
@@ -676,47 +697,9 @@ PYEOF
 case "$1" in
   --help|-h) print_help; exit 0 ;;
   --version|-v) echo "slipbox $CLI_VERSION"; exit 0 ;;
-  evergreen)
-    shift
-    [ $# -ge 1 ] || usage_err "evergreen requires an action: find, add, update"
-    action="$1"; shift
-    case "$action" in
-      find) cmd_evergreen_find "$@" ;;
-      add) cmd_evergreen_add "$@" ;;
-      update) cmd_evergreen_update "$@" ;;
-      *) usage_err "unknown evergreen action: $action" ;;
-    esac
-    ;;
-  links)
-    shift
-    [ $# -ge 1 ] || usage_err "links requires an action: add, find"
-    action="$1"; shift
-    case "$action" in
-      add) cmd_links_add "$@" ;;
-      find) cmd_links_find "$@" ;;
-      *) usage_err "unknown links action: $action" ;;
-    esac
-    ;;
-  config)
-    shift
-    [ $# -ge 1 ] || usage_err "config requires an action: get, set"
-    action="$1"; shift
-    case "$action" in
-      get) cmd_config_get "$@" ;;
-      set) cmd_config_set "$@" ;;
-      *) usage_err "unknown config action: $action" ;;
-    esac
-    ;;
-  humanize)
-    shift
-    [ $# -ge 1 ] || usage_err "humanize requires an action: check"
-    action="$1"; shift
-    case "$action" in
-      check) cmd_humanize_check "$@" ;;
-      *) usage_err "unknown humanize action: $action" ;;
-    esac
-    ;;
-  *)
-    usage_err "unknown command: $1"
-    ;;
+  evergreen) shift; dispatch evergreen "find add update" "$@" ;;
+  links) shift; dispatch links "add find" "$@" ;;
+  config) shift; dispatch config "get set" "$@" ;;
+  humanize) shift; dispatch humanize "check" "$@" ;;
+  *) usage_err "unknown command: $1" ;;
 esac
