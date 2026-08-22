@@ -33,6 +33,10 @@ The JSON result includes per-signal hits, signals that passed their own threshol
 
 `created_at`/`updated_at` on evergreen candidates are handled automatically — `created_at` on `add`, `updated_at` on any subsequent `update` call. No flag exists to set either directly; nothing needs one.
 
+## Slug rules
+
+A slug names a file inside `.slipbox/evergreen/`, never a path: `evergreen add` and `evergreen update` accept only letters, digits, dot, underscore, and hyphen, up to 128 characters, with no leading dot and no `..` segment. Anything else is a usage error rather than a normalized path, so a slug proposed from clipped source text can't place a file outside that directory. `--iteration` must be a non-negative integer.
+
 ## Output and error conventions
 
 Every command prints JSON by default. `find`/`get`-family commands accept `--format table` for a human-readable alternative. Exit code `2` means a usage error (bad flags, missing required argument); exit code `1` means a runtime failure (file not found, duplicate slug, etc.).
