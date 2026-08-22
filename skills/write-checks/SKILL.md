@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
 ---
 
 # Write-checks
@@ -45,7 +45,7 @@ guides the workflow; it never rewrites a file automatically.
 
 Given a note type and its field list (e.g. literature: `type`, `created`, `source`),
 resolve each field via `.slipbox/bin/slipbox config get frontmatter.<type>.<field>`. The stored
-shape for a resolved entry is defined canonically in `.slipbox/config.json`'s
+shape for a resolved entry is defined canonically in `skills/setup-slipbox/assets/config.schema.json`'s
 own `description` field — not restated here.
 
 - **Already resolved** — write under the mapped property, the standard name if new,
