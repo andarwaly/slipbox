@@ -56,3 +56,5 @@ The one non-atomic step left is `evergreen update --slug NEW`, a write of the ne
 ## Installation
 
 `slipbox` is a bash script wrapping Python 3's standard library — no SQLite, no `PyYAML`, no dependency beyond what's already required for `config get/set` and `humanize check`. It's copied into a vault by `setup-slipbox`, never installed standalone — see [setup-slipbox.md](setup-slipbox.md).
+
+Because the install unit is that one file, shared code lives inside it rather than in a repo-level module an installed skill would never receive: every command's Python body runs through the `py` wrapper, which prepends one prelude holding the single implementation of error/warning exits, frontmatter parse/serialize, atomic write, row printing, and dotted-path lookup. On the shell side, flag reading, `--format`/`--rel` validation, and `<group> <action>` dispatch are shared the same way, so each of the error messages above exists in exactly one place.
