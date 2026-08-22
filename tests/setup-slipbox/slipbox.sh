@@ -60,6 +60,13 @@ check "evergreen update (slug rename)" "$SLIPBOX" evergreen update "draft-test-1
 check_exit "evergreen update on unknown slug fails" 1 "$SLIPBOX" evergreen update "does-not-exist" --status discussed
 check_exit "evergreen update with no flags is a usage error" 2 "$SLIPBOX" evergreen update "final-test-1"
 
+echo "--- slug validation confines writes to evergreen/ ---"
+check_exit "evergreen add rejects a traversal slug" 2 "$SLIPBOX" evergreen add --slug "./../pwned" --reason "traversal"
+check_exit "evergreen add rejects an absolute-path slug" 2 "$SLIPBOX" evergreen add --slug "/tmp/pwned" --reason "traversal"
+check_exit "evergreen add rejects a dot-segment slug" 2 "$SLIPBOX" evergreen add --slug ".." --reason "traversal"
+check_exit "evergreen update rejects a traversal --slug" 2 "$SLIPBOX" evergreen update "final-test-1" --slug "./../pwned"
+[ ! -e "$SCRATCH/pwned.md" ] && [ ! -e "$SCRATCH/../pwned.md" ] && echo "ok   - no file written outside evergreen/" || { echo "FAIL - traversal wrote outside evergreen/"; fail=1; }
+
 echo "--- evergreen atomic write leaves no stray temp files ---"
 TMP_COUNT=$(find "$SCRATCH/evergreen" -name '*.tmp' | wc -l | tr -d ' ')
 [ "$TMP_COUNT" = "0" ] && echo "ok   - no leftover .tmp files after writes" || { echo "FAIL - $TMP_COUNT stray temp file(s) found"; fail=1; }

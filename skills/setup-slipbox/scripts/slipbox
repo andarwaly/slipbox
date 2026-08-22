@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.1.0"
+CLI_VERSION="2.2.0"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -215,6 +215,21 @@ EOF
 }
 py() { { py_prelude; cat; } | python3 -; }
 
+# validate_slug <slug> — a slug names a file inside the evergreen directory, never a path.
+# Slugs arrive as agent-generated text derived from clipped sources, so anything that could
+# escape that directory (separator, dot segment, leading dot) is rejected, not normalized.
+validate_slug() {
+  local slug="$1"
+  [ -n "$slug" ] || usage_err "invalid slug (empty)"
+  case "$slug" in
+    */*|*\\*) usage_err "invalid slug (path separators not allowed): $slug" ;;
+    .*) usage_err "invalid slug (may not start with a dot): $slug" ;;
+    *..*) usage_err "invalid slug (dot segments not allowed): $slug" ;;
+    *[!A-Za-z0-9._-]*) usage_err "invalid slug (allowed characters: letters, digits, dot, underscore, hyphen): $slug" ;;
+  esac
+  [ "${#slug}" -le 128 ] || usage_err "invalid slug (longer than 128 characters)"
+}
+
 print_help() {
   cat <<'EOF'
 slipbox — CLI for .slipbox/evergreen/*.md, .slipbox/links.jsonl, and .slipbox/config.json
@@ -245,6 +260,7 @@ cmd_evergreen_add() {
   reason=$(flag reason "$@")
   [ -n "$slug" ] || usage_err "evergreen add requires --slug"
   [ -n "$reason" ] || usage_err "evergreen add requires --reason"
+  validate_slug "$slug"
   EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 slug = os.environ["SLUG"]
@@ -320,6 +336,7 @@ cmd_evergreen_update() {
   [ $# -ge 1 ] || usage_err "evergreen update requires <slug>"
   local slug="$1"; shift
   reject_unknown_flags "status note-path iteration slug" "$@"
+  validate_slug "$slug"
   local status note_path iteration new_slug
   status=$(flag status "$@")
   note_path=$(flag note-path "$@")
@@ -328,6 +345,7 @@ cmd_evergreen_update() {
   if [ -z "$status" ] && [ -z "$note_path" ] && [ -z "$iteration" ] && [ -z "$new_slug" ]; then
     usage_err "evergreen update requires at least one of --status, --note-path, --slug, --iteration"
   fi
+  [ -z "$new_slug" ] || validate_slug "$new_slug"
   case "$iteration" in
     ''|*[!0-9]*) [ -z "$iteration" ] || usage_err "--iteration must be a non-negative integer, got: $iteration" ;;
   esac

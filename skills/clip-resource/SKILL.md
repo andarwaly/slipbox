@@ -4,7 +4,7 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.2"
+  version: "1.4.0"
 ---
 
 # Clip Resource
@@ -26,6 +26,8 @@ Defuddle, Firecrawl, `youtube-transcript-api`, and TinyFish each get used somewh
 ## Take the URL(s)
 
 Ask for one or more URLs: articles, news stories, social/forum threads, or video links, any mix. There is no paste-the-text fallback. If the user hands you raw text instead of a link, tell them this skill only takes URLs and ask for one.
+
+Every URL below reaches a shell command (`defuddle parse`, `firecrawl scrape`), so check each one before it gets there: it must parse as an `http`/`https` URL, and it must contain no shell metacharacters — quotes, backticks, `$`, `;`, `|`, `&`, `<`, `>`, newlines. Reject anything else and say why instead of sanitizing it into something runnable; a URL that needs escaping to be safe isn't the URL the user meant. Pass the checked URL as a single quoted argument, never interpolated into a longer shell string.
 
 For more than one URL, spawn one subagent per URL. Each subagent runs the full fetch/extract/transform/write pipeline (Detect the content type through Write) independently, in parallel, for its own URL only. If no subagent capability exists in this harness, process each URL sequentially instead. Either way, one URL's failure never blocks or corrupts another's — each is fetched, extracted, transformed, and written on its own, and reported on its own in the Report the outcome step's batch table.
 
