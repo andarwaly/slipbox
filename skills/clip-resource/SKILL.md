@@ -4,7 +4,7 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.3.4"
+  version: "1.4.0"
 ---
 
 # Clip Resource
@@ -18,6 +18,7 @@ For the case where the user has no Web Clipper, no Readwise, nothing installed: 
 - MUST: `.slipbox/AGENTS.md` exists — confirms `setup-slipbox` ran to completion.
 - MUST: All dependencies (Defuddle, Firecrawl, `youtube-transcript-api`, TinyFish) are available — check at step-entry, not here.
 - NEVER: proceed without either. Stop and tell the user to run `setup-slipbox` first.
+- NEVER: improvise a naming/folder convention in place of running `setup-slipbox`.
 - NEVER: install a missing dependency yourself — that's `setup-slipbox`'s job. Point the user there instead.
 
 ## Workflow
@@ -61,6 +62,8 @@ Read the template first — its location comes from the `templates.<type>_path` 
 `clip-resource` fills in only what the template's own variables and filters ask for — see `references/variable-glossary.md` and `references/filter-glossary.md`. Nothing beyond that: no line naming an idea worth pursuing, no conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
 
 ### 05 - Write
+
+If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run a `/write-checks` session on the synthesized content in its checks-only mode (no field list — this is a Resource, not a note, so the full frontmatter-resolution pass doesn't apply) before writing, since the agent synthesized or rewrote that content. If this clip used only bare variables, skip this — nothing was synthesized to check.
 
 Save the file using the filename and frontmatter conventions resolved via `.slipbox/bin/slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
 
