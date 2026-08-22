@@ -10,7 +10,8 @@ trap 'rm -rf "$SCRATCH"' EXIT
 
 BIN="$SCRATCH/bin"
 PYTHON="$SCRATCH/python"
-mkdir -p "$BIN" "$PYTHON"
+EMPTY_BIN="$SCRATCH/empty-bin"
+mkdir -p "$BIN" "$PYTHON" "$EMPTY_BIN"
 REAL_PYTHON="$(command -v python3)"
 cat > "$BIN/python3" <<EOF
 #!/usr/bin/env bash
@@ -29,15 +30,6 @@ EOF
 chmod +x "$BIN/defuddle"
 
 fail=0
-check() {
-  local desc="$1"; shift
-  if "$@" >/dev/null 2>&1; then
-    echo "ok   - $desc"
-  else
-    echo "FAIL - $desc"
-    fail=1
-  fi
-}
 check_exit() {
   local desc="$1" expected="$2"; shift 2
   set +e
@@ -64,9 +56,28 @@ assert_output() {
 
 echo "--- required dependencies ---"
 check_exit "all required dependencies present" 0 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
+assert_output "all-present output reports python3" "python3: present"
 assert_output "all-present output reports youtube_transcript_api" "youtube_transcript_api: present"
 assert_output "all-present output reports defuddle" "defuddle: present"
 assert_output "missing optional firecrawl is marked optional" "firecrawl: missing (optional"
+
+echo "--- missing and broken required dependencies ---"
+check_exit "missing python3 exits 1" 1 env PATH="$EMPTY_BIN" PYTHONPATH="$PYTHON" /bin/bash "$SCRIPT"
+assert_output "missing python3 is reported" "python3: missing"
+assert_output "youtube_transcript_api is unknown without python3" "youtube_transcript_api: unknown"
+cat > "$BIN/defuddle" <<'EOF'
+#!/usr/bin/env bash
+echo "defuddle version probe failed" >&2
+exit 1
+EOF
+chmod +x "$BIN/defuddle"
+check_exit "broken defuddle exits 1" 1 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
+assert_output "broken defuddle counts as missing" "defuddle: present on PATH but 'defuddle --version' failed"
+cat > "$BIN/defuddle" <<'EOF'
+#!/usr/bin/env bash
+echo "defuddle test-version"
+EOF
+chmod +x "$BIN/defuddle"
 
 rm "$PYTHON/youtube_transcript_api.py"
 check_exit "missing youtube_transcript_api exits 1" 1 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
@@ -74,14 +85,6 @@ assert_output "missing youtube_transcript_api is reported" "youtube_transcript_a
 cat > "$PYTHON/youtube_transcript_api.py" <<'EOF'
 """Dummy module for the prerequisite import probe."""
 EOF
-rm "$BIN/defuddle"
-check_exit "missing defuddle exits 1" 1 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
-assert_output "missing defuddle is reported" "defuddle: missing"
-cat > "$BIN/defuddle" <<'EOF'
-#!/usr/bin/env bash
-echo "defuddle test-version"
-EOF
-chmod +x "$BIN/defuddle"
 
 echo "--- optional firecrawl ---"
 cat > "$BIN/firecrawl" <<'EOF'
@@ -91,6 +94,14 @@ EOF
 chmod +x "$BIN/firecrawl"
 check_exit "unauthenticated firecrawl remains optional" 0 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
 assert_output "unauthenticated firecrawl is reported" "firecrawl: present, not authenticated"
+cat > "$BIN/firecrawl" <<'EOF'
+#!/usr/bin/env bash
+echo "status endpoint failed" >&2
+exit 1
+EOF
+chmod +x "$BIN/firecrawl"
+check_exit "failed firecrawl status remains optional" 0 env PATH="$BIN:$PATH" PYTHONPATH="$PYTHON" "$SCRIPT"
+assert_output "failed firecrawl status is distinguished" "firecrawl: present on PATH but 'firecrawl --status' failed (optional)"
 cat > "$BIN/firecrawl" <<'EOF'
 #!/usr/bin/env bash
 echo "Authenticated"

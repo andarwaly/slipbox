@@ -11,11 +11,15 @@
 # exists at all: literature/term tracking is now derived on demand from
 # existing notes' own frontmatter and wikilinks, not surfaced into a queue.
 #
+# Every failure path exits nonzero and prints a single JSON object on stderr —
+# {"error": "..."} for failures, {"warning": "..."} for a skipped-but-survivable
+# input. No command ever emits a Python traceback or swallows a failure.
+#
 # Portability note: macOS ships bash 3.2 by default (GPL licensing) — this file
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.0.0"
+CLI_VERSION="2.1.0"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -23,25 +27,193 @@ LINKS_FILE="$SELF_DIR/links.jsonl"
 CONFIG="$SELF_DIR/config.json"
 
 # ---- helpers ----
-usage_err() { echo "{\"error\":\"$1\"}" >&2; exit 2; }
-runtime_err() { echo "{\"error\":\"$1\"}" >&2; exit 1; }
+# json_escape <string> — minimal JSON string-body escaping, so an error message
+# carrying a quote, a backslash, or a newline still leaves stderr parseable.
+json_escape() {
+  local s="$1"
+  s=${s//\\/\\\\}
+  s=${s//\"/\\\"}
+  s=${s//$'\n'/ }
+  s=${s//$'\t'/ }
+  s=${s//$'\r'/ }
+  printf '%s' "$s"
+}
+usage_err() { echo "{\"error\":\"$(json_escape "$1")\"}" >&2; exit 2; }
+runtime_err() { echo "{\"error\":\"$(json_escape "$1")\"}" >&2; exit 1; }
 require_config() { [ -f "$CONFIG" ] || runtime_err "config.json not found at $CONFIG — run setup-slipbox first"; }
 require_evergreen_dir() { [ -d "$EVERGREEN_DIR" ] || runtime_err "evergreen directory not found at $EVERGREEN_DIR — run setup-slipbox first"; }
+require_links_dir() { [ -d "$(dirname "$LINKS_FILE")" ] || runtime_err "slipbox directory not found at $(dirname "$LINKS_FILE") — run setup-slipbox first"; }
 
-# get_flag <name> "$@" — scans args for "--<name> <value>", echoes value, exits 1 if absent.
+# get_flag <name> "$@" — scans args for "--<name> <value>" and puts the value in
+# FLAG_VALUE (emptied first), returning 1 when the flag is absent. A value is
+# never echoed through a subshell: usage_err for a valueless flag has to be able
+# to exit the whole script, and `x=$(get_flag ...) || x=""` would swallow it.
 # Plain positional scan, not an associative array — keeps this file bash-3.2-safe.
+FLAG_VALUE=""
 get_flag() {
   local name="--$1"; shift
+  FLAG_VALUE=""
   while [ $# -gt 0 ]; do
     if [ "$1" = "$name" ]; then
       [ $# -ge 2 ] || usage_err "flag $name needs a value"
-      printf '%s' "$2"
+      FLAG_VALUE="$2"
       return 0
     fi
     shift
   done
   return 1
 }
+
+# flag <name> "$@" — get_flag with "absent" collapsed to the empty string, for
+# the callers that treat both the same. Still exits 2 on a valueless flag.
+flag() {
+  get_flag "$@" || FLAG_VALUE=""
+  printf '%s' "$FLAG_VALUE"
+}
+
+# reject_unknown_flags "<allowed names>" "$@" — an unrecognized or misspelled
+# flag is a usage error, never a silently ignored argument (`--stat discussing`
+# used to read as "no status filter at all" and quietly return every row).
+reject_unknown_flags() {
+  local allowed=" $1 "; shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --*)
+        case "$allowed" in
+          *" ${1#--} "*)
+            [ $# -ge 2 ] || usage_err "flag $1 needs a value"
+            shift 2
+            ;;
+          *) usage_err "unknown flag: $1" ;;
+        esac
+        ;;
+      *) usage_err "unexpected argument: $1" ;;
+    esac
+  done
+}
+
+# py — runs a Python body (on stdin) with the shared prelude prepended.
+py_prelude() {
+  cat <<'EOF'
+import glob, json, os, re, sys, tempfile
+from datetime import datetime, timezone
+
+USAGE_EXIT = 2
+RUNTIME_EXIT = 1
+
+
+def fail(message, code=RUNTIME_EXIT):
+    print(json.dumps({"error": message}), file=sys.stderr)
+    sys.exit(code)
+
+
+def warn(message):
+    print(json.dumps({"warning": message}), file=sys.stderr)
+
+
+def _report_unhandled(exc_type, exc, tb):
+    # Anything unforeseen still leaves the caller a JSON error and a nonzero
+    # exit rather than a traceback on stderr and a parse failure downstream.
+    fail(f"unexpected {exc_type.__name__}: {exc}")
+
+
+sys.excepthook = _report_unhandled
+
+
+def now_stamp():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def read_text(path, label):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except OSError as err:
+        fail(f"cannot read {label} at {path}: {err.strerror or err}")
+    except UnicodeDecodeError as err:
+        fail(f"{label} at {path} is not valid UTF-8: {err}")
+
+
+def load_json(path, label):
+    text = read_text(path, label)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as err:
+        fail(f"{label} at {path} is not valid JSON (line {err.lineno}, column {err.colno}): {err.msg}")
+
+
+class FrontmatterError(Exception):
+    pass
+
+
+def parse_frontmatter(text, path):
+    match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
+    if not match:
+        raise FrontmatterError(f"no YAML frontmatter block in {path}")
+    fields, order = {}, []
+    for offset, line in enumerate(match.group(1).splitlines(), start=2):
+        if not line.strip():
+            continue
+        key, sep, raw = line.partition(":")
+        key = key.strip()
+        raw = raw.strip()
+        if not sep or not key:
+            raise FrontmatterError(f"malformed frontmatter line {offset} in {path}: {line.strip()!r}")
+        order.append(key)
+        if raw == "":
+            fields[key] = None
+        elif raw.startswith('"'):
+            try:
+                fields[key] = json.loads(raw)
+            except json.JSONDecodeError:
+                raise FrontmatterError(f"unparsable quoted value for {key!r} on line {offset} in {path}")
+        elif raw.lstrip("-").isdigit():
+            fields[key] = int(raw)
+        else:
+            fields[key] = raw
+    return fields, order
+
+
+def serialize_frontmatter(fields, order):
+    lines = ["---"]
+    for key in order:
+        value = fields.get(key)
+        if value is None:
+            lines.append(f"{key}:")
+        elif isinstance(value, str):
+            lines.append(f"{key}: {json.dumps(value)}")
+        else:
+            lines.append(f"{key}: {value}")
+    lines.append("---")
+    return "\n".join(lines) + "\n"
+
+
+def atomic_write(path, text, label="file"):
+    directory = os.path.dirname(path) or "."
+    tmp_path = None
+    try:
+        fd, tmp_path = tempfile.mkstemp(
+            dir=directory, prefix=f".{os.path.basename(path)}-", suffix=".tmp"
+        )
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, path)
+        tmp_path = None
+    except OSError as err:
+        fail(f"cannot write {label} at {path}: {err.strerror or err}")
+    finally:
+        # A failed write never leaves its temp file behind for the next
+        # `evergreen find` to trip over.
+        if tmp_path is not None and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+EOF
+}
+py() { { py_prelude; cat; } | python3 -; }
 
 print_help() {
   cat <<'EOF'
@@ -59,32 +231,30 @@ Usage:
   slipbox --help | --version
 
 Output is JSON by default (--format table optional on find/get commands).
-Exit 2 on usage errors, exit 1 on runtime failures.
+Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
+{"error": "..."} object on stderr.
 EOF
 }
 
 # ---- evergreen (file-per-candidate, YAML frontmatter, no body) ----
 cmd_evergreen_add() {
   require_evergreen_dir
+  reject_unknown_flags "slug reason" "$@"
   local slug reason
-  slug=$(get_flag slug "$@") || slug=""
-  reason=$(get_flag reason "$@") || reason=""
+  slug=$(flag slug "$@")
+  reason=$(flag reason "$@")
   [ -n "$slug" ] || usage_err "evergreen add requires --slug"
   [ -n "$reason" ] || usage_err "evergreen add requires --reason"
-  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" python3 - <<'PYEOF'
-import json, os, sys, tempfile
-from datetime import datetime, timezone
-
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 slug = os.environ["SLUG"]
 reason = os.environ["REASON"]
 path = os.path.join(evergreen_dir, f"{slug}.md")
 
 if os.path.exists(path):
-    print(json.dumps({"error": f"evergreen slug already exists: {slug}"}), file=sys.stderr)
-    sys.exit(1)
+    fail(f"evergreen slug already exists: {slug}")
 
-now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+now = now_stamp()
 order = ["status", "reason", "discussion_path", "note_path", "iteration", "created_at", "updated_at"]
 fields = {
     "status": "to-discuss",
@@ -96,23 +266,7 @@ fields = {
     "updated_at": now,
 }
 
-def serialize(fields, order):
-    lines = ["---"]
-    for key in order:
-        value = fields[key]
-        if value is None:
-            lines.append(f"{key}:")
-        elif isinstance(value, str):
-            lines.append(f"{key}: {json.dumps(value)}")
-        else:
-            lines.append(f"{key}: {value}")
-    lines.append("---")
-    return "\n".join(lines) + "\n"
-
-fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{slug}-", suffix=".md.tmp")
-with os.fdopen(fd, "w") as f:
-    f.write(serialize(fields, order))
-os.replace(tmp_path, path)
+atomic_write(path, serialize_frontmatter(fields, order), "evergreen candidate")
 
 print(json.dumps({"slug": slug, **fields}, indent=2))
 PYEOF
@@ -120,42 +274,25 @@ PYEOF
 
 cmd_evergreen_find() {
   require_evergreen_dir
+  reject_unknown_flags "status format" "$@"
   local status format
-  status=$(get_flag status "$@") || status=""
-  format=$(get_flag format "$@") || format="json"
-  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" python3 - <<'PYEOF'
-import glob, json, os, re
-
+  status=$(flag status "$@")
+  format=$(flag format "$@")
+  [ -n "$format" ] || format="json"
+  case "$format" in json|table) ;; *) usage_err "--format must be one of json, table" ;; esac
+  EVERGREEN_DIR="$EVERGREEN_DIR" STATUS_FILTER="$status" FORMAT="$format" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 status_filter = os.environ.get("STATUS_FILTER", "")
 fmt = os.environ.get("FORMAT", "json")
 
-def parse_frontmatter(text):
-    match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
-    if not match:
-        return None, []
-    fields, order = {}, []
-    for line in match.group(1).splitlines():
-        if ":" not in line:
-            continue
-        key, _, raw = line.partition(":")
-        key = key.strip()
-        raw = raw.strip()
-        order.append(key)
-        if raw == "":
-            fields[key] = None
-        elif raw.startswith('"'):
-            fields[key] = json.loads(raw)
-        elif raw.lstrip("-").isdigit():
-            fields[key] = int(raw)
-        else:
-            fields[key] = raw
-    return fields, order
-
 rows = []
 for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
-    fields, _ = parse_frontmatter(open(path).read())
-    if fields is None:
+    try:
+        fields, _ = parse_frontmatter(read_text(path, "evergreen candidate"), path)
+    except FrontmatterError as err:
+        # Survivable: the rest of the result set is still valid, so report the
+        # skipped file on stderr instead of dropping it without a word.
+        warn(f"skipped unparsable evergreen candidate: {err}")
         continue
     slug = os.path.splitext(os.path.basename(path))[0]
     row = {"slug": slug, **fields}
@@ -182,20 +319,21 @@ cmd_evergreen_update() {
   require_evergreen_dir
   [ $# -ge 1 ] || usage_err "evergreen update requires <slug>"
   local slug="$1"; shift
+  reject_unknown_flags "status note-path iteration slug" "$@"
   local status note_path iteration new_slug
-  status=$(get_flag status "$@") || status=""
-  note_path=$(get_flag note-path "$@") || note_path=""
-  iteration=$(get_flag iteration "$@") || iteration=""
-  new_slug=$(get_flag slug "$@") || new_slug=""
+  status=$(flag status "$@")
+  note_path=$(flag note-path "$@")
+  iteration=$(flag iteration "$@")
+  new_slug=$(flag slug "$@")
   if [ -z "$status" ] && [ -z "$note_path" ] && [ -z "$iteration" ] && [ -z "$new_slug" ]; then
     usage_err "evergreen update requires at least one of --status, --note-path, --slug, --iteration"
   fi
+  case "$iteration" in
+    ''|*[!0-9]*) [ -z "$iteration" ] || usage_err "--iteration must be a non-negative integer, got: $iteration" ;;
+  esac
   local path="$EVERGREEN_DIR/$slug.md"
   [ -f "$path" ] || runtime_err "evergreen slug not found: $slug"
-  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" NEW_SLUG="$new_slug" STATUS="$status" NOTE_PATH="$note_path" ITERATION="$iteration" python3 - <<'PYEOF'
-import json, os, re, sys, tempfile
-from datetime import datetime, timezone
-
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" NEW_SLUG="$new_slug" STATUS="$status" NOTE_PATH="$note_path" ITERATION="$iteration" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 slug = os.environ["SLUG"]
 new_slug = os.environ.get("NEW_SLUG", "")
@@ -204,22 +342,10 @@ note_path = os.environ.get("NOTE_PATH", "")
 iteration = os.environ.get("ITERATION", "")
 
 path = os.path.join(evergreen_dir, f"{slug}.md")
-text = open(path).read()
-match = re.match(r"^---\n(.*?)\n---\n?", text, re.DOTALL)
-fields, order = {}, []
-for line in match.group(1).splitlines():
-    key, _, raw = line.partition(":")
-    key = key.strip()
-    raw = raw.strip()
-    order.append(key)
-    if raw == "":
-        fields[key] = None
-    elif raw.startswith('"'):
-        fields[key] = json.loads(raw)
-    elif raw.lstrip("-").isdigit():
-        fields[key] = int(raw)
-    else:
-        fields[key] = raw
+try:
+    fields, order = parse_frontmatter(read_text(path, "evergreen candidate"), path)
+except FrontmatterError as err:
+    fail(f"cannot update evergreen candidate: {err}")
 
 if status:
     fields["status"] = status
@@ -227,33 +353,26 @@ if note_path:
     fields["note_path"] = note_path
 if iteration:
     fields["iteration"] = int(iteration)
-fields["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-def serialize(fields, order):
-    lines = ["---"]
-    for key in order:
-        value = fields[key]
-        if value is None:
-            lines.append(f"{key}:")
-        elif isinstance(value, str):
-            lines.append(f"{key}: {json.dumps(value)}")
-        else:
-            lines.append(f"{key}: {value}")
-    lines.append("---")
-    return "\n".join(lines) + "\n"
+fields["updated_at"] = now_stamp()
+if "updated_at" not in order:
+    order.append("updated_at")
 
 final_slug = new_slug or slug
 final_path = os.path.join(evergreen_dir, f"{final_slug}.md")
-if new_slug and os.path.exists(final_path):
-    print(json.dumps({"error": f"evergreen slug already exists: {new_slug}"}), file=sys.stderr)
-    sys.exit(1)
+if new_slug and new_slug != slug and os.path.exists(final_path):
+    fail(f"evergreen slug already exists: {new_slug}")
 
-fd, tmp_path = tempfile.mkstemp(dir=evergreen_dir, prefix=f".{final_slug}-", suffix=".md.tmp")
-with os.fdopen(fd, "w") as f:
-    f.write(serialize(fields, order))
-os.replace(tmp_path, final_path)
+atomic_write(final_path, serialize_frontmatter(fields, order), "evergreen candidate")
 if new_slug and new_slug != slug:
-    os.remove(path)
+    try:
+        os.remove(path)
+    except OSError as err:
+        # The rename half-landed: the new file is on disk, the old one isn't
+        # gone. Say so rather than reporting a clean rename.
+        fail(
+            f"wrote {final_path} but could not remove the old {path}: "
+            f"{err.strerror or err} — both slugs now exist"
+        )
 
 print(json.dumps({"slug": final_slug, **fields}, indent=2))
 PYEOF
@@ -261,40 +380,46 @@ PYEOF
 
 # ---- links (append-only JSONL log; edges have no natural filename) ----
 cmd_links_add() {
+  require_links_dir
+  reject_unknown_flags "source target rel" "$@"
   local source target rel
-  source=$(get_flag source "$@") || source=""
-  target=$(get_flag target "$@") || target=""
-  rel=$(get_flag rel "$@") || rel=""
+  source=$(flag source "$@")
+  target=$(flag target "$@")
+  rel=$(flag rel "$@")
   [ -n "$source" ] || usage_err "links add requires --source"
   [ -n "$target" ] || usage_err "links add requires --target"
   [ -n "$rel" ] || usage_err "links add requires --rel"
   case "$rel" in cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
-  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" python3 - <<'PYEOF'
-import json, os
-from datetime import datetime, timezone
-
+  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 row = {
     "source_id": os.environ["SOURCE"],
     "target_id": os.environ["TARGET"],
     "rel_type": os.environ["REL"],
-    "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "created_at": now_stamp(),
 }
-with open(links_file, "a") as f:
-    f.write(json.dumps(row) + "\n")
+try:
+    with open(links_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+except OSError as err:
+    fail(f"cannot append to links log at {links_file}: {err.strerror or err}")
 print(json.dumps({"status": "ok", **row}))
 PYEOF
 }
 
 cmd_links_find() {
+  reject_unknown_flags "source target rel format" "$@"
   local source target rel format
-  source=$(get_flag source "$@") || source=""
-  target=$(get_flag target "$@") || target=""
-  rel=$(get_flag rel "$@") || rel=""
-  format=$(get_flag format "$@") || format="json"
-  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" python3 - <<'PYEOF'
-import json, os
-
+  source=$(flag source "$@")
+  target=$(flag target "$@")
+  rel=$(flag rel "$@")
+  format=$(flag format "$@")
+  [ -n "$format" ] || format="json"
+  case "$format" in json|table) ;; *) usage_err "--format must be one of json, table" ;; esac
+  case "$rel" in ''|cites|extends) ;; *) usage_err "--rel must be one of cites, extends" ;; esac
+  LINKS_FILE="$LINKS_FILE" SOURCE_FILTER="$source" TARGET_FILTER="$target" REL_FILTER="$rel" FORMAT="$format" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 source_filter = os.environ.get("SOURCE_FILTER", "")
 target_filter = os.environ.get("TARGET_FILTER", "")
@@ -303,19 +428,26 @@ fmt = os.environ.get("FORMAT", "json")
 
 rows = []
 if os.path.exists(links_file):
-    with open(links_file) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
+    for lineno, line in enumerate(read_text(links_file, "links log").splitlines(), start=1):
+        line = line.strip()
+        if not line:
+            continue
+        try:
             row = json.loads(line)
-            if source_filter and row.get("source_id") != source_filter:
-                continue
-            if target_filter and row.get("target_id") != target_filter:
-                continue
-            if rel_filter and row.get("rel_type") != rel_filter:
-                continue
-            rows.append(row)
+        except json.JSONDecodeError as err:
+            # A corrupt log means the result set is incomplete in a way the
+            # caller can't detect from the output — fail instead of filtering
+            # the bad line out and returning a plausible-looking subset.
+            fail(f"links log at {links_file} has invalid JSON on line {lineno}: {err.msg}")
+        if not isinstance(row, dict):
+            fail(f"links log at {links_file} line {lineno} is not a JSON object")
+        if source_filter and row.get("source_id") != source_filter:
+            continue
+        if target_filter and row.get("target_id") != target_filter:
+            continue
+        if rel_filter and row.get("rel_type") != rel_filter:
+            continue
+        rows.append(row)
 
 if fmt == "table":
     if not rows:
@@ -334,17 +466,16 @@ PYEOF
 cmd_config_get() {
   require_config
   local path="${1:-}"
-  CONFIG_PATH="$CONFIG" DOTTED="$path" python3 - <<'PYEOF'
-import json, os, sys
-with open(os.environ["CONFIG_PATH"]) as f:
-    data = json.load(f)
+  case "$path" in --*) usage_err "unknown flag: $path" ;; esac
+  [ $# -le 1 ] || usage_err "config get takes at most one <dotted.path>"
+  CONFIG_PATH="$CONFIG" DOTTED="$path" py <<'PYEOF'
+data = load_json(os.environ["CONFIG_PATH"], "config.json")
 dotted = os.environ.get("DOTTED", "")
 node = data
 if dotted:
     for part in dotted.split("."):
         if not isinstance(node, dict) or part not in node:
-            print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-            sys.exit(2)
+            fail(f"unknown path: {dotted}", USAGE_EXIT)
         node = node[part]
 print(json.dumps(node, indent=2))
 PYEOF
@@ -353,16 +484,14 @@ PYEOF
 cmd_config_set() {
   require_config
   [ $# -ge 2 ] || usage_err "config set requires <dotted.path> <value>"
+  [ $# -le 2 ] || usage_err "config set takes exactly <dotted.path> <value>"
   local dotted="$1" value="$2"
-  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" python3 - <<'PYEOF'
-import json, os, sys
-
+  CONFIG_PATH="$CONFIG" DOTTED="$dotted" VALUE="$value" py <<'PYEOF'
 config_path = os.environ["CONFIG_PATH"]
 dotted = os.environ["DOTTED"]
 raw = os.environ["VALUE"]
 
-with open(config_path) as f:
-    data = json.load(f)
+data = load_json(config_path, "config.json")
 
 try:
     value = json.loads(raw)
@@ -373,18 +502,16 @@ parts = dotted.split(".")
 node = data
 for part in parts[:-1]:
     if not isinstance(node, dict) or part not in node:
-        print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-        sys.exit(2)
+        fail(f"unknown path: {dotted}", USAGE_EXIT)
     node = node[part]
 leaf = parts[-1]
 if not isinstance(node, dict) or leaf not in node:
-    print(json.dumps({"error": f"unknown path: {dotted}"}), file=sys.stderr)
-    sys.exit(2)
+    fail(f"unknown path: {dotted}", USAGE_EXIT)
 node[leaf] = value
 
-with open(config_path, "w") as f:
-    json.dump(data, f, indent=2)
-    f.write("\n")
+# Temp file plus rename, same as evergreen: a failed write can't truncate a
+# working config.json into an unparsable one.
+atomic_write(config_path, json.dumps(data, indent=2) + "\n", "config.json")
 
 print(json.dumps({"status": "ok", "path": dotted, "value": value}))
 PYEOF
@@ -413,17 +540,17 @@ cmd_humanize_check() {
   local style="$SELF_DIR/style-profile.json"
   [ -f "$style" ] || runtime_err "style-profile.json not found — run setup-slipbox first"
 
-  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" python3 - <<'PYEOF'
-import json, os, re
+  FILE_PATH="$file" CHECKLIST_PATH="$checklist" STYLE_PATH="$style" PASSAGE_LANGUAGE="$passage_language" py <<'PYEOF'
+text = read_text(os.environ["FILE_PATH"], "checked file")
+checklist = load_json(os.environ["CHECKLIST_PATH"], "humanize-checklist.json")
+style = load_json(os.environ["STYLE_PATH"], "style-profile.json")
 
-with open(os.environ["FILE_PATH"]) as f:
-    text = f.read()
-with open(os.environ["CHECKLIST_PATH"]) as f:
-    checklist = json.load(f)
-with open(os.environ["STYLE_PATH"]) as f:
-    style = json.load(f)
+if not isinstance(checklist, dict) or not isinstance(style, dict):
+    fail("humanize-checklist.json and style-profile.json must each hold a JSON object")
 
 language = style.get("language", {})
+if not isinstance(language, dict):
+    fail("style-profile.json: language must be an object")
 allowed_langs = {
     str(language.get("primary", "")),
     str(language.get("secondary", "")),
@@ -433,9 +560,11 @@ allowed_langs = {value.lower() for value in allowed_langs if value}
 passage_language = os.environ.get("PASSAGE_LANGUAGE", "").lower()
 english_ok = bool({"en", "english"} & ({passage_language} if passage_language else allowed_langs))
 
+
 def language_allowed(signal):
     scope = signal.get("language", "universal")
     return scope == "universal" or (scope == "en" and english_ok)
+
 
 def title_case_headings(value):
     matches = []
@@ -449,39 +578,62 @@ def title_case_headings(value):
             matches.append(line.strip())
     return matches
 
+
+def findall(pattern, signal_id, flags=re.IGNORECASE):
+    try:
+        return re.findall(pattern, text, flags)
+    except re.error as err:
+        # A checklist regex that won't compile is a broken checklist, not a
+        # passage that happens to contain no matches.
+        fail(f"signal {signal_id!r} has an invalid regex {pattern!r}: {err}")
+
+
 def signal_matches(signal):
+    """Returns matches, or None when the signal's type isn't supported here."""
     stype = signal.get("type")
+    signal_id = signal.get("id")
     if stype == "title_case_heading":
         return title_case_headings(text)
     if stype == "word_list":
         matches = []
         for word in signal.get("words", []):
-            matches.extend(re.findall(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE))
+            matches.extend(findall(r"\b" + re.escape(word) + r"\b", signal_id))
         return matches
     if stype == "phrase_list":
         matches = []
         for phrase in signal.get("phrases", []):
-            matches.extend(re.findall(re.escape(phrase), text, re.IGNORECASE))
+            matches.extend(findall(re.escape(phrase), signal_id))
         return matches
     if stype == "announcement_opener":
         matches = []
         for phrase in signal.get("phrases", []):
-            pattern = r"(?im)(?:^|[.!?]\s+)\s*" + re.escape(phrase)
-            matches.extend(re.findall(pattern, text))
+            matches.extend(findall(r"(?im)(?:^|[.!?]\s+)\s*" + re.escape(phrase), signal_id))
         return matches
     if stype == "regex":
-        return [match if isinstance(match, str) else " ".join(match) for match in re.findall(signal.get("pattern", ""), text, re.IGNORECASE)]
-    return []
+        pattern = signal.get("pattern", "")
+        if not pattern:
+            fail(f"signal {signal_id!r} is type regex but declares no pattern")
+        return [match if isinstance(match, str) else " ".join(match) for match in findall(pattern, signal_id)]
+    return None
+
 
 signals_present = []
 signals_passed = []
 signal_results = []
 
 for signal in checklist.get("detection", {}).get("mechanical", {}).get("signals", []):
+    if not isinstance(signal, dict) or "id" not in signal:
+        fail(f"humanize-checklist.json has a mechanical signal without an id: {signal!r}")
     if not language_allowed(signal):
         signal_results.append({"id": signal["id"], "skipped": "language_scope"})
         continue
     matches = signal_matches(signal)
+    if matches is None:
+        # Forward-compatibility: an unrecognized signal type is reported as
+        # skipped and warned about, never counted as "no hits".
+        warn(f"signal {signal['id']!r} has unsupported type {signal.get('type')!r} — not evaluated")
+        signal_results.append({"id": signal["id"], "skipped": "unsupported_type"})
+        continue
     present = bool(matches)
     threshold = 1 if signal.get("flag") == "single" else int(signal.get("min_hits", 1))
     passed = present and (signal.get("flag") == "single" or len(matches) >= threshold)
