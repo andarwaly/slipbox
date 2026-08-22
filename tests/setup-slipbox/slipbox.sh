@@ -13,6 +13,7 @@ mkdir -p "$SCRATCH/bin" "$SCRATCH/evergreen"
 cp "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox" "$SCRATCH/bin/slipbox"
 chmod +x "$SCRATCH/bin/slipbox"
 SLIPBOX="$SCRATCH/bin/slipbox"
+CLI_VERSION=$(grep -m1 '^CLI_VERSION=' "$SLIPBOX" | cut -d'"' -f2)
 
 fail=0
 pass() { echo "ok   - $1"; }
@@ -65,6 +66,43 @@ stderr_of() { "$@" 2>&1 >/dev/null || true; }
 json_len() { python3 -c "import json,sys; print(len(json.load(sys.stdin)))"; }
 json_at() { python3 -c "import json,sys; print(json.load(sys.stdin)$1)"; }
 
+assert_contains() {
+  local desc="$1" needle="$2" file="$3"
+  if grep -Fq "$needle" "$file"; then pass "$desc"; else failed "$desc (missing: $needle)"; fi
+}
+# check_json <desc> <python body> -- asserts against the JSON on stdin, bound as `data`.
+check_json() {
+  if python3 -c "import json, sys
+data = json.load(sys.stdin)
+$2"; then pass "$1"; else failed "$1"; fi
+}
+# check_json_file <desc> <python body> <path> -- same, against a file's JSON.
+check_json_file() {
+  if python3 -c "import json, sys
+data = json.load(open(sys.argv[1]))
+$2" "$3"; then pass "$1"; else failed "$1"; fi
+}
+# check_table <subject> <header glob> <expected data rows> <output>
+check_table() {
+  check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
+  check_eq "$1 table output has one line per row" "$3" "$(printf '%s\n' "$4" | tail -n +2 | grep -c .)"
+}
+assert_humanize_signal() {
+  local desc="$1" file="$2" expected_id="$3"
+  if EXPECTED_ID="$expected_id" python3 - "$file" <<'PY'
+import json
+import os
+import sys
+
+with open(sys.argv[1]) as handle:
+    result = json.load(handle)
+expected = os.environ["EXPECTED_ID"]
+assert result["flagged"] is True
+assert expected in result["signals_passed"]
+PY
+  then pass "$desc"; else failed "$desc"; fi
+}
+
 echo "--- no init/migrate/seeds commands exist ---"
 check_exit "seeds is not a recognized command" 2 "$SLIPBOX" seeds find
 check_exit "init is not a recognized command" 2 "$SLIPBOX" init
@@ -83,6 +121,16 @@ check_file "renamed file exists" "$SCRATCH/evergreen/final-test-1.md"
 check_no_file "old-slug file removed on rename" "$SCRATCH/evergreen/draft-test-1.md"
 check_exit "evergreen update on unknown slug fails" 1 "$SLIPBOX" evergreen update "does-not-exist" --status discussed
 check_exit "evergreen update with no flags is a usage error" 2 "$SLIPBOX" evergreen update "final-test-1"
+
+echo "--- slug validation confines writes to evergreen/ ---"
+check_exit "evergreen add rejects a traversal slug" 2 "$SLIPBOX" evergreen add --slug "../../etc/pwned" --reason "x"
+check_exit "evergreen add rejects an absolute-path slug" 2 "$SLIPBOX" evergreen add --slug "/etc/pwned" --reason "x"
+check_exit "evergreen add rejects a dot-segment slug" 2 "$SLIPBOX" evergreen add --slug "foo..bar" --reason "x"
+check_exit "evergreen update rejects a traversal --slug" 2 "$SLIPBOX" evergreen update "final-test-1" --slug "../pwned"
+check_exit "evergreen update rejects a non-numeric --iteration" 2 "$SLIPBOX" evergreen update "final-test-1" --iteration abc
+find "$SCRATCH" -mindepth 1 -maxdepth 1 ! -name bin ! -name evergreen ! -name config.json ! -name style-profile.json ! -name humanize-checklist.json | grep -q . \
+  && failed "unexpected file written outside evergreen/" \
+  || pass "no file written outside evergreen/"
 
 echo "--- evergreen atomic write leaves no stray temp files ---"
 check_no_tmp_files "no leftover .tmp files after writes" "$SCRATCH/evergreen"
@@ -104,6 +152,111 @@ printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"
 check "config get" "$SLIPBOX" config get paths.literature
 check "config set" "$SLIPBOX" config set paths.literature "Literature"
 check_eq "config set persisted" Literature "$("$SLIPBOX" config get paths.literature | json_at "")"
+
+echo "--- dispatch and flag usage ---"
+check_exit "--help exits 0" 0 "$SLIPBOX" --help
+assert_contains "--help prints the usage block" "Usage:" /tmp/slipbox-test-out
+check_exit "-h exits 0" 0 "$SLIPBOX" -h
+assert_contains "-h prints the usage block" "slipbox — CLI" /tmp/slipbox-test-out
+check_exit "--version exits 0" 0 "$SLIPBOX" --version
+assert_contains "--version prints the CLI version" "slipbox $CLI_VERSION" /tmp/slipbox-test-out
+check_exit "-v exits 0" 0 "$SLIPBOX" -v
+assert_contains "-v prints the CLI version" "slipbox $CLI_VERSION" /tmp/slipbox-test-out
+check_exit "no arguments prints help and exits 2" 2 "$SLIPBOX"
+assert_contains "no arguments prints the usage block" "Usage:" /tmp/slipbox-test-out
+for group in evergreen links config humanize; do
+  check_exit "$group with no action exits 2" 2 "$SLIPBOX" "$group"
+  check_exit "$group with a bogus action exits 2" 2 "$SLIPBOX" "$group" bogus
+done
+check_exit "a final flag without a value exits 2" 2 "$SLIPBOX" evergreen find --status
+
+echo "--- evergreen edge cases ---"
+check_exit "evergreen add missing --slug exits 2" 2 "$SLIPBOX" evergreen add --reason reason
+mv "$SCRATCH/evergreen" "$SCRATCH/evergreen.saved"
+check_exit "evergreen add without its data directory exits 1" 1 "$SLIPBOX" evergreen add --slug no-dir --reason reason
+check_exit "evergreen find without its data directory exits 1" 1 "$SLIPBOX" evergreen find
+check_exit "evergreen update without its data directory exits 1" 1 "$SLIPBOX" evergreen update no-dir --status discussing
+mv "$SCRATCH/evergreen.saved" "$SCRATCH/evergreen"
+
+check_exit "evergreen find with no matching status returns 0" 0 "$SLIPBOX" evergreen find --status no-such-status
+check_json_file "unmatched evergreen status returns an empty JSON array" "assert data == []" /tmp/slipbox-test-out
+check_table evergreen $'slug\t*' 1 "$("$SLIPBOX" evergreen find --format table)"
+check_eq "evergreen table output marks an empty result" "(no rows)" "$("$SLIPBOX" evergreen find --status no-such-status --format table)"
+printf 'this file has no frontmatter\n' > "$SCRATCH/evergreen/no-frontmatter.md"
+"$SLIPBOX" evergreen find | check_json "evergreen find skips a file with no frontmatter" "assert len(data) >= 1"
+cat > "$SCRATCH/evergreen/typed-values.md" <<'EOF'
+---
+status: plain-status
+plain_string: plain
+integer_value: 42
+empty_value:
+created_at: "2099-01-03T00:00:00Z"
+---
+EOF
+"$SLIPBOX" evergreen find | check_json "evergreen frontmatter parses plain strings, integers, and empty values" '
+row = next(row for row in data if row["slug"] == "typed-values")
+assert row["plain_string"] == "plain" and isinstance(row["plain_string"], str)
+assert row["integer_value"] == 42 and isinstance(row["integer_value"], int)
+assert row["empty_value"] is None
+'
+cat > "$SCRATCH/evergreen/older.md" <<'EOF'
+---
+status: to-discuss
+created_at: "2020-01-01T00:00:00Z"
+---
+EOF
+cat > "$SCRATCH/evergreen/newer.md" <<'EOF'
+---
+status: to-discuss
+created_at: "2099-01-02T00:00:00Z"
+---
+EOF
+"$SLIPBOX" evergreen find | check_json "evergreen rows sort by created_at descending" '
+positions = {row["slug"]: index for index, row in enumerate(data)}
+assert positions["newer"] < positions["older"]
+'
+check "evergreen update persists --note-path" "$SLIPBOX" evergreen update final-test-1 --note-path notes/final.md
+assert_contains "evergreen update persisted note_path" 'note_path: "notes/final.md"' "$SCRATCH/evergreen/final-test-1.md"
+check "add collision candidate" "$SLIPBOX" evergreen add --slug collision-target --reason collision
+cp "$SCRATCH/evergreen/final-test-1.md" "$SCRATCH/final-before-collision.md"
+cp "$SCRATCH/evergreen/collision-target.md" "$SCRATCH/collision-before-collision.md"
+check_exit "evergreen update rejects a colliding rename" 1 "$SLIPBOX" evergreen update final-test-1 --slug collision-target
+if cmp -s "$SCRATCH/evergreen/final-test-1.md" "$SCRATCH/final-before-collision.md" &&
+  cmp -s "$SCRATCH/evergreen/collision-target.md" "$SCRATCH/collision-before-collision.md"; then
+  pass "colliding rename leaves both original files untouched"
+else
+  failed "colliding rename changed an original file"
+fi
+
+echo "--- links edge cases ---"
+"$SLIPBOX" links find --target some-term | check_json "links find filters by --target" "assert len(data) == 2"
+"$SLIPBOX" links find --rel extends | check_json "links find filters by --rel" 'assert len(data) == 1 and data[0]["source_id"] == "other-slug"'
+"$SLIPBOX" links find --source final-test-1 --rel cites | check_json "links find combines source and relation filters" "assert len(data) == 1"
+cp "$SCRATCH/links.jsonl" "$SCRATCH/links.jsonl.before-blank-line"
+printf '\n' >> "$SCRATCH/links.jsonl"
+"$SLIPBOX" links find | check_json "links find skips a blank JSONL line" "assert len(data) == 2"
+mv "$SCRATCH/links.jsonl.before-blank-line" "$SCRATCH/links.jsonl"
+check_table links $'source_id\ttarget_id*' 2 "$("$SLIPBOX" links find --format table)"
+check_eq "links table output marks an empty result" "(no rows)" "$("$SLIPBOX" links find --target no-such-target --format table)"
+mv "$SCRATCH/links.jsonl" "$SCRATCH/links.saved"
+"$SLIPBOX" links find | check_json "links find without links.jsonl returns an empty array" "assert data == []"
+mv "$SCRATCH/links.saved" "$SCRATCH/links.jsonl"
+
+echo "--- config edge cases ---"
+printf '{"paths":{"literature":"literature"},"settings":{"number":0,"enabled":false}}' > "$SCRATCH/config.json"
+"$SLIPBOX" config get | check_json "config get without a path prints the whole document" 'assert data["paths"]["literature"] == "literature"'
+check_exit "config get unknown path exits 2" 2 "$SLIPBOX" config get paths.unknown
+check_exit "config get through a non-dict exits 2" 2 "$SLIPBOX" config get paths.literature.missing
+check_exit "config set unknown intermediate path exits 2" 2 "$SLIPBOX" config set missing.leaf value
+check_exit "config set unknown leaf exits 2" 2 "$SLIPBOX" config set paths.unknown value
+check "config set stores a JSON number" "$SLIPBOX" config set settings.number 42
+check "config set stores a JSON boolean" "$SLIPBOX" config set settings.enabled true
+check "config set stores a bare word as a string" "$SLIPBOX" config set paths.literature Literature
+check_json_file "config set preserves JSON types and bare words as strings" '
+assert data["settings"]["number"] == 42 and isinstance(data["settings"]["number"], int)
+assert data["settings"]["enabled"] is True
+assert data["paths"]["literature"] == "Literature" and isinstance(data["paths"]["literature"], str)
+' "$SCRATCH/config.json"
 
 echo "--- error handling: usage errors are never swallowed ---"
 check_exit "a flag given without a value exits 2" 2 "$SLIPBOX" evergreen update "final-test-1" --status
@@ -144,6 +297,115 @@ EOF
 printf '# Strategic Negotiations And Partnerships\n# Another Important Heading\n' > "$SCRATCH/two-title-case.md"
 check_eq "two title-case headings pass the cluster threshold" True \
   "$("$SLIPBOX" humanize check "$SCRATCH/two-title-case.md" | json_at '["flagged"]')"
+
+echo "--- humanize edge cases ---"
+printf 'plain prose with no mechanical signals.\n' > "$SCRATCH/clean.md"
+if "$SLIPBOX" humanize check "$SCRATCH/clean.md" > "$SCRATCH/clean-result.json" &&
+  python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["flagged"] is False' "$SCRATCH/clean-result.json"; then
+  echo "ok   - clean prose is not flagged"
+else
+  echo "FAIL - clean prose was flagged"
+  fail=1
+fi
+check_exit "humanize check on a nonexistent file exits 1" 1 "$SLIPBOX" humanize check "$SCRATCH/missing.md"
+mv "$SCRATCH/config.json" "$SCRATCH/config.saved"
+check_exit "humanize check without config.json exits 1" 1 "$SLIPBOX" humanize check "$SCRATCH/clean.md"
+mv "$SCRATCH/config.saved" "$SCRATCH/config.json"
+mv "$SCRATCH/humanize-checklist.json" "$SCRATCH/humanize-checklist.saved"
+check_exit "humanize check without humanize-checklist.json exits 1" 1 "$SLIPBOX" humanize check "$SCRATCH/clean.md"
+mv "$SCRATCH/humanize-checklist.saved" "$SCRATCH/humanize-checklist.json"
+mv "$SCRATCH/style-profile.json" "$SCRATCH/style-profile.saved"
+check_exit "humanize check without style-profile.json exits 1" 1 "$SLIPBOX" humanize check "$SCRATCH/clean.md"
+mv "$SCRATCH/style-profile.saved" "$SCRATCH/style-profile.json"
+check_exit "humanize check rejects an extra argument" 2 "$SLIPBOX" humanize check "$SCRATCH/clean.md" extra
+check_exit "humanize check rejects --language without a value" 2 "$SLIPBOX" humanize check "$SCRATCH/clean.md" --language
+cat > "$SCRATCH/french.md" <<'EOF'
+Let's dive in.
+EOF
+if "$SLIPBOX" humanize check "$SCRATCH/french.md" --language French > "$SCRATCH/french-result.json" &&
+  python3 - "$SCRATCH/french-result.json" <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as handle:
+    result = json.load(handle)
+assert any(signal.get("skipped") == "language_scope" for signal in result["signals"])
+PY
+then
+  echo "ok   - out-of-profile language skips en-scoped signals"
+else
+  echo "FAIL - out-of-profile language did not skip en-scoped signals"
+  fail=1
+fi
+printf '# One\n' > "$SCRATCH/one-heading.md"
+if "$SLIPBOX" humanize check "$SCRATCH/one-heading.md" > "$SCRATCH/one-heading-result.json" &&
+  python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["flagged"] is False' "$SCRATCH/one-heading-result.json"; then
+  echo "ok   - a single-significant-word title-case heading is not flagged"
+else
+  echo "FAIL - a single-significant-word title-case heading was flagged"
+  fail=1
+fi
+
+CHECKLIST="$REPO_ROOT/skills/setup-slipbox/assets/humanize-checklist.json"
+read_signal_value() {
+  local signal_id="$1" expected_type="$2" field="$3"
+  python3 - "$CHECKLIST" "$signal_id" "$expected_type" "$field" <<'PY'
+import json
+import sys
+
+checklist_path, expected_id, expected_type, field = sys.argv[1:]
+with open(checklist_path) as handle:
+    signals = json.load(handle)["detection"]["mechanical"]["signals"]
+matches = [signal for signal in signals if signal.get("id") == expected_id]
+if not matches:
+    raise SystemExit(
+        f"FAIL - checklist is missing expected signal id {expected_id!r}"
+    )
+signal = matches[0]
+if signal.get("type") != expected_type:
+    raise SystemExit(
+        f"FAIL - checklist signal {expected_id!r} has type "
+        f"{signal.get('type')!r}, expected {expected_type!r}"
+    )
+value = signal.get(field)
+if not value:
+    raise SystemExit(
+        f"FAIL - checklist signal {expected_id!r} has no usable {field}"
+    )
+if isinstance(value, list):
+    print(value[0])
+else:
+    print(value)
+PY
+}
+
+WORD_ID="ai_vocabulary"
+WORD=$(read_signal_value "$WORD_ID" word_list words)
+printf '%s %s\n' "$WORD" "$WORD" > "$SCRATCH/word-list.md"
+"$SLIPBOX" humanize check "$SCRATCH/word-list.md" > "$SCRATCH/word-list-result.json"
+assert_humanize_signal "word_list signal is detected from the checklist" "$SCRATCH/word-list-result.json" "$WORD_ID"
+
+PHRASE_ID="filler_phrases"
+PHRASE=$(read_signal_value "$PHRASE_ID" phrase_list phrases)
+printf '%s.\n' "$PHRASE" > "$SCRATCH/phrase-list.md"
+"$SLIPBOX" humanize check "$SCRATCH/phrase-list.md" > "$SCRATCH/phrase-list-result.json"
+assert_humanize_signal "phrase_list signal is detected from the checklist" "$SCRATCH/phrase-list-result.json" "$PHRASE_ID"
+
+ANNOUNCEMENT_ID="signposting_announcements"
+ANNOUNCEMENT=$(read_signal_value "$ANNOUNCEMENT_ID" announcement_opener phrases)
+printf '%s.\n' "$ANNOUNCEMENT" > "$SCRATCH/announcement-opener.md"
+"$SLIPBOX" humanize check "$SCRATCH/announcement-opener.md" > "$SCRATCH/announcement-opener-result.json"
+assert_humanize_signal "announcement_opener signal is detected from the checklist" "$SCRATCH/announcement-opener-result.json" "$ANNOUNCEMENT_ID"
+
+REGEX_ID="em_dash"
+REGEX_PATTERN=$(read_signal_value "$REGEX_ID" regex pattern)
+if [ "$REGEX_PATTERN" != "—|–|--" ]; then
+  echo "FAIL - checklist signal $REGEX_ID pattern changed: $REGEX_PATTERN"
+  fail=1
+else
+  printf '%s\n' '— —' > "$SCRATCH/regex.md"
+fi
+"$SLIPBOX" humanize check "$SCRATCH/regex.md" > "$SCRATCH/regex-result.json"
+assert_humanize_signal "regex signal is detected from the checklist pattern" "$SCRATCH/regex-result.json" "$REGEX_ID"
 
 echo "--- error handling: corrupt JSON inputs ---"
 printf '{"paths":{"literature":"Literature"' > "$SCRATCH/config.json"

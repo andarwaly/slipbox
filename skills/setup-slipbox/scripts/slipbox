@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.1.0"
+CLI_VERSION="2.1.1"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -43,6 +43,22 @@ runtime_err() { echo "{\"error\":\"$(json_escape "$1")\"}" >&2; exit 1; }
 require_config() { [ -f "$CONFIG" ] || runtime_err "config.json not found at $CONFIG — run setup-slipbox first"; }
 require_evergreen_dir() { [ -d "$EVERGREEN_DIR" ] || runtime_err "evergreen directory not found at $EVERGREEN_DIR — run setup-slipbox first"; }
 require_links_dir() { [ -d "$(dirname "$LINKS_FILE")" ] || runtime_err "slipbox directory not found at $(dirname "$LINKS_FILE") — run setup-slipbox first"; }
+
+# validate_slug <slug> — a slug names a file inside the evergreen directory, never a
+# path. Slugs arrive as agent-generated text derived from clipped sources, so anything
+# that could escape that directory (separator, dot segment, leading dot) is rejected,
+# not normalized.
+validate_slug() {
+  local slug="$1"
+  [ -n "$slug" ] || usage_err "invalid slug (empty)"
+  case "$slug" in
+    */*|*\\*) usage_err "invalid slug (path separators not allowed): $slug" ;;
+    .*) usage_err "invalid slug (may not start with a dot): $slug" ;;
+    *..*) usage_err "invalid slug (dot segments not allowed): $slug" ;;
+    *[!A-Za-z0-9._-]*) usage_err "invalid slug (allowed characters: letters, digits, dot, underscore, hyphen): $slug" ;;
+  esac
+  [ "${#slug}" -le 128 ] || usage_err "invalid slug (longer than 128 characters)"
+}
 
 # get_flag <name> "$@" — scans args for "--<name> <value>" and puts the value in
 # FLAG_VALUE (emptied first), returning 1 when the flag is absent. A value is
@@ -299,6 +315,7 @@ cmd_evergreen_add() {
   reason=$(flag reason "$@")
   [ -n "$slug" ] || usage_err "evergreen add requires --slug"
   [ -n "$reason" ] || usage_err "evergreen add requires --reason"
+  validate_slug "$slug"
   EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 slug = os.environ["SLUG"]
@@ -362,6 +379,7 @@ cmd_evergreen_update() {
   require_evergreen_dir
   [ $# -ge 1 ] || usage_err "evergreen update requires <slug>"
   local slug="$1"; shift
+  validate_slug "$slug"
   reject_unknown_flags "status note-path iteration slug" "$@"
   local status note_path iteration new_slug
   status=$(flag status "$@")
@@ -371,6 +389,7 @@ cmd_evergreen_update() {
   if [ -z "$status" ] && [ -z "$note_path" ] && [ -z "$iteration" ] && [ -z "$new_slug" ]; then
     usage_err "evergreen update requires at least one of --status, --note-path, --slug, --iteration"
   fi
+  [ -z "$new_slug" ] || validate_slug "$new_slug"
   case "$iteration" in
     ''|*[!0-9]*) [ -z "$iteration" ] || usage_err "--iteration must be a non-negative integer, got: $iteration" ;;
   esac
