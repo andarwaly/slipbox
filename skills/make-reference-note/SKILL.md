@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.2"
+  version: "1.4.3"
 ---
 
 # Make-reference-note
@@ -119,14 +119,3 @@ write — no field resolution needed here.
   note.
 - Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.
-
-## Open
-
-- **Still unresolved as of this writing**: whether extending an existing Reference note
-  with a source that hasn't gone through `make-literature-note` yet routes there
-  automatically (this skill triggering that flow itself) versus this skill simply
-  stopping and telling the user to run it separately. This SKILL.md takes the
-  stop-and-tell reading above as the safer default given the "no exception" rule, but
-  the discussion record — `discussion/slipbox/discussion-topics/find-terms-find-connections-merge.md`
-  — flags the routing mechanics themselves as open, not just the principle. Revisit
-  once that's settled.
