@@ -18,6 +18,9 @@ queue this skill owns.
 
 ## How it works
 
+- **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming
+  `setup-slipbox` has run; every `slipbox` CLI call throughout this skill goes
+  through `.slipbox/bin/slipbox`, never bare `slipbox`.
 - **Take the candidate** — named directly, checked against
   `.slipbox/config.json`'s `paths.reference` (and `filenames.reference` casing
   convention) to see if this is a new reference or an extension of an existing
@@ -26,16 +29,25 @@ queue this skill owns.
   `## Key Concepts` wikilinks to this candidate, and read each one's already-
   grounded treatment of it. No re-interviewing the user — that's settled
   already, at the claim level. A source that hasn't been through
-  `make-literature-note` yet is skipped here and routed there first.
+  `make-literature-note` yet is stopped here and the user is told it needs to go
+  through `make-literature-note` first — synthesis continues from whatever
+  already-grounded sources exist rather than blocking the whole write on one.
 - **Synthesize and confirm** — reconcile agreeing, complementary, or
   conflicting characterizations into one coherent definition; surface
   conflicts rather than silently picking one; present for confirmation before
   writing anything to disk.
-- **Write** — a fresh reference note on first occurrence (running a
-  `/write-checks` session for field resolution), or an in-place extension
-  (append-only, never overwritten wholesale) on repeat mentions, with a typed
-  `links` edge (`rel_type: 'extends'`) connecting the new resource to the
-  reference note.
+- **Write — new reference** — running a `/write-checks` session for full field
+  resolution, then writing the fresh note.
+- **Write — extending an existing reference** — the collision-safe path:
+  running `/write-checks` in checks-only mode (no field list, since the
+  reference's fields were already resolved on its first write), appending the
+  new source(s) to the `sources` array without ever overwriting the file
+  wholesale, then recording a typed `links` edge (`rel_type: 'extends'`)
+  connecting the new resource to the reference note.
+
+The file on disk ends up reflecting either the confirmed new definition, or
+every source that has ever fed the note (old and new); any flagged tension is
+logged to the evergreen backlog, and the user is told the file path.
 
 ## Usage
 
@@ -46,14 +58,6 @@ queue this skill owns.
 ```bash
 npx skills add andarwaly/slipbox
 ```
-
-## Open
-
-Whether extending an existing Reference note with a source that hasn't gone
-through `make-literature-note` yet should be auto-routed there by this skill, or
-this skill should just stop and tell the user to run it separately, is still
-unresolved — see
-`discussion/slipbox/discussion-topics/find-terms-find-connections-merge.md`.
 
 See the [skill source](../skills/make-reference-note/) for the full
 agent-facing instructions.

@@ -12,23 +12,34 @@ rather than only appending to it.
 
 ## How it works
 
-1. **Take the material** — named notes, a bare hunch to search around, or a pull from
+1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming
+   `setup-slipbox` has run; every `slipbox` CLI call throughout this skill goes
+   through `.slipbox/bin/slipbox`, never bare `slipbox`.
+2. **Take the material** — named notes, a bare hunch to search around, or a pull from
    the evergreen backlog.
-2. **Ground it** — a `/grounding` session where your own answers are free (personal
+3. **Ground it** — a `/grounding` session where your own answers are free (personal
    experience, memory, anything unwritten), but your own questions and reflections must
    trace to what the retrieved notes actually establish, never to your own training.
    Orients with Compass (now living inside `grounding`, alongside its own Connect/
    Challenge/Distil supporting techniques) — reaches for whichever direction the
    conversation calls for. A Compass direction can spawn a fresh sub-idea; anything not
-   pursued this sitting gets logged to the evergreen backlog for later.
-3. **Purity check** — before writing, every sentence in the draft is tested: does it
-   just restate one cited note's claim unchanged? If so, the conversation isn't done.
+   pursued this sitting gets logged to the evergreen backlog for later. Before writing,
+   every sentence in the draft gets a purity check: does it just restate one cited
+   note's claim unchanged? If so, the conversation isn't done.
 4. **Write** — cites every note it draws on with a one-line reason; never links
    silently. Can be a full rewrite if revisiting an existing evergreen note.
 5. **Sign-off** — checked against five criteria (complete-claim title,
    standalone-comprehensible, about one thing, every link has a reason, answers or
    spawns a "so what"), each grounded in Matuschak's evergreen-note practice and
-   Ahrens' permanent-note rules, before the session finishes.
+   Ahrens' permanent-note rules — including a real tension between the two the skill
+   deliberately sides on, spelled out in its own `references/sign-off-theory.md` —
+   before the session finishes.
+
+Once done, the note is on disk (or updated, if revisiting), every cited note is linked
+with a reason, and any flagged tension is logged as its own evergreen-backlog entry. If
+this session's material came from the backlog itself, that row gets closed out —
+renamed to the note's own slug on a first write, or its `--iteration` bumped on a
+revisit — and the user is told the file path.
 
 ## Usage
 
