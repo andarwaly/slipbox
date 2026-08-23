@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Make-evergreen-note
@@ -129,12 +129,10 @@ being freshly named or a bare hunch, close out the row it drew from:
 .slipbox/bin/slipbox evergreen update <slug> --status discussed --note-path <path>
 ```
 
-Rename the slug too if this was a first write — same pattern as
-`make-literature-note`'s own "Write — new reference" step. Bump
-`--iteration` instead if this is a revisit to an existing evergreen note
-rather than a first write. The note's own `updated-at` frontmatter field
-was already set in the Write section above — `created`'s timestamp on a
-first write, refreshed to current time on a revisit.
+Apply the installed `.slipbox/AGENTS.md` Backlog contract for lifecycle details,
+including first-write slug renames, revisit iteration bumps, and the candidate's
+note-path/updated-at bookkeeping. The note's own `updated-at` frontmatter field
+was already set in the Write section above.
 
 ## References
 
