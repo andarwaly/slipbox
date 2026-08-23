@@ -344,6 +344,7 @@ if prefix is not False and not isinstance(prefix, str):
 
 # Protect explicit spans and genuinely all-caps acronym tokens while transforming ordinary words.
 protected = []
+explicit_protected = []
 protection_warnings = []
 for value in preserve:
     if not value:
@@ -352,6 +353,7 @@ for value in preserve:
     matches = list(re.finditer(r"(?<![A-Za-z0-9])" + re.escape(value) + r"(?![A-Za-z0-9])", title))
     if len(matches) == 1:
         protected.append(value)
+        explicit_protected.append(value)
     elif not matches:
         protection_warnings.append(f"protected name not found: {value}")
     else:
@@ -389,7 +391,7 @@ if casing == "Sentence case":
 # Keep readable punctuation, but prevent path/control characters and trim trailing dots/spaces.
 # A colon directly introducing an explicitly protected source name is retained as
 # readable subtitle punctuation; other unsafe separators become a single hyphen.
-for value in protected:
+for value in explicit_protected:
     work = re.sub(r":" + r"(?=\s*" + re.escape(value) + r"(?![A-Za-z0-9]))", "__SLIPBOX_COLON__", work, count=1)
 work = re.sub(r'[\\/:*?"<>|\x00-\x1f\x7f]', "-", work)
 work = work.replace("__SLIPBOX_COLON__", ":")

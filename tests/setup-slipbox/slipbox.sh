@@ -192,6 +192,8 @@ check_match "ambiguous protected names are surfaced" '*ambiguous*preview*' \
   "$(stderr_of "$SLIPBOX" filename format --type literature --title 'OpenAI and OpenAI' --preserve 'OpenAI')"
 check_eq "only the protected-name subtitle colon is preserved" "§ First: Matt Pocock-second title" \
   "$($SLIPBOX filename format --type literature --title 'First: Matt Pocock: Second Title' --preserve 'Matt Pocock')"
+check_eq "auto-detected acronyms do not preserve subtitle colons" "§ API-NASA teams" \
+  "$($SLIPBOX filename format --type literature --title 'API: NASA Teams')"
 check_match "uncertain protected names are surfaced on stderr" '*uncertain*preview*' \
   "$(stderr_of "$SLIPBOX" filename format --type literature --title 'A Title' --uncertain 'Title')"
 check_exit "filename format missing title is a usage error" 2 "$SLIPBOX" filename format --type literature
