@@ -4,7 +4,7 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.5.0"
 ---
 
 # Clip Resource
@@ -61,7 +61,7 @@ Read the reference file for your type; it covers the full extraction logic, tool
 
 Read the template first — its location comes from the `templates.<type>_path` scoped read described above — then resolve its variables and filters against the reference files. Mechanical fields, not content-shape opinions, still apply regardless of template: `type` in frontmatter holds the content type directly (see `GLOSSARY.md` for the Resource type-field rule). `author` resolves per type's own definition (byline for Article/News, display name falling back to handle for Social, channel name for Video) — see `references/variable-glossary.md`. `published` resolves via Defuddle's output for Article/News, or the Ladder in Fetch and extract for Social, same as any other bare fact for that type.
 
-`clip-resource` fills in only what the template's own variables and filters ask for — see `references/variable-glossary.md` and `references/filter-glossary.md`. Nothing beyond that: no line naming an idea worth pursuing, no conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
+`clip-resource` fills in only what the template's own variables and filters ask for — see `references/variable-glossary.md` and `references/filter-glossary.md`. The active Video path is YouTube-specific; a Video template may therefore use `{{video_id}}` to construct YouTube's deterministic thumbnail URL. No corresponding generic cover variable exists for Article, News, or Social, so do not invent or guess one. Nothing beyond that: no line naming an idea worth pursuing, no conclusion about what the content means. Reading the material and forming an opinion on it is `make-literature-note`'s surface pass (per its own SKILL.md), run later and separately. A Resource file that already contains a take would skip that analytical step instead of feeding it.
 
 ### 05 - Write
 

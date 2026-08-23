@@ -25,7 +25,7 @@ This file only describes *what each variable is and when to use it*. How a bare 
 | `{{root_post}}` | Social | The thread's opening post. | Body content for Social — the thread-as-a-single-post case. |
 | `{{continuation}}` | Social | The original author's own reply chain continuing the thread. Never other participants' replies. | Appended to `{{root_post}}` for the full thread body. |
 | `{{transcript}}` | Video | The video's transcript. | Body content for Video. |
-| `{{video_id}}` | Video | The platform's video identifier. | Building a canonical URL, or as a lookup key. |
+| `{{video_id}}` | Video (YouTube only) | The YouTube video identifier from the active transcript path. | Build a canonical URL, use as a lookup key, or construct `https://i.ytimg.com/vi/{{video_id}}/maxresdefault.jpg` for a deterministic `cover:` property. |
 
 ## Quoted instructions
 

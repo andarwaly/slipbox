@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.3"
+  version: "1.6.0"
 ---
 
 # Setup Slipbox
@@ -59,7 +59,14 @@ Present what you found, one item at a time. Recommend a default and lead with it
     1. Tell them which variables apply to this content type and what each does, in plain language — pull this from `variable-glossary.md` and `filter-glossary.md` (bundled with this skill, mirroring `clip-resource`'s own copies), but never point the user at those files directly; you are the interface to that reference, not a librarian handing over a card catalog.
     2. Ask what they want captured in the note and in what order (title, source link, a raw excerpt, a synthesized summary, etc.).
     3. As you propose each variable, explain bare vs. quoted inline, concretely: "`{{content}}` pulls the article body verbatim; if you'd rather have a compressed summary instead, that's a quoted instruction like `{{"a 3-sentence summary of the article"}}` — I'll write whichever one you want here." Do not make the user learn the bare/quoted rule in the abstract before they can make this choice.
-    4. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
+    4. For a missing **Video** template, include this deterministic YouTube cover in the draft by default:
+
+       ```yaml
+       cover: "https://i.ytimg.com/vi/{{video_id}}/maxresdefault.jpg"
+       ```
+
+       `video_id` is available only on the current YouTube transcript path. Do not add `cover:` to Article, News, or Social templates: this skill has no verified generic image variable or DOM/headless image extraction for them. The user may still edit or remove the proposed Video property before approval.
+    5. Write the draft to the resolved path, show it, and let them edit or approve before moving to the next missing template.
   - This drafting help is conversational, not a fixed asset — template *content* reflects the user's own note structure and is never the same across two vaults, unlike `config.json`/`humanize-checklist.json`/`style-profile.json` elsewhere in this skill.
 
 **field_map** — **first, one combined question**: "Want to resolve frontmatter field mappings for all three note types now, or defer any of them until you actually write one?" Any type the user defers gets `{"deferred": true}` recorded for each of its required fields in `config.json`, skipping the branches below entirely for that type — `/write-checks` runs this same resolution logic the first time that type is actually written (see `write-checks/SKILL.md`'s "Frontmatter fields" section), and writes the resolved mapping back at that point.

@@ -2,7 +2,7 @@
   "test_cases": [
     {
       "prompt": "Set up slipbox in my vault for the first time.",
-      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults (including a combined question on which note types to resolve field_map for now versus defer), interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, installs the slipbox CLI and initializes its evergreen directory and links log, and shows a draft config.json for approval before writing.",
+      "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults (including a combined question on which note types to resolve field_map for now versus defer). When drafting a missing Video resource template, it proposes the deterministic YouTube `cover: \"https://i.ytimg.com/vi/{{video_id}}/maxresdefault.jpg\"` property, while keeping `cover:` out of Article, News, and Social templates because no generic image variable is verified. It then interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, installs the slipbox CLI and initializes its evergreen directory and links log, and shows a draft config.json for approval before writing.",
       "assertions": [
         {"type": "file_exists", "path": ".slipbox/bin/slipbox"},
         {"type": "file_exists", "path": ".slipbox/config.json"},
