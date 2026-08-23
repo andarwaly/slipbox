@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Make-reference-note
@@ -84,9 +84,15 @@ Reconcile the gathered characterizations into one definition:
 Write fresh:
 
 - Run a `/write-checks` session on the draft, passing the Reference field list (`type`,
-  `created`, `sources`, plus `alt_names` if any were given) — it resolves each field's
-  mapping, formatting, zone placement, and title prefix, and checks the draft's style
-  and humanize signals.
+  `created`, `sources`, and `alt_names`) — it resolves each field's mapping, formatting,
+  zone placement, and title prefix, and checks the draft's style and humanize signals.
+- Resolve `prefixes.reference` and the configured `alt_names` field before assembling
+  frontmatter. When the Reference prefix is a string, add the clean concept display
+  name (the concept before that generated prefix, preserving the user's casing) to the
+  alternate-name values. When the prefix is `false`, use only explicit alternate names.
+- Merge the inferred name before explicit alternate names, preserving first spelling and
+  order while deduplicating by case-insensitive comparison. Write the resulting list to
+  the mapped `alt_names`/`aliases` field. This alias rule applies only to Reference notes.
 - Write into the folder from `.slipbox/bin/slipbox config get paths.reference`, filename per
   `.slipbox/bin/slipbox config get filenames.reference` casing convention.
 - Re-read the target path from disk right before writing.

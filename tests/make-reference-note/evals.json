@@ -34,6 +34,36 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "make-reference-note \"Deep module\" for a new Reference note in a vault whose prefixes.reference is \"※ \" and whose mapped alternate-name field is aliases",
+      "expected_output": "Adds the clean alias \"Deep module\" to aliases while preserving that display casing, alongside the generated prefixed title.",
+      "assertions": [
+        {"type": "contains", "text": "Deep module"},
+        {"type": "contains", "text": "aliases"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note \"Deep module\" for a new Reference note in a vault whose prefixes.reference is false",
+      "expected_output": "Does not infer an alias because the unprefixed title is already the note title; writes only explicitly supplied alternate names.",
+      "assertions": [
+        {"type": "not_contains", "text": "inferred alias"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note \"Deep module\" with explicit alternate names [\"DM\", \"deep module\", \"Deep Module\"] and a configured Reference prefix",
+      "expected_output": "Merges the inferred clean name before explicit names, preserving the first spelling and removing case-insensitive duplicates deterministically: [\"Deep module\", \"DM\"].",
+      "assertions": [
+        {"type": "contains", "text": "case-insensitive"},
+        {"type": "contains", "text": "DM"}
+      ]
+    },
+    {
+      "prompt": "make-literature-note or make-evergreen-note with a configured prefix",
+      "expected_output": "Leaves the clean-alias inference untouched because it is Reference-only; the other note types have no equivalent alt_names contract.",
+      "assertions": [
+        {"type": "contains", "text": "Reference-only"}
+      ]
     }
   ]
 }

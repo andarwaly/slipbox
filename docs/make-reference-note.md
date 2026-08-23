@@ -37,7 +37,9 @@ queue this skill owns.
   conflicts rather than silently picking one; present for confirmation before
   writing anything to disk.
 - **Write — new reference** — running a `/write-checks` session for full field
-  resolution, then writing the fresh note.
+  resolution, then writing the fresh note. A configured Reference title prefix also
+  adds the unprefixed concept display name to the mapped `alt_names`/`aliases` list;
+  explicit alternate names are merged case-insensitively, with the user's casing kept.
 - **Write — extending an existing reference** — the collision-safe path:
   running `/write-checks` in checks-only mode (no field list, since the
   reference's fields were already resolved on its first write), appending the
