@@ -77,7 +77,8 @@
       "prompt": "/make-literature-note from a Resource whose exact source title is 'Software Fundamentals Matter More Than Ever: Matt Pocock', with filenames.literature configured as Sentence case and prefixes.literature configured as '§'",
       "expected_output": "Writes the Literature H1 with the exact Resource title, and derives the complete basename through `slipbox filename format`, yielding `§ Software fundamentals matter more than ever: Matt Pocock` while preserving the proper-name span and subtitle colon.",
       "assertions": [
-        {"type": "contains", "text": "Software Fundamentals Matter More Than Ever: Matt Pocock"},
+        {"type": "contains", "text": "# Software Fundamentals Matter More Than Ever: Matt Pocock"},
+        {"type": "contains", "text": ".slipbox/bin/slipbox filename format --type literature --title"},
         {"type": "contains", "text": "§ Software fundamentals matter more than ever: Matt Pocock"}
       ]
     },
@@ -85,7 +86,8 @@
       "prompt": "/make-literature-note from a Resource titled 'API Design for NASA Teams', with filenames.literature configured as Sentence case",
       "expected_output": "Preserves the exact source-title H1 and derives `§ API design for NASA teams`, retaining both acronyms while lowercasing ordinary words.",
       "assertions": [
-        {"type": "contains", "text": "API Design for NASA Teams"},
+        {"type": "contains", "text": "# API Design for NASA Teams"},
+        {"type": "contains", "text": "slipbox filename format"},
         {"type": "contains", "text": "§ API design for NASA teams"}
       ]
     }

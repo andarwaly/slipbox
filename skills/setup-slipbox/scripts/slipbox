@@ -342,9 +342,21 @@ if not isinstance(casing, str):
 if prefix is not False and not isinstance(prefix, str):
     fail(f"prefixes.{note_type} must be a string or false")
 
-# Protect explicit spans and all-caps acronyms while transforming ordinary words.
-protected = list(preserve)
-for match in re.findall(r"(?<![A-Za-z])[A-Z][A-Z0-9&+.-]{1,}(?![A-Za-z])", title):
+# Protect explicit spans and genuinely all-caps acronym tokens while transforming ordinary words.
+protected = []
+protection_warnings = []
+for value in preserve:
+    if not value:
+        protection_warnings.append("empty protected name")
+        continue
+    matches = list(re.finditer(r"(?<![A-Za-z0-9])" + re.escape(value) + r"(?![A-Za-z0-9])", title))
+    if len(matches) == 1:
+        protected.append(value)
+    elif not matches:
+        protection_warnings.append(f"protected name not found: {value}")
+    else:
+        protection_warnings.append(f"protected name is ambiguous ({len(matches)} matches): {value}")
+for match in re.findall(r"(?<![A-Za-z0-9])[A-Z][A-Z0-9&+.]+(?![A-Za-z0-9])", title):
     if match not in protected:
         protected.append(match)
 work = title
@@ -375,11 +387,10 @@ if casing == "Sentence case":
         pos = match.start()
         work = work[:pos] + work[pos].upper() + work[pos + 1:]
 # Keep readable punctuation, but prevent path/control characters and trim trailing dots/spaces.
-# A colon introducing an explicitly protected source name is retained as readable
-# subtitle punctuation; other unsafe separators become a single hyphen.
-protected_after_colon = any(re.search(r":\s*" + re.escape(value), title) for value in preserve if value)
-if protected_after_colon:
-    work = work.replace(":", "__SLIPBOX_COLON__")
+# A colon directly introducing an explicitly protected source name is retained as
+# readable subtitle punctuation; other unsafe separators become a single hyphen.
+for value in protected:
+    work = re.sub(r":" + r"(?=\s*" + re.escape(value) + r"(?![A-Za-z0-9]))", "__SLIPBOX_COLON__", work, count=1)
 work = re.sub(r'[\\/:*?"<>|\x00-\x1f\x7f]', "-", work)
 work = work.replace("__SLIPBOX_COLON__", ":")
 work = re.sub(r"\s*-\s*", "-", work)
@@ -388,8 +399,10 @@ if not work:
     fail("title produces an empty filename")
 if prefix is not False and prefix:
     work = f"{prefix} {work}"
-if uncertain:
-    warn("protected-name identification is uncertain; preview this basename before writing: " + work)
+if uncertain or protection_warnings:
+    protection_warnings.extend(f"uncertain protected name: {value}" for value in uncertain if value)
+    detail = "; ".join(protection_warnings) if protection_warnings else "uncertain protected-name input"
+    warn("protected-name identification is uncertain (" + detail + "); preview this basename before writing: " + work)
 print(work)
 PYEOF
 }
