@@ -69,10 +69,10 @@
     },
     {
       "prompt": "make-reference-note \"Zettelkasten Method\" again, extending an existing Reference note whose aliases field already contains [\"Zettelkasten\"]",
-      "expected_output": "Preserves the existing aliases field unchanged, appends the new resource to the sources array without overwriting prior sources, and records a links row with rel_type='extends' to the existing Reference note.",
+      "expected_output": "Preserves the existing aliases field unchanged as aliases: [\"Zettelkasten\"], appends the new resource to the sources array without overwriting prior sources, and records a links row with rel_type='extends' to the existing Reference note.",
       "assertions": [
         {"type": "contains", "text": "append"},
-        {"type": "contains", "text": "aliases"},
+        {"type": "contains", "text": "aliases: [\"Zettelkasten\"]"},
         {"type": "contains", "text": "extends"}
       ]
     }
