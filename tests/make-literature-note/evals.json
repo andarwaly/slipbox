@@ -90,6 +90,40 @@
         {"type": "contains", "text": "slipbox filename format"},
         {"type": "contains", "text": "§ API design for NASA teams"}
       ]
+    },
+    {
+      "prompt": "/make-literature-note closes after several confirmed claims",
+      "expected_output": "Runs a mandatory complete source-to-note audit checking missing arguments, narrow or broad claims, overlap, and lost qualifications or gray areas; any selected finding returns through grounding and a material change restarts the audit until clean.",
+      "assertions": [
+        {"type": "contains", "text": "narrow"},
+        {"type": "contains", "text": "overlap"},
+        {"type": "contains", "text": "gray areas"}
+      ]
+    },
+    {
+      "prompt": "The user declines a valid source-audit finding and asks to finish",
+      "expected_output": "Reports the literature note as deliberately partial, discards the private backlog, and does not persist a backlog unless explicitly requested.",
+      "assertions": [
+        {"type": "contains", "text": "partial"},
+        {"type": "contains", "text": "private backlog"}
+      ]
+    },
+    {
+      "prompt": "A confirmed claim introduces a method, a named tool, a book, and an event",
+      "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during the claim write, then performs one mandatory final batch pass before reaction and validation.",
+      "assertions": [
+        {"type": "contains", "text": "final batch"},
+        {"type": "contains", "text": "Mentioned"},
+        {"type": "contains", "text": "named tools"}
+      ]
+    },
+    {
+      "prompt": "The session is ready to finish",
+      "expected_output": "Follows the fixed order: convergent source audit, density merge and re-audit if changed, final Core Idea, final Key Concepts/Mentioned batch, reaction and optional Evergreen routing, then final artifact validation. Done cannot fire early.",
+      "assertions": [
+        {"type": "contains", "text": "Done"},
+        {"type": "contains", "text": "final validation"}
+      ]
     }
   ]
 }

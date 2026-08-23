@@ -181,8 +181,9 @@ exists in this family.
 
 ## Key Concepts and Mentioned
 
-Add or extend `## Key Concepts` (concept/term/framework/method candidates) or
-`## Mentioned` (person/place/organization candidates, real or fictional) with a
+Add or extend `## Key Concepts` (abstract concept/term/framework/method candidates) or
+`## Mentioned` (concrete named referents: person, place, organization, book or
+creative work, named tool, or event) with a
 wikilinked, 1-line gloss for anything this claim introduces or leans on. The test is
 always the same, for either section: is the claim's weight actually resting on it, or
 is it just mentioned in passing? Niklas Luhmann, in a claim about the Zettelkasten
@@ -201,7 +202,10 @@ burying it mid-sentence: "Tseng identifies X as the person who popularized Y," n
 person Tseng identifies as having popularized Y" — the source's own claim should read as
 the subject of the sentence, not a clause nested inside a description of the entity.
 
-Both sections are load-bearing — `find-connections` scans `## Key Concepts` **and**
+Both sections are load-bearing and incremental — update the applicable section
+for every confirmed claim before continuing. A mandatory final batch pass runs
+after claims, density, and Core Idea stabilize; it catches load-bearing entries
+that were not surfaced during individual writes. `find-connections` scans `## Key Concepts` **and**
 `## Mentioned` for recurrence detection, so everything the claim actually leans on must
 appear in one or the other.
 

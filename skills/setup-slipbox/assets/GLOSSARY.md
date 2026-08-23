@@ -111,12 +111,12 @@ One `###`-headed entry inside a literature note's `## Key Claims` section: a Con
 _Avoid_: Core Idea (the note's single central argument, written once; a Key Claim is one of potentially several claims serving that Core Idea).
 
 **Key Concepts**
-The literature-note section wikilinking anything a Key Claim's weight actually rests on that reads as a concept, term, framework, or method — a person, place, or organization goes to Mentioned instead. Scanned by find-connections for recurrence detection.
+The literature-note section wikilinking anything a Key Claim's weight actually rests on that reads as an abstract concept, term, framework, or method — concrete named referents go to Mentioned instead. Accumulates during claim writes and receives a mandatory final batch pass; scanned by find-connections for recurrence detection.
 _Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for person/place/organization candidates).
 
 **Mentioned**
-The literature-note section wikilinking anything a Key Claim's weight actually rests on that reads as a person, place, or organization (real or fictional) — flat, unprefixed link format, no config lookup. Scanned by find-connections for recurrence detection alongside Key Concepts.
-_Avoid_: Key Concepts (the sibling section for concept/term/framework/method candidates, using the Reference-note prefixed format instead).
+The literature-note section wikilinking concrete named referents a Key Claim's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during claim writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification remains separate.
+_Avoid_: Key Concepts (the sibling section for abstract concept/term/framework/method candidates, using the Reference-note prefixed format instead).
 
 **Ladder**
 The generic ordered-fallback-check pattern: try one method, and only on its failure move to the next, stopping at the first rung that yields a result.

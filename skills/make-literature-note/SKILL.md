@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.12.0"
+  version: "1.13.0"
 ---
 
 # Make-literature-note
@@ -166,16 +166,13 @@ rule (full list under Checking the shape, below).
 
 ## Knowing when the session is done
 
-Once the conversation's natural energy winds down, the close runs in a
-fixed order across the two sub-sections below, then the closing prompt:
-coverage first (what's missing — the backlog, then a fresh read of the
-source), shape second (what's there — density, then the Core Idea), and
-the user's own reaction last. Coverage precedes shape deliberately: both
-the density judgment and the Core Idea confirmation are judgments *over
-the final set of claims*, so anything that can still add a claim has to
-happen before them, or they'd be made against a set that's about to
-change. The opinion prompt sits after everything because its answer never
-touches the literature note at all.
+Once the conversation's natural energy winds down, `Done` is a fixed closeout
+gate. Run every stage below in order; never declare completion between stages.
+The source audit is convergent: any material claim-set change, including a
+density merge, returns to the complete audit and the loop continues until the
+audit is clean. A user-declined valid finding makes the note deliberately
+partial; report that status and discard the private backlog unless the user
+explicitly asks to retain it.
 
 ### Checking coverage — the backlog, then the source itself
 
@@ -210,29 +207,19 @@ The user's own "I think that's everything" always ends the session
 regardless of what the backlog still shows uncovered — for both states.
 The nudge is a single offer, never an insistence.
 
-Then consider re-reading the source fresh — the whole source, not a
-targeted look at whatever the backlog flagged, since the point is to
-catch what the Surface pass and the conversation both missed, which by
-definition isn't on the backlog. This is a judgment call, not a mandatory
-step: skip it when the session already felt thorough — a short source
-worked through end to end, or a conversation that visibly exhausted what
-the source had. Reach for it when the conversation moved fast, jumped
-around, ran long, or left the sense that something got discussed and then
-dropped.
-
-When it runs, re-read the source, compare it against the finished note,
-and show everything found in one message rather than raising each find as
-its own question — the same batch-diff-and-present mechanic Spot terms and
-entities below reuses, aimed here at whole missing claims instead of
-concepts and entities.
+Then **always** re-read the complete source and compare it against the
+finished note. The audit explicitly checks missing arguments, claims that
+became too narrow or too broad, overlapping claims, and qualifications or
+gray areas lost during compression. Present findings as one batch.
 
 > "Re-reading the source, these look like things it argues that we never
 > captured: [list, each with a one-line note on what the source says].
 > Want to ground all of them, some, or none?"
 
-Whatever the user picks goes through `/grounding`'s Gate exactly as any
-other claim, and gets written the same way. Zero found is a complete,
-valid result.
+Whatever the user picks goes through `/grounding`'s Gate exactly as any other
+claim and gets written the same way. A declined valid finding is reported as
+partial. Zero findings is clean. After every material change, restart this
+whole audit; only a clean pass permits the next stage.
 
 ### Checking the shape — density, then the Core Idea
 
@@ -284,6 +271,16 @@ Gate takes. Not "is this still the Core Idea?" but:
 
 If what comes back differs, rewrite the Core Idea line. If it matches,
 leave it as it stands.
+
+### Final concepts and mentioned batch
+
+Both sections accumulate during claim writes. After claims, density, and Core
+Idea stabilize, re-read the source and note once in a mandatory batch. Surface
+load-bearing candidates together, with a guessed section, and obtain the
+user's confirmation before appending. `Key Concepts` holds abstract concepts,
+methods, and frameworks. `Mentioned` holds concrete named referents: people,
+places, organizations, books/creative works, named tools, and events.
+Downstream classification remains separate.
 
 ### Closing with the user's own reaction
 
@@ -344,51 +341,25 @@ confirms it, edit the existing `## Key Claims` entry in place: this is the
 one case in the whole file where an already-written entry is legitimately
 reopened rather than superseded by a new heading.
 
-## Spot terms and entities
+## Final validation handoff
 
-Once the session ends, one batch pass — never mid-claim — using the same
-batch-diff-and-present mechanic as Checking coverage above: re-read the
-finished note (and the source too, if this is a resumed session and it's
-no longer in context), compare, and surface findings together in one
-message rather than asking about each one separately.
-
-Here the scan targets anything a claim leans on — its weight actually
-resting on it, not just mentioned in passing — that neither
-`## Key Concepts` nor `## Mentioned` yet covers. This scan is type-blind: a
-person passing the load-bearing test (e.g. Niklas Luhmann, in a claim about
-the Zettelkasten method's origins) is found the same automatic way a
-concept is, in the same pass — never held back for the user to ask about
-separately. Wikilink liberally here: this step doesn't decide what the
-target will become (Reference note, Person, Location, Organization, or
-nothing at all) — that classification happens downstream, in
-`find-connections`, once cross-note evidence exists. The author-exclusion
-stays unchanged: a source's own author still gets a bare, unresolved
-wikilink, never routed toward a Person note through this pipeline.
-
-For each candidate, also make a quick, cheap read — enough to pick a
-*section and link format*: does this look like a person, place, or
-organization (real or fictional) — bound for `## Mentioned` — or a
-concept/term/method — bound for `## Key Concepts`? Show the guess alongside
-each candidate so the user can correct a misread before anything is written.
-
-> "Found these worth adding: [list, each with a one-line reason, its
-> guessed kind, and which section it's headed for]. Add all, some, or
-> none — and flag any I've read wrong."
-
-On confirmation, run `/write-checks` again and append the confirmed entries
-to `## Key Concepts` or `## Mentioned`, per candidate type, per
-`references/writing-a-claim.md`'s wikilink resolution. Zero found is a
-complete, valid result.
+Run `/write-checks` against the complete artifact after the final batch. Check
+required fields, section order, claim headings, Core Idea placement, and both
+surfacing sections on the file already written. Validation is a handoff, not
+permission to silently rewrite a claim; any material claim change returns to
+the convergent source audit.
 
 ## Done
 
-The literature note exists on disk with its Core Idea, every claim the
-session actually produced as its own `## Key Claims` entry, any confirmed
-Key Concepts and Mentioned entries, and any user-flagged `## Open
-Questions` entries with their `*Assumption*`/`*Answered*` bullets (partial
-if the session stopped early — that's a complete, valid outcome), any
-flagged tensions are logged in the evergreen backlog, and the user is told
-the file path.
+`Done` fires only after this checklist is true: the convergent source audit
+is clean (or the user explicitly declined findings and the note is reported
+partial); density merge was offered and, if accepted, re-audited; final Core
+Idea is confirmed; final Key Concepts/Mentioned batch is complete; reaction
+and optional Evergreen routing are complete; and artifact validation confirms
+the note already written incrementally. The note includes any user-flagged
+Open Questions and nested bullets, and flagged tensions are logged in the
+evergreen backlog. Then tell the user the file path and partial status when
+applicable.
 
 ## References
 

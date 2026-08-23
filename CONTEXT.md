@@ -3,8 +3,9 @@
 ## Language
 
 One frozen source-type plus five knowledge-management note types (Literature, Reference,
-Evergreen — the family's actual subject) plus three surfacing-only entity types (Person,
-Location, Organization — adjacent territory, not written by any skill here) — never
+Evergreen — the family's actual subject) plus concrete named referents surfaced in
+`Mentioned` (Person, Location, Organization, books/creative works, named tools, and
+events) — never
 conflate them:
 
 **Resource** (`clip-resource`'s output):
@@ -58,15 +59,12 @@ functionally dependent internal steps (e.g. a four-question review method) gets 
 Reference note; its steps live as sections inside that one note, not as separately
 wikilinked, separately-promoted targets.
 
-**Person, Location, Organization** (surfacing only — no dedicated write skill):
-Entity-profile territory (who/where/what-organization something is), real or fictional
-alike, as opposed to knowledge-synthesis territory (what a source argues, what a stable
-concept means) — which is what Reference/Literature/Evergreen exist for. Closer to
-entity-profile territory than to slipbox's actual subject. `find-connections` still
-detects, flags, and wikilinks candidates of these three types exactly like Reference
-candidates (same recurrence threshold, same batch-presentation, same dedup/alias pass),
-but this family owns no write procedure for them — no `ground-person` /
-`ground-location` / `ground-organization` skill, dedicated or shared. Many users already
+**Mentioned referents** (surfacing only — no dedicated write skill):
+Concrete named people, places, organizations, books/creative works, named tools, and
+events, real or fictional alike. Abstract concepts, methods, and frameworks belong in
+`Key Concepts`. `find-connections` detects, flags, and wikilinks these candidates exactly
+like Reference candidates (same recurrence threshold, batch presentation, and
+dedup/alias pass), but this family owns no write procedure for them. Many users already
 have their own templates or tooling for these from elsewhere; the agent can still help
 write one on request, as ad-hoc assistance, never as a mandated skill-procedure — there's
 no author stance to hold to a citation-discipline interview for a stable fact like a
