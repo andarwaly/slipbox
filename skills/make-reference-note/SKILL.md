@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.3"
+  version: "1.5.0"
 ---
 
 # Make-reference-note
@@ -67,7 +67,9 @@ Reconcile the gathered characterizations into one definition:
 - Where characterizations conflict, surface the conflict to the user rather than
   silently picking one — resolve it the same way any other flagged tension in this
   family gets handled: if the user opts in to flagging it rather than resolving it now,
-  insert it into the evergreen backlog before moving on to writing:
+  insert it into the evergreen backlog before moving on to writing. The
+  installed `.slipbox/AGENTS.md` is the canonical reference for backlog
+  semantics and lifecycle; this skill retains the command it executes:
 
   ```bash
   .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"

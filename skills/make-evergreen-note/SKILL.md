@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.4.1"
+  version: "1.5.0"
 ---
 
 # Make-evergreen-note
@@ -26,7 +26,9 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 - **Bare, just a hunch** → search for anything related before starting; a
   hunch with nothing to check against is still a valid, complete session —
   see `/grounding`'s own handling of "neither present."
-- **From the backlog** → query the pending queue:
+- **From the backlog** → query the pending queue. The installed
+  `.slipbox/AGENTS.md` is the canonical reference for backlog semantics and
+  lifecycle; this skill retains the command it executes:
 
   ```bash
   .slipbox/bin/slipbox evergreen find --status to-discuss
@@ -52,12 +54,11 @@ starts.
 Orient the take with the Compass technique — reach for whichever direction
 the conversation calls for, no fixed order. Compass's own
 directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
-gets logged to the evergreen backlog the same way any other flagged tension
-does (see Compass's own Guardrail).
+  gets logged to the evergreen backlog (see Compass's own Guardrail).
 
 `/grounding` hands back the confirmed Take, and — only if the user opted
-in — a flagged tension. If a tension came back, insert it into the same
-evergreen backlog this skill itself reads from:
+in — a flagged tension. If a tension came back, insert it into the evergreen
+backlog:
 
 ```bash
 .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"

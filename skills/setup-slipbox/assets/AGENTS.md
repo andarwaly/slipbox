@@ -30,6 +30,22 @@ A vault typically moves through these skills in this order, though any skill can
 
 `GLOSSARY.md` and this file are copied verbatim from `setup-slipbox`'s own bundled assets on every run, first run or re-run alike, so a vault always carries the current package version of both.
 
+## Evergreen backlog contract
+
+The vault's `.slipbox/AGENTS.md` is the canonical runtime reference for shared
+evergreen-backlog semantics. The `evergreen` CLI maintains candidates through
+their lifecycle:
+
+- `evergreen add --slug <slug> --reason "<reason>"` records a pending candidate.
+- `evergreen find --status to-discuss` lists candidates available for discussion.
+- `evergreen update <slug> --status discussed --note-path <path>` closes a
+  candidate after a Take is written; use `--iteration` when revisiting an
+  existing note and rename the slug on a first write when appropriate.
+
+Skills may retain the exact commands they execute, but defer shared semantics,
+status meanings, and lifecycle rules to this section rather than duplicating
+that explanation.
+
 ## When a `slipbox` command fails
 
 Check the exit code of every `.slipbox/bin/slipbox` call before using its output, and read stderr when it's nonzero — the CLI prints one JSON object there, `{"error": "..."}`, and never a bare traceback.
