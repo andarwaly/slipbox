@@ -170,6 +170,26 @@ for group in evergreen links config humanize; do
 done
 check_exit "a final flag without a value exits 2" 2 "$SLIPBOX" evergreen find --status
 
+echo "--- deterministic filename formatting ---"
+cat > "$SCRATCH/config.json" <<'EOF'
+{"filenames":{"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},"prefixes":{"literature":"§","reference":"※","evergreen":false}}
+EOF
+check_eq "Sentence case preserves proper name and prefixes after casing" "§ Software fundamentals matter more than ever: Matt Pocock" \
+  "$("$SLIPBOX" filename format --type literature --title 'Software Fundamentals Matter More Than Ever: Matt Pocock' --preserve 'Matt Pocock')"
+check_eq "Sentence case preserves acronyms" "§ API design for NASA teams" \
+  "$("$SLIPBOX" filename format --type literature --title 'API Design for NASA Teams')"
+check_eq "unsafe filename characters are sanitized" "§ A title-with-unsafe-chars-yes" \
+  "$("$SLIPBOX" filename format --type literature --title 'A Title/With: Unsafe*Chars? Yes')"
+check_eq "no prefix returns the complete unprefixed basename" "An evergreen idea" \
+  "$("$SLIPBOX" filename format --type evergreen --title 'An Evergreen Idea')"
+check_eq "multiple protected spans survive casing" "§ Design with Matt Pocock and OpenAI" \
+  "$("$SLIPBOX" filename format --type literature --title 'Design With Matt Pocock and OpenAI' --preserve 'Matt Pocock' --preserve 'OpenAI')"
+check_match "uncertain protected names are surfaced on stderr" '*uncertain*preview*' \
+  "$(stderr_of "$SLIPBOX" filename format --type literature --title 'A Title' --uncertain 'Title')"
+check_exit "filename format missing title is a usage error" 2 "$SLIPBOX" filename format --type literature
+check_exit "filename format unknown type is a usage error" 2 "$SLIPBOX" filename format --type article --title Title
+check_exit "filename format help exits 0" 0 "$SLIPBOX" filename format --help
+
 echo "--- evergreen edge cases ---"
 check_exit "evergreen add missing --slug exits 2" 2 "$SLIPBOX" evergreen add --reason reason
 mv "$SCRATCH/evergreen" "$SCRATCH/evergreen.saved"

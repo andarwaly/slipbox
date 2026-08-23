@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.11.0"
+  version: "1.12.0"
 ---
 
 # Make-literature-note
@@ -128,9 +128,14 @@ toward the next one, if there is a next one:
   formatting, zone placement, and title prefix, and checks the draft's
   style and humanize signals.
 - Write into the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
-  `.slipbox/bin/slipbox config get filenames.literature` casing convention. The title
-  is source/topic-oriented (what the source is about), never claim-shaped
-  — it doesn't change as more claims get added. On this note's first
+  `.slipbox/bin/slipbox config get filenames.literature` casing convention. The Literature H1
+  preserves the Resource's source title exactly; it is never replaced with an agent-authored
+  topic label. Construct the complete basename through `.slipbox/bin/slipbox filename format
+  --type literature --title "<exact source title>"`, passing each confidently identified
+  proper-name span as `--preserve`. The command applies protected names, configured casing,
+  filename sanitization, then the configured prefix, and returns the complete basename. If
+  protected-name identification is uncertain, show the proposed basename and ask the user
+  before writing. On this note's first
   claim, write the Core Idea line too, directly under the title (see
   `references/writing-a-claim.md`); skip it on a second or later claim,
   it's already there.

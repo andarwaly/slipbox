@@ -14,6 +14,7 @@ slipbox links add        --source S --target T --rel cites|extends
 slipbox links find       [--source S] [--target T] [--rel cites|extends]
 slipbox config get       [<dotted.path>]
 slipbox config set       <dotted.path> <value>
+slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
 slipbox humanize check   <file> [--language LANG]
 slipbox --help | --version
 ```

@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.2.0"
+CLI_VERSION="2.3.0"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -297,6 +297,7 @@ Usage:
   slipbox links find       [--source S] [--target T] [--rel cites|extends]
   slipbox config get       [<dotted.path>]
   slipbox config set       <dotted.path> <value>
+  slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
   slipbox humanize check   <file> [--language LANG]
   slipbox --help | --version
 
@@ -304,6 +305,93 @@ Output is JSON by default (--format table optional on find/get commands).
 Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
 {"error": "..."} object on stderr.
 EOF
+}
+
+# ---- filename (deterministic note basename construction) ----
+cmd_filename_format() {
+  [ $# -ge 1 ] || usage_err "filename format requires arguments"
+  local note_type="" title="" preserve_args=() uncertain_args=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --type) [ $# -ge 2 ] || usage_err "flag --type needs a value"; note_type="$2"; shift 2 ;;
+      --title) [ $# -ge 2 ] || usage_err "flag --title needs a value"; title="$2"; shift 2 ;;
+      --preserve) [ $# -ge 2 ] || usage_err "flag --preserve needs a value"; preserve_args+=("$2"); shift 2 ;;
+      --uncertain) [ $# -ge 2 ] || usage_err "flag --uncertain needs a value"; uncertain_args+=("$2"); shift 2 ;;
+      --help|-h) print_help; exit 0 ;;
+      --*) usage_err "unknown flag: $1" ;;
+      *) usage_err "unexpected argument: $1" ;;
+    esac
+  done
+  [ -n "$note_type" ] || usage_err "filename format requires --type"
+  [ -n "$title" ] || usage_err "filename format requires --title"
+  case "$note_type" in literature|reference|evergreen) ;; *) usage_err "--type must be literature, reference, or evergreen" ;; esac
+  require_config
+  local preserve_json uncertain_json
+  preserve_json=$(printf '%s\n' "${preserve_args[@]:-}" | python3 -c 'import json,sys; print(json.dumps([x.rstrip("\n") for x in sys.stdin if x.rstrip("\n")]))')
+  uncertain_json=$(printf '%s\n' "${uncertain_args[@]:-}" | python3 -c 'import json,sys; print(json.dumps([x.rstrip("\n") for x in sys.stdin if x.rstrip("\n")]))')
+  CONFIG_PATH="$CONFIG" NOTE_TYPE="$note_type" TITLE="$title" PRESERVE="$preserve_json" UNCERTAIN="$uncertain_json" py <<'PYEOF'
+data = load_json(os.environ["CONFIG_PATH"], "config.json")
+note_type = os.environ["NOTE_TYPE"]
+title = os.environ["TITLE"]
+preserve = json.loads(os.environ["PRESERVE"])
+uncertain = json.loads(os.environ["UNCERTAIN"])
+casing = walk_dotted(data, ["filenames", note_type], f"filenames.{note_type}")
+prefix = walk_dotted(data, ["prefixes", note_type], f"prefixes.{note_type}")
+if not isinstance(casing, str):
+    fail(f"filenames.{note_type} must be a string")
+if prefix is not False and not isinstance(prefix, str):
+    fail(f"prefixes.{note_type} must be a string or false")
+
+# Protect explicit spans and all-caps acronyms while transforming ordinary words.
+protected = list(preserve)
+for match in re.findall(r"(?<![A-Za-z])[A-Z][A-Z0-9&+.-]{1,}(?![A-Za-z])", title):
+    if match not in protected:
+        protected.append(match)
+work = title
+sentinels = []
+for index, value in enumerate(sorted(set(protected), key=len, reverse=True)):
+    if not value or value not in work:
+        continue
+    token = f"\u0000{index}\u0000"
+    work = work.replace(value, token)
+    sentinels.append((token, value))
+if casing == "Sentence case":
+    work = work.lower()
+elif casing == "Title Case":
+    work = work.title()
+elif casing == "kebab-case":
+    work = re.sub(r"[^A-Za-z0-9]+", "-", work).strip("-").lower()
+elif casing == "snake_case":
+    work = re.sub(r"[^A-Za-z0-9]+", "_", work).strip("_").lower()
+elif casing not in ("verbatim", "other"):
+    fail(f"unsupported filename casing: {casing}", USAGE_EXIT)
+for token, value in sentinels:
+    work = work.replace(token, value)
+# Sentence case starts at the first alphabetic character after protected spans
+# have been restored, so an acronym at the beginning remains intact.
+if casing == "Sentence case":
+    match = re.search(r"[A-Za-z]", work)
+    if match:
+        pos = match.start()
+        work = work[:pos] + work[pos].upper() + work[pos + 1:]
+# Keep readable punctuation, but prevent path/control characters and trim trailing dots/spaces.
+# A colon introducing an explicitly protected source name is retained as readable
+# subtitle punctuation; other unsafe separators become a single hyphen.
+protected_after_colon = any(re.search(r":\s*" + re.escape(value), title) for value in preserve if value)
+if protected_after_colon:
+    work = work.replace(":", "__SLIPBOX_COLON__")
+work = re.sub(r'[\\/:*?"<>|\x00-\x1f\x7f]', "-", work)
+work = work.replace("__SLIPBOX_COLON__", ":")
+work = re.sub(r"\s*-\s*", "-", work)
+work = re.sub(r"\s+", " ", work).strip().rstrip(". ")
+if not work:
+    fail("title produces an empty filename")
+if prefix is not False and prefix:
+    work = f"{prefix} {work}"
+if uncertain:
+    warn("protected-name identification is uncertain; preview this basename before writing: " + work)
+print(work)
+PYEOF
 }
 
 # ---- evergreen (file-per-candidate, YAML frontmatter, no body) ----
@@ -720,5 +808,6 @@ case "$1" in
   links) shift; dispatch links "add find" "$@" ;;
   config) shift; dispatch config "get set" "$@" ;;
   humanize) shift; dispatch humanize "check" "$@" ;;
+  filename) shift; dispatch filename "format" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

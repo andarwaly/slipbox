@@ -9,7 +9,7 @@ claim entry once it's written.
 ## Structure
 
 ```markdown
-# {{prefix}} [Source-oriented title]
+# {{prefix}} [Exact Resource/source title]
 
 [Core Idea — bare declarative sentence, no label]
 
@@ -25,7 +25,10 @@ claim entry once it's written.
   - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
-`{{prefix}}` resolves from `prefixes.literature` — see Resolving a note-type prefix
+The H1 preserves the Resource/source title exactly. Construct the filename separately with
+`.slipbox/bin/slipbox filename format --type literature --title "<exact source title>"`;
+do not independently case, sanitize, or prepend its prefix. `{{prefix}}` resolves from
+`prefixes.literature` — see Resolving a note-type prefix
 below, never hardcode a literal character.
 
 **Core Idea** — one sentence stating the source's central argument, everything else in
