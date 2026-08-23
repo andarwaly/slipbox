@@ -38,9 +38,13 @@ their lifecycle:
 
 - `evergreen add --slug <slug> --reason "<reason>"` records a pending candidate.
 - `evergreen find --status to-discuss` lists candidates available for discussion.
-- `evergreen update <slug> --status discussed --note-path <path>` closes a
-  candidate after a Take is written; use `--iteration` when revisiting an
-  existing note and rename the slug on a first write when appropriate.
+- Any `evergreen update` automatically refreshes the candidate's `updated_at`.
+- After a first write, close and rename the candidate with
+  `evergreen update <current-slug> --slug <final-slug> --status discussed
+  --note-path <path>`.
+- On a revisit, close the candidate with
+  `evergreen update <slug> --status discussed --note-path <path> --iteration
+  <next-number>`.
 
 Skills may retain the exact commands they execute, but defer shared semantics,
 status meanings, and lifecycle rules to this section rather than duplicating

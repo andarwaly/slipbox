@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Make-evergreen-note
@@ -54,7 +54,7 @@ starts.
 Orient the take with the Compass technique — reach for whichever direction
 the conversation calls for, no fixed order. Compass's own
 directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
-  gets logged to the evergreen backlog (see Compass's own Guardrail).
+gets logged to the evergreen backlog (see Compass's own Guardrail).
 
 `/grounding` hands back the confirmed Take, and — only if the user opted
 in — a flagged tension. If a tension came back, insert it into the evergreen
