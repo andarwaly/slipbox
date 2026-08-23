@@ -37,25 +37,27 @@
     },
     {
       "prompt": "make-reference-note \"Deep module\" for a new Reference note in a vault whose prefixes.reference is \"※ \" and whose mapped alternate-name field is aliases",
-      "expected_output": "Adds the clean alias \"Deep module\" to aliases while preserving that display casing, alongside the generated prefixed title.",
+      "expected_output": "Adds the exact ordered aliases list [\"Deep module\"] to aliases while preserving the display casing, alongside the generated prefixed title.",
       "assertions": [
         {"type": "contains", "text": "Deep module"},
-        {"type": "contains", "text": "aliases"}
+        {"type": "contains", "text": "aliases"},
+        {"type": "contains", "text": "[\"Deep module\"]"}
       ]
     },
     {
       "prompt": "make-reference-note \"Deep module\" for a new Reference note in a vault whose prefixes.reference is false",
-      "expected_output": "Does not infer an alias because the unprefixed title is already the note title; writes only explicitly supplied alternate names.",
+      "expected_output": "Does not infer the clean alias value \"Deep module\" because the unprefixed title is already the note title; writes only explicitly supplied alternate names, and the aliases list does not contain \"Deep module\".",
       "assertions": [
-        {"type": "not_contains", "text": "inferred alias"}
+        {"type": "not_contains", "text": "aliases: [\"Deep module\"]"}
       ]
     },
     {
       "prompt": "make-reference-note \"Deep module\" with explicit alternate names [\"DM\", \"deep module\", \"Deep Module\"] and a configured Reference prefix",
-      "expected_output": "Merges the inferred clean name before explicit names, preserving the first spelling and removing case-insensitive duplicates deterministically: [\"Deep module\", \"DM\"].",
+      "expected_output": "Merges the inferred clean name before explicit names, preserving the first spelling and removing case-insensitive duplicates deterministically. The exact aliases list is [\"Deep module\", \"DM\"].",
       "assertions": [
         {"type": "contains", "text": "case-insensitive"},
-        {"type": "contains", "text": "DM"}
+        {"type": "contains", "text": "DM"},
+        {"type": "contains", "text": "[\"Deep module\", \"DM\"]"}
       ]
     },
     {
@@ -63,6 +65,15 @@
       "expected_output": "Leaves the clean-alias inference untouched because it is Reference-only; the other note types have no equivalent alt_names contract.",
       "assertions": [
         {"type": "contains", "text": "Reference-only"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note \"Zettelkasten Method\" again, extending an existing Reference note whose aliases field already contains [\"Zettelkasten\"]",
+      "expected_output": "Preserves the existing aliases field unchanged, appends the new resource to the sources array without overwriting prior sources, and records a links row with rel_type='extends' to the existing Reference note.",
+      "assertions": [
+        {"type": "contains", "text": "append"},
+        {"type": "contains", "text": "aliases"},
+        {"type": "contains", "text": "extends"}
       ]
     }
   ]
