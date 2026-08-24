@@ -15,10 +15,11 @@
       ]
     },
     {
-      "prompt": "write-checks in checks-only mode (no field list) on an extending Reference note",
-      "expected_output": "Runs Style and Humanize only, skipping Frontmatter fields and Zone placement entirely — hands back a pass/revise signal alone, no resolved-field data.",
+      "prompt": "write-checks with artifact-kind: note and note-type: reference in checks-only mode (no field list) on an extending Reference note",
+      "expected_output": "Runs Style and Humanize, skips Frontmatter fields and Zone placement, and validates the complete Reference draft with note validate before handing back the pass/revise signal and validation result.",
       "assertions": [
-        {"type": "not_contains", "text": "zone"}
+        {"type": "contains", "text": "validate"},
+        {"type": "not_contains", "text": "resolve fields"}
       ]
     },
     {
@@ -52,16 +53,10 @@
       "prompt": "clip-resource resolved a quoted template instruction for an Article Resource. Run write-checks in explicit Resource mode on the synthesized body.",
       "expected_output": "Runs Style and Humanize on the synthesized Resource content and returns a pass/revise signal. It skips field resolution, zone placement, and note validate because Resource frontmatter type is an Article content subtype.",
       "assertions": [
-        {"type": "contains", "text": "Resource mode"},
+        {"type": "contains", "text": "artifact-kind: resource"},
+        {"type": "not_contains", "text": "field resolution"},
+        {"type": "not_contains", "text": "zone placement"},
         {"type": "not_contains", "text": "note validate"}
-      ]
-    },
-    {
-      "prompt": "An extending Reference note invokes write-checks in checks-only synthesized-note mode with no field list.",
-      "expected_output": "Runs Style and Humanize, then validates the complete Reference draft with note validate; it does not resolve fields or place zones.",
-      "assertions": [
-        {"type": "contains", "text": "Reference"},
-        {"type": "contains", "text": "validate"}
       ]
     }
   ]

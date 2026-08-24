@@ -73,7 +73,7 @@ states something none of the individual notes said on their own.
 
 ### 03 - Write
 
-- Run a `/write-checks` session on the draft, passing the evergreen field
+- Run a `/write-checks` session with `artifact-kind: note` and `note-type: evergreen`, passing the evergreen field
   list (`type`, `created`, `derived-from`, `updated-at`) — it resolves each
   field's mapping, formatting, and zone placement, and checks the draft's
   style and humanize signals. `updated-at` gets `created`'s own timestamp

@@ -114,7 +114,9 @@
       "expected_output": "Invokes /write-checks explicitly in Resource mode for the synthesized Resource body, running Style and Humanize only. It does not invoke note validate; bare-variable capture behavior remains unchanged.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
-        {"type": "contains", "text": "Resource mode"},
+        {"type": "contains", "text": "artifact-kind: resource"},
+        {"type": "not_contains", "text": "field resolution"},
+        {"type": "not_contains", "text": "zone placement"},
         {"type": "not_contains", "text": "note validate"}
       ]
     },

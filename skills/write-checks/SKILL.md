@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Write-checks
@@ -17,23 +17,31 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Invocation modes
 
-There are three explicit caller modes:
+The caller must pass an explicit `artifact-kind` field with exactly one of these values:
+
+- `artifact-kind: note` — also pass `note-type: literature`, `note-type: reference`,
+  or `note-type: evergreen`, plus the complete draft, basename, and H1/title. A
+  field list selects the full note pass; omitting it selects checks-only note mode.
+- `artifact-kind: resource` — pass synthesized content and no field list. The
+  Resource mode runs Style and Humanize only.
+
+There are three execution modes:
 
 - **Full synthesized-note mode** — called with a field list, runs Style, Humanize,
   Frontmatter fields, Zone placement, and whole-artifact validation.
 - **Checks-only synthesized-note mode** — called with no field list for an already-
   resolved note (for example, a Reference extension), runs Style and Humanize and
   validates the caller's complete Literature, Reference, or Evergreen draft.
-- **Resource mode** — the caller explicitly identifies the draft as a synthesized
-  Resource. It runs Style and Humanize on the synthesized content and returns the
+- **Resource mode** (`artifact-kind: resource`) — the caller identifies the draft as
+  synthesized Resource content. It runs Style and Humanize and returns the
   pass/revise signal only. It does not resolve fields, place zones, or invoke
   `note validate`: Resource frontmatter `type` is the content subtype, and the
   validator accepts only `literature`, `reference`, and `evergreen`.
 
 ## Artifact validation
 
-For full and checks-only synthesized-note modes, the caller supplies the complete draft,
-its note type, the intended final basename, and the exact H1/title before writing. Run
+For full and checks-only note modes (`artifact-kind: note`), the caller supplies the
+complete draft, its `note-type`, intended final basename, and exact H1/title. Run
 the bundled validator against that temporary file:
 
 ```bash

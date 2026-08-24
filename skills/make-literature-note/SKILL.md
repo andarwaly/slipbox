@@ -123,7 +123,7 @@ format.
 As soon as one claim is confirmed — before continuing the conversation
 toward the next one, if there is a next one:
 
-- Run a `/write-checks` session on the draft, passing the literature field
+- Run a `/write-checks` session with `artifact-kind: note` and `note-type: literature`, passing the literature field
   list (`type`, `created`, `source`) — it resolves each field's mapping,
   formatting, zone placement, and title prefix, and checks the draft's
   style and humanize signals.
@@ -354,7 +354,7 @@ reopened rather than superseded by a new heading.
 
 ## Final validation handoff
 
-Run `/write-checks` against the complete artifact after the final batch. Check
+Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete artifact after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
 surfacing sections on the file already written. Then run
 `.slipbox/bin/slipbox note validate --type literature --path <saved-path>

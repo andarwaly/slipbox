@@ -83,7 +83,7 @@ Reconcile the gathered characterizations into one definition:
 
 Write fresh:
 
-- Run a `/write-checks` session on the draft, passing the Reference field list (`type`,
+- Run a `/write-checks` session with `artifact-kind: note` and `note-type: reference`, passing the Reference field list (`type`,
   `created`, `sources`, and `alt_names`) — it resolves each field's mapping, formatting,
   zone placement, and title prefix, and checks the draft's style and humanize signals.
 - Resolve `prefixes.reference` and the configured `alt_names` field before assembling
@@ -113,7 +113,7 @@ Write fresh:
 `sources` already has its resolved mapping and formatting from the reference's first
 write — no field resolution needed here.
 
-1. Run a `/write-checks` session on the draft in its checks-only mode (no field list).
+1. Run a `/write-checks` session with `artifact-kind: note` and `note-type: reference` in checks-only mode (no field list).
 2. Re-read the file from disk immediately before assembling the new draft (state can
    have changed since the read in "Take the candidate").
 3. Append the new resource(s) to the `sources` frontmatter array, formatted per the
