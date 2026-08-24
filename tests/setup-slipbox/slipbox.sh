@@ -264,6 +264,20 @@ check_eq "no prefix returns the complete unprefixed basename" "An evergreen idea
   "$("$SLIPBOX" filename format --type evergreen --title 'An Evergreen Idea')"
 check_eq "multiple protected spans survive casing" "§ Design with Matt Pocock and OpenAI" \
   "$("$SLIPBOX" filename format --type literature --title 'Design With Matt Pocock and OpenAI' --preserve 'Matt Pocock' --preserve 'OpenAI')"
+check_eq "protected substring does not alter an unrelated word in Sentence case" "§ AI and PAIR" \
+  "$($SLIPBOX filename format --type literature --title 'AI and PAIR' --preserve 'AI')"
+check_eq "protected substring does not alter a mixed-case word" "§ AI and pairwise" \
+  "$($SLIPBOX filename format --type literature --title 'AI and PAIRwise' --preserve 'AI')"
+check_eq "protected span survives kebab-case" "※ guide-by-OpenAI" \
+  "$($SLIPBOX filename format --type reference --title 'Guide By OpenAI' --preserve 'OpenAI')"
+cat > "$SCRATCH/config.json" <<'EOF'
+{"filenames":{"literature":"Sentence case","reference":"snake_case","evergreen":"Sentence case"},"prefixes":{"literature":"§","reference":"※","evergreen":false}}
+EOF
+check_eq "protected span survives snake_case" "※ guide_by_OpenAI" \
+  "$($SLIPBOX filename format --type reference --title 'Guide By OpenAI' --preserve 'OpenAI')"
+cat > "$SCRATCH/config.json" <<'EOF'
+{"filenames":{"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},"prefixes":{"literature":"§","reference":"※","evergreen":false}}
+EOF
 check_eq "mixed-case hyphenated words are not treated as acronyms" "§ AI-assisted coding" \
   "$($SLIPBOX filename format --type literature --title 'AI-Assisted Coding')"
 check_match "unmatched protected names are surfaced" '*not found*preview*' \

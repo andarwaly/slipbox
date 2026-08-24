@@ -570,6 +570,8 @@ if prefix is not False and not isinstance(prefix, str):
     fail(f"prefixes.{note_type} must be a string or false")
 
 # Protect explicit spans and genuinely all-caps acronym tokens while transforming ordinary words.
+# Keep the validated match ranges: replacing a protected value globally would also
+# protect an unrelated occurrence inside another word (for example, AI in PAIR).
 protected = []
 explicit_protected = []
 protection_warnings = []
@@ -579,23 +581,37 @@ for value in preserve:
         continue
     matches = list(re.finditer(r"(?<![A-Za-z0-9])" + re.escape(value) + r"(?![A-Za-z0-9])", title))
     if len(matches) == 1:
-        protected.append(value)
+        protected.append((matches[0].start(), matches[0].end(), value))
         explicit_protected.append(value)
     elif not matches:
         protection_warnings.append(f"protected name not found: {value}")
     else:
         protection_warnings.append(f"protected name is ambiguous ({len(matches)} matches): {value}")
 for match in re.findall(r"(?<![A-Za-z0-9])[A-Z][A-Z0-9&+.]+(?![A-Za-z0-9])", title):
-    if match not in protected:
-        protected.append(match)
+    for found in re.finditer(r"(?<![A-Za-z0-9])" + re.escape(match) + r"(?![A-Za-z0-9])", title):
+        candidate = (found.start(), found.end(), match)
+        if candidate not in protected:
+            protected.append(candidate)
 work = title
 sentinels = []
-for index, value in enumerate(sorted(set(protected), key=len, reverse=True)):
-    if not value or value not in work:
+# Alphanumeric placeholders survive every configured casing/sanitizing pass.
+# Restore case-insensitively because Title Case changes the placeholder itself.
+spans = []
+for start, end, value in sorted(protected, key=lambda item: (item[0], -(item[1] - item[0]))):
+    if spans and start < spans[-1][1]:
         continue
-    token = f"\u0000{index}\u0000"
-    work = work.replace(value, token)
+    spans.append((start, end, value))
+pieces = []
+cursor = 0
+for index, (start, end, value) in enumerate(spans):
+    token = f"slipboxprotected{index}token"
+    while token.casefold() in title.casefold():
+        token += "x"
+    pieces.extend((title[cursor:start], token))
     sentinels.append((token, value))
+    cursor = end
+pieces.append(title[cursor:])
+work = "".join(pieces)
 if casing == "Sentence case":
     work = work.lower()
 elif casing == "Title Case":
@@ -607,7 +623,7 @@ elif casing == "snake_case":
 elif casing not in ("verbatim", "other"):
     fail(f"unsupported filename casing: {casing}", USAGE_EXIT)
 for token, value in sentinels:
-    work = work.replace(token, value)
+    work = re.sub(re.escape(token), lambda _: value, work, count=1, flags=re.IGNORECASE)
 # Sentence case starts at the first alphabetic character after protected spans
 # have been restored, so an acronym at the beginning remains intact.
 if casing == "Sentence case":
