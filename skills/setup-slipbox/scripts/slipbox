@@ -608,7 +608,11 @@ for index, (start, end, value) in enumerate(spans):
     while token.casefold() in title.casefold():
         token += "x"
     pieces.extend((title[cursor:start], token))
-    sentinels.append((token, value))
+    protected_value = value
+    if casing in ("kebab-case", "snake_case"):
+        separator = "-" if casing == "kebab-case" else "_"
+        protected_value = re.sub(r"[^A-Za-z0-9]+", separator, value).strip(separator)
+    sentinels.append((token, protected_value))
     cursor = end
 pieces.append(title[cursor:])
 work = "".join(pieces)

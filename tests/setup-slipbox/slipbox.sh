@@ -270,11 +270,15 @@ check_eq "protected substring does not alter a mixed-case word" "§ AI and pairw
   "$($SLIPBOX filename format --type literature --title 'AI and PAIRwise' --preserve 'AI')"
 check_eq "protected span survives kebab-case" "※ guide-by-OpenAI" \
   "$($SLIPBOX filename format --type reference --title 'Guide By OpenAI' --preserve 'OpenAI')"
+check_eq "multiword protected span uses kebab separators" "※ guide-by-Matt-Pocock" \
+  "$($SLIPBOX filename format --type reference --title 'Guide By Matt Pocock' --preserve 'Matt Pocock')"
 cat > "$SCRATCH/config.json" <<'EOF'
 {"filenames":{"literature":"Sentence case","reference":"snake_case","evergreen":"Sentence case"},"prefixes":{"literature":"§","reference":"※","evergreen":false}}
 EOF
 check_eq "protected span survives snake_case" "※ guide_by_OpenAI" \
   "$($SLIPBOX filename format --type reference --title 'Guide By OpenAI' --preserve 'OpenAI')"
+check_eq "multiword protected span uses snake separators" "※ guide_by_Matt_Pocock" \
+  "$($SLIPBOX filename format --type reference --title 'Guide By Matt Pocock' --preserve 'Matt Pocock')"
 cat > "$SCRATCH/config.json" <<'EOF'
 {"filenames":{"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},"prefixes":{"literature":"§","reference":"※","evergreen":false}}
 EOF
