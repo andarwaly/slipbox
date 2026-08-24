@@ -495,7 +495,29 @@ else:
             if top_positions and bottom_positions and max(top_positions) > min(bottom_positions):
                 error("field-zone", "top fields must precede bottom fields", True)
 
-        h1 = re.findall(r"(?m)^# (.+?)\s*$", body)
+        def markdown_h1s_outside_fences(markdown):
+            h1s = []
+            fence_char = None
+            fence_length = 0
+            for line in markdown.splitlines():
+                if fence_char is not None:
+                    closing = re.match(rf"^\s{{0,3}}({re.escape(fence_char)}){{{fence_length},}}\s*$", line)
+                    if closing:
+                        fence_char = None
+                        fence_length = 0
+                    continue
+                opening = re.match(r"^\s{0,3}(`{3,}|~{3,})(?:[^`~].*)?$", line)
+                if opening:
+                    fence = opening.group(1)
+                    fence_char = fence[0]
+                    fence_length = len(fence)
+                    continue
+                heading = re.match(r"^# (.+?)\s*$", line)
+                if heading:
+                    h1s.append(heading.group(1))
+            return h1s
+
+        h1 = markdown_h1s_outside_fences(body)
         if len(h1) != 1:
             error("markdown-structure", "note body must contain exactly one level-one heading")
         elif expected_title and h1[0] != expected_title:

@@ -199,6 +199,43 @@ EOF
 check "note validate accepts a complete artifact" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Exact source title.md" --title "Exact source title"
 sed 's/type: "literature"/type: literature/' "$SCRATCH/§ Exact source title.md" > "$SCRATCH/§ Bare text.md"
 check "note validate accepts bare mapped text" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Bare text.md" --basename "§ Bare text.md" --title "Exact source title"
+cat > "$SCRATCH/§ Backtick comment.md" <<'EOF'
+---
+type: literature
+created: 2026-08-24
+source: "[[A resource]]"
+---
+# Exact source title
+```sh
+# Shell comment
+echo "ok"
+```
+EOF
+check "note validate ignores H1-like lines in backtick fences" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Backtick comment.md" --basename "§ Backtick comment.md" --title "Exact source title"
+cat > "$SCRATCH/§ Tilde comment.md" <<'EOF'
+---
+type: literature
+created: 2026-08-24
+source: "[[A resource]]"
+---
+# Exact source title
+~~~sh
+# Shell comment
+echo "ok"
+~~~
+EOF
+check "note validate ignores H1-like lines in tilde fences" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Tilde comment.md" --basename "§ Tilde comment.md" --title "Exact source title"
+cat > "$SCRATCH/§ Multiple real H1.md" <<'EOF'
+---
+type: literature
+created: 2026-08-24
+source: "[[A resource]]"
+---
+# Exact source title
+## A section
+# Another real heading
+EOF
+check_exit "note validate rejects multiple real H1s" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Multiple real H1.md" --basename "§ Multiple real H1.md" --title "Exact source title"
 check_exit "note validate rejects a basename mismatch" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Other title.md" --title "Exact source title"
 cat > "$SCRATCH/config.json" <<'EOF'
 {
