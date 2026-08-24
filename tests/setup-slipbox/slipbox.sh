@@ -197,8 +197,8 @@ source: "[[A resource]]"
 One compact paragraph.
 EOF
 check "note validate accepts a complete artifact" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Exact source title.md" --title "Exact source title"
-sed 's/source: "\(.*\)"/source: \1/' "$SCRATCH/§ Exact source title.md" > "$SCRATCH/bad.md"
-check_exit "note validate rejects unquoted mapped text" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/bad.md" --basename "§ Exact source title.md" --title "Exact source title"
+sed 's/type: "literature"/type: literature/' "$SCRATCH/§ Exact source title.md" > "$SCRATCH/§ Bare text.md"
+check "note validate accepts bare mapped text" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Bare text.md" --basename "§ Bare text.md" --title "Exact source title"
 check_exit "note validate rejects a basename mismatch" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Other title.md" --title "Exact source title"
 cat > "$SCRATCH/config.json" <<'EOF'
 {
@@ -217,10 +217,47 @@ sources: ["[[A resource]]"]
 Definition.
 EOF
 check "note validate accepts a parsed list" "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Reference.md" --basename "※ Reference.md" --title "Reference"
+cat > "$SCRATCH/※ block-list.md" <<'EOF'
+---
+type: reference
+created: 2026-08-24
+sources:
+  - "[[A resource]]"
+  - "[[Another resource]]"
+---
+# Reference
+Definition.
+EOF
+check "note validate accepts a block YAML list" "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ block-list.md" --basename "※ block-list.md" --title "Reference"
 sed 's/sources: \[.*/sources: [not valid/' "$SCRATCH/※ Reference.md" > "$SCRATCH/malformed-list.md"
 check_exit "note validate rejects malformed list serialization" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/malformed-list.md" --basename "malformed-list.md" --title "Reference"
 sed 's/created: 2026-08-24/created: "2026-08-24"/' "$SCRATCH/※ Reference.md" > "$SCRATCH/quoted-date.md"
 check_exit "note validate rejects quoted date" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/quoted-date.md" --basename "quoted-date.md" --title "Reference"
+cat > "$SCRATCH/config.json" <<'EOF'
+{
+  "filenames": {"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},
+  "prefixes": {"literature":"§","reference":"※","evergreen":false},
+  "frontmatter": {"evergreen": {"type":{"name":"type","type":"text","zone":"top"},"score":{"name":"score","type":"number","zone":"top"},"enabled":{"name":"enabled","type":"checkbox","zone":"top"},"created":{"name":"created","type":"date","zone":"top"},"updated":{"name":"updated","type":"datetime","zone":"bottom"}}}
+}
+EOF
+cat > "$SCRATCH/kinds.md" <<'EOF'
+---
+type: evergreen
+score: 3.5
+enabled: true
+created: 2026-08-24
+updated: 2026-08-24T12:34:56Z
+---
+# Kinds
+Definition.
+EOF
+check "note validate accepts number checkbox date and datetime" "$SLIPBOX" note validate --type evergreen --path "$SCRATCH/kinds.md" --basename "kinds.md" --title "Kinds"
+sed 's/score: 3.5/score: "not a number"/' "$SCRATCH/kinds.md" > "$SCRATCH/bad-number.md"
+check_exit "note validate rejects a non-number" 1 "$SLIPBOX" note validate --type evergreen --path "$SCRATCH/bad-number.md" --basename "bad-number.md" --title "Kinds"
+sed 's/enabled: true/enabled: yes/' "$SCRATCH/kinds.md" > "$SCRATCH/bad-checkbox.md"
+check_exit "note validate rejects a non-checkbox" 1 "$SLIPBOX" note validate --type evergreen --path "$SCRATCH/bad-checkbox.md" --basename "bad-checkbox.md" --title "Kinds"
+sed 's/updated: 2026-08-24T12:34:56Z/updated: "2026-08-24T12:34:56Z"/' "$SCRATCH/kinds.md" > "$SCRATCH/quoted-datetime.md"
+check_exit "note validate rejects quoted datetime" 1 "$SLIPBOX" note validate --type evergreen --path "$SCRATCH/quoted-datetime.md" --basename "quoted-datetime.md" --title "Kinds"
 check_eq "unsafe filename characters are sanitized" "§ A title-with-unsafe-chars-yes" \
   "$("$SLIPBOX" filename format --type literature --title 'A Title/With: Unsafe*Chars? Yes')"
 check_eq "no prefix returns the complete unprefixed basename" "An evergreen idea" \

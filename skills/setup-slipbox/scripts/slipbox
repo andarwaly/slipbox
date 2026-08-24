@@ -357,18 +357,102 @@ else:
     else:
         body = text[closing + 5:]
         raw_fields = text[4:closing]
-        fields = {}
-        order = []
-        for line_no, line in enumerate(raw_fields.splitlines(), 2):
-            if not line.strip():
-                continue
-            key, sep, raw = line.partition(":")
-            key, raw = key.strip(), raw.strip()
-            if not sep or not key:
-                error("yaml", f"malformed frontmatter line {line_no}")
-                continue
-            order.append(key)
-            fields[key] = raw
+
+        def parse_yaml_scalar(raw, line_no):
+            raw = raw.strip()
+            if not raw:
+                return None, False
+            if raw.startswith(chr(34)):
+                try:
+                    return json.loads(raw), True
+                except json.JSONDecodeError:
+                    raise ValueError("unparsable quoted value")
+            if raw.startswith("'") and raw.endswith("'") and len(raw) >= 2:
+                return raw[1:-1].replace("''", "'"), True
+            if raw in ("null", "Null", "NULL", "~"):
+                return None, False
+            if raw in ("true", "True", "TRUE"):
+                return True, False
+            if raw in ("false", "False", "FALSE"):
+                return False, False
+            if re.fullmatch(r"[-+]?\d+", raw):
+                return int(raw), False
+            if re.fullmatch(r"[-+]?(?:\d+\.\d*|\d*\.\d+)(?:[eE][-+]?\d+)?", raw) or re.fullmatch(r"[-+]?\d+[eE][-+]?\d+", raw):
+                return float(raw), False
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError:
+                    if not raw.endswith("]"):
+                        raise ValueError("unparsable inline list")
+                    parts = [part.strip() for part in raw[1:-1].split(",")]
+                    parsed = [parse_yaml_scalar(part, line_no)[0] for part in parts if part]
+                if not isinstance(parsed, list):
+                    raise ValueError("inline value is not a list")
+                return parsed, False
+            return raw, False
+
+        def parse_yaml_frontmatter(raw_fields):
+            lines = raw_fields.splitlines()
+            fields, order = {}, []
+            index = 0
+            while index < len(lines):
+                line_no = index + 2
+                line = lines[index]
+                if not line.strip():
+                    index += 1
+                    continue
+                if line[:1].isspace():
+                    raise ValueError(f"malformed frontmatter line {line_no}")
+                key, sep, raw = line.partition(":")
+                key, raw = key.strip(), raw.strip()
+                if not sep or not key:
+                    raise ValueError(f"malformed frontmatter line {line_no}")
+                order.append(key)
+                if raw:
+                    fields[key], quoted = parse_yaml_scalar(raw, line_no)
+                    if fields[key] is None and raw not in ("null", "Null", "NULL", "~"):
+                        raise ValueError(f"malformed frontmatter line {line_no}")
+                    fields[f"__raw__{key}"] = raw
+                    fields[f"__quoted__{key}"] = quoted
+                    index += 1
+                    continue
+                children = []
+                child_index = index + 1
+                while child_index < len(lines):
+                    child = lines[child_index]
+                    if not child.strip():
+                        child_index += 1
+                        continue
+                    if not child[:1].isspace():
+                        break
+                    children.append((child_index + 2, child))
+                    child_index += 1
+                if children and all(re.match(r"^\s+-\s+", child) for _, child in children):
+                    parsed = []
+                    for child_line_no, child in children:
+                        item = re.sub(r"^\s+-\s+", "", child)
+                        if not item:
+                            raise ValueError(f"malformed frontmatter line {child_line_no}")
+                        parsed.append(parse_yaml_scalar(item, child_line_no)[0])
+                    fields[key] = parsed
+                    fields[f"__raw__{key}"] = "block-list"
+                    fields[f"__quoted__{key}"] = False
+                    index = child_index
+                    continue
+                if children:
+                    raise ValueError(f"malformed frontmatter line {children[0][0]}")
+                fields[key] = None
+                fields[f"__raw__{key}"] = ""
+                fields[f"__quoted__{key}"] = False
+                index += 1
+            return fields, order
+
+        try:
+            fields, order = parse_yaml_frontmatter(raw_fields)
+        except (ValueError, TypeError) as exc:
+            error("yaml", str(exc))
+            fields, order = {}, []
 
         mapping = config.get("frontmatter", {}).get(note_type, {})
         top, bottom = [], []
@@ -387,19 +471,23 @@ else:
             if name not in fields:
                 error("missing-field", f"mapped field {name!r} is missing")
                 continue
-            raw = fields[name]
-            quoted = len(raw) >= 2 and raw.startswith(chr(34)) and raw.endswith(chr(34))
-            if kind in ("datetime", "date") and quoted:
-                error("yaml-quoting", f"{kind} field {name!r} must use a bare YAML value")
-            elif kind == "text" and raw and not quoted:
-                error("yaml-quoting", f"text field {name!r} must use a quoted YAML value", True)
-            if kind == "list" and raw:
-                try:
-                    parsed_list = json.loads(raw)
-                except json.JSONDecodeError:
-                    parsed_list = None
-                if not isinstance(parsed_list, list):
-                    error("yaml-list", f"list field {name!r} must be a valid YAML array")
+            value = fields[name]
+            raw = fields.get(f"__raw__{name}", "")
+            quoted = fields.get(f"__quoted__{name}", False)
+            if kind == "text" and not isinstance(value, str):
+                error("yaml-type", f"text field {name!r} must be a YAML string")
+            elif kind == "list" and (not isinstance(value, list) or not all(isinstance(item, str) for item in value)):
+                error("yaml-list", f"list field {name!r} must be a YAML array of strings")
+            elif kind == "number" and (isinstance(value, bool) or not isinstance(value, (int, float))):
+                error("yaml-type", f"number field {name!r} must be a YAML number")
+            elif kind == "checkbox" and not isinstance(value, bool):
+                error("yaml-type", f"checkbox field {name!r} must be true or false")
+            elif kind == "date":
+                if quoted or not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+                    error("yaml-date", f"date field {name!r} must be an unquoted YYYY-MM-DD value")
+            elif kind == "datetime":
+                if quoted or not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})", raw):
+                    error("yaml-datetime", f"datetime field {name!r} must be an unquoted ISO-8601 value")
             (top if zone == "top" else bottom).append(name)
         if order:
             top_positions = [order.index(name) for name in top if name in order]
