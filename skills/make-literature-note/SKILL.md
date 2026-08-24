@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.13.0"
+  version: "1.14.0"
 ---
 
 # Make-literature-note
@@ -204,7 +204,8 @@ mentioned [X] — is that not something the source argues, or should we
 leave it for now?"
 
 The user's own "I think that's everything" always ends the session
-regardless of what the backlog still shows uncovered — for both states.
+regardless of what the backlog still shows uncovered — for both non-covered
+states: Drafted but unconfirmed and Untouched.
 The nudge is a single offer, never an insistence.
 
 Then **always** re-read the complete source and compare it against the
@@ -279,8 +280,10 @@ Idea stabilize, re-read the source and note once in a mandatory batch. Surface
 load-bearing candidates together, with a guessed section, and obtain the
 user's confirmation before appending. `Key Concepts` holds abstract concepts,
 methods, and frameworks. `Mentioned` holds concrete named referents: people,
-places, organizations, books/creative works, named tools, and events.
-Downstream classification remains separate.
+places, organizations, books/creative works, named tools, and events. Downstream
+`find-connections --references` classification first checks people, places, and
+organizations as surfacing-only entities; non-entities then take the reusability
+test and may become Reference candidates.
 
 ### Closing with the user's own reaction
 

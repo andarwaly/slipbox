@@ -1,6 +1,6 @@
 # find-connections
 
-Scan existing notes for Reference/Person/Location/Organization recurrence, missing
+Scan existing notes for recurring Reference or Mentioned candidates, missing
 links, and sparked ideas — takes an explicit `--references` or `--evergreen` mode flag.
 Absorbs the former `find-terms` skill entirely (that skill no longer exists).
 
@@ -24,8 +24,8 @@ never a bare `slipbox`, since it isn't guaranteed to be on `PATH`.
 An explicit mode flag is required — `--references` or `--evergreen`. Neither given means
 the skill stops and asks which mode is meant, rather than guessing.
 
-- **`--references`** — absorbed `find-terms` behavior. Scans for Reference/Person/
-  Location/Organization recurrence: candidates that show up across 2+ notes but have no
+- **`--references`** — absorbed `find-terms` behavior. Scans for recurring Reference and
+  concrete Mentioned candidates: candidates that show up across 2+ notes but have no
   note of their own yet.
 - **`--evergreen`** — the original `find-connections` behavior, unchanged: mechanical
   link suggestions and sparked ideas.
@@ -51,12 +51,13 @@ connections relating to just those notes, instead of a whole-vault scan.
    `alt_names` candidates on write.
 3. **Classify each cluster crossing threshold** — entity-check first (is this a person,
    place, or organization, real or fictional?), then the reusability test (deletion test
-   + declarative-title test) for anything that isn't an entity.
-4. **Present as a batch** — every candidate crossing threshold (Reference and Person/
-   Location/Organization alike) shown together, never auto-written. For an approved
+   + declarative-title test) for anything that isn't an entity, including named books/
+   creative works, tools, and events.
+4. **Present as a batch** — every candidate crossing threshold (Reference and concrete
+   Mentioned candidates alike) shown together, never auto-written. For an approved
    Reference candidate, the user invokes `/make-reference-note` themselves — this skill never
-   writes one directly. Person/Location/Organization candidates are surfaced only; this
-   family has no write skill for those three types.
+   writes one directly. Person/Location/Organization candidates remain surfacing-only;
+   this family has no write skill for those three types.
 5. Zero clusters crossing threshold is a complete, valid result, not an error.
 
 ## How `--evergreen` works

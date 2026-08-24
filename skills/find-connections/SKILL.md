@@ -1,6 +1,6 @@
 ---
 name: find-connections
-description: Scan existing notes for missing links, sparked ideas, and Reference/Person/Location/Organization recurrence — takes an explicit --references or --evergreen mode flag.
+description: Scan existing notes for missing links, sparked ideas, and recurring Reference or Mentioned candidates — takes an explicit --references or --evergreen mode flag.
 disable-model-invocation: true
 license: MIT
 metadata:
@@ -23,7 +23,7 @@ This skill takes an explicit mode flag: `--references` or `--evergreen`. If neit
 given, stop and ask the user which mode they mean — do not guess or default to one.
 
 - `--references` — absorbs `find-terms` entirely (that skill no longer exists). Scans
-  for Reference/Person/Location/Organization recurrence.
+  for recurring Reference and concrete Mentioned candidates.
 - `--evergreen` — the original `find-connections` behavior, unchanged: mechanical link
   suggestions and sparked ideas.
 
@@ -71,11 +71,10 @@ in this order — entity-check first, then the reusability test:
    `paths.*` config needed; a single configured path per type would wrongly flag an
    already-noted entity as broken if the vault splits these across multiple folders
    (e.g. `coworkers/`, `family/`, `authors/`).
-   - If yes: this is a Person/Location/Organization candidate. Surfacing only —
-     `find-connections` never writes one of these three types, real or fictional
-     (per `GLOSSARY.md`). Report it the same way as a
-     Reference candidate (recurrence threshold, batch-presented), just without ever
-     attempting a write.
+   - If yes: this is a surfacing-only entity candidate. `find-connections` never
+     writes people, places, or organizations, real or fictional (per `GLOSSARY.md`).
+     Report it the same way as a Reference candidate (recurrence threshold,
+     batch-presented), just without ever attempting a write.
    - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
 2. **Reusability test** (only if not an entity; see `GLOSSARY.md` for deletion test and declarative-title test definitions).
    - Passes both: Reference-note candidate.
@@ -83,10 +82,14 @@ in this order — entity-check first, then the reusability test:
      stays an unresolved broken wikilink indefinitely. This is a legitimate resting
      state, not a defect to resolve.
 
+Non-entity books/creative works, named tools, and events continue to the reusability
+test. If they pass, report them as Reference-note candidates; if they fail, leave them
+as unresolved Mentioned links.
+
 ### Present as a batch
 
 Batch-present every candidate crossing threshold — Reference candidates and
-Person/Location/Organization candidates alike — never auto-write. This matches the
+surfacing-only entity candidates alike — never auto-write. This matches the
 existing mechanical-links batch-presentation discipline below. For each cluster, show
 its variant labels (`alt_names`), the count, and which notes mention it.
 

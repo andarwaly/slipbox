@@ -96,16 +96,21 @@
       "expected_output": "Runs a mandatory complete source-to-note audit checking missing arguments, narrow or broad claims, overlap, and lost qualifications or gray areas; any selected finding returns through grounding and a material change restarts the audit until clean.",
       "assertions": [
         {"type": "contains", "text": "narrow"},
+        {"type": "contains", "text": "missing arguments"},
         {"type": "contains", "text": "overlap"},
-        {"type": "contains", "text": "gray areas"}
+        {"type": "contains", "text": "gray areas"},
+        {"type": "contains", "text": "material change"},
+        {"type": "contains", "text": "until the audit is clean"}
       ]
     },
     {
       "prompt": "The user declines a valid source-audit finding and asks to finish",
-      "expected_output": "Reports the literature note as deliberately partial, discards the private backlog, and does not persist a backlog unless explicitly requested.",
+      "expected_output": "Reports the literature note as deliberately partial after the user declined the valid finding, discards the private backlog, and does not persist a backlog unless explicitly requested.",
       "assertions": [
         {"type": "contains", "text": "partial"},
-        {"type": "contains", "text": "private backlog"}
+        {"type": "contains", "text": "private backlog"},
+        {"type": "contains", "text": "declined"},
+        {"type": "contains", "text": "does not persist"}
       ]
     },
     {
@@ -113,8 +118,11 @@
       "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during the claim write, then performs one mandatory final batch pass before reaction and validation.",
       "assertions": [
         {"type": "contains", "text": "final batch"},
+        {"type": "contains", "text": "Key Concepts"},
         {"type": "contains", "text": "Mentioned"},
-        {"type": "contains", "text": "named tools"}
+        {"type": "contains", "text": "named tools"},
+        {"type": "contains", "text": "books/creative works"},
+        {"type": "contains", "text": "events"}
       ]
     },
     {
@@ -122,7 +130,20 @@
       "expected_output": "Follows the fixed order: convergent source audit, density merge and re-audit if changed, final Core Idea, final Key Concepts/Mentioned batch, reaction and optional Evergreen routing, then final artifact validation. Done cannot fire early.",
       "assertions": [
         {"type": "contains", "text": "Done"},
-        {"type": "contains", "text": "final validation"}
+        {"type": "contains", "text": "final validation"},
+        {"type": "contains", "text": "fixed order"},
+        {"type": "contains", "text": "re-audit"}
+      ]
+    },
+    {
+      "prompt": "The conversation drafted a clinical light-therapy claim, parked it for later, and also has one untouched source argument; the user says, 'I think that's everything.'",
+      "expected_output": "Keeps the drafted-but-unconfirmed item distinct from the untouched item, names the drafted item specifically, gives the untouched item one nudge, and ends when the user says they are finished. It does not treat either item as Covered or collapse the drafted state into Untouched.",
+      "assertions": [
+        {"type": "contains", "text": "Drafted but unconfirmed"},
+        {"type": "contains", "text": "Untouched"},
+        {"type": "contains", "text": "parked"},
+        {"type": "contains", "text": "one nudge"},
+        {"type": "not_contains", "text": "for both states"}
       ]
     }
   ]

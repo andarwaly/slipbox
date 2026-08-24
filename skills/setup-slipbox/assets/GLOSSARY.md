@@ -112,10 +112,10 @@ _Avoid_: Core Idea (the note's single central argument, written once; a Key Clai
 
 **Key Concepts**
 The literature-note section wikilinking anything a Key Claim's weight actually rests on that reads as an abstract concept, term, framework, or method — concrete named referents go to Mentioned instead. Accumulates during claim writes and receives a mandatory final batch pass; scanned by find-connections for recurrence detection.
-_Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for person/place/organization candidates).
+_Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for concrete named referents).
 
 **Mentioned**
-The literature-note section wikilinking concrete named referents a Key Claim's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during claim writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification remains separate.
+The literature-note section wikilinking concrete named referents a Key Claim's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during claim writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the Admission test to non-entities.
 _Avoid_: Key Concepts (the sibling section for abstract concept/term/framework/method candidates, using the Reference-note prefixed format instead).
 
 **Ladder**
@@ -138,9 +138,9 @@ _Avoid_: Tension (the agent's own prior-knowledge conflict noticed against the m
 The retired, superseded admission check that gated a Reference-note candidate on who argued or coined it first, replaced because it wrongly excluded a source's own newly introduced, genuinely reusable framework.
 _Avoid_: Admission test (the current, reusability-based replacement; say Admission test, not Origin test).
 
-**Person, Location, Organization**
-The three surfacing-only entity types find-connections detects and wikilinks like Reference candidates, real or fictional alike, but never writes. Entity-profile territory this family owns no write procedure for.
-_Avoid_: Reference note (knowledge-synthesis territory this family does write; the entity-check runs before the Admission test specifically to keep the two separate).
+**Mentioned referents**
+The surfacing-only literature-note section for concrete named people, places, organizations, books/creative works, named tools, and events, real or fictional alike. `find-connections --references` scans it alongside `Key Concepts`; downstream classification runs the entity-check first for people, places, and organizations, then the Admission test for non-entity candidates. The first group remains surfacing-only; a reusable non-entity may become a Reference note.
+_Avoid_: Key Concepts (abstract concepts, methods, and frameworks); Reference note (the downstream note type, never decided while the link is written).
 
 **Prefix**
 The optional per-note-type symbol (e.g. `§` for literature) prepended to a note's title and its filename, configured in `config.json`'s `prefixes` map. Resources are never prefixed.

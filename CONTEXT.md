@@ -47,11 +47,13 @@ surfacing-only, per the entity-check above. Which one applies is decided by the 
 own usage, not by the string alone.
 
 **Classification order: entity-check runs before the reusability test.** A candidate
-wikilink is checked "is this a named person/place/organization?" first; only if not does
-it get evaluated against the deletion/declarative-title test. A person's name can
-technically pass the deletion test too (e.g. a name survives independent of any one
-source), but that's a coincidental technicality, not what the test is meant to check —
-"what kind of thing is this" is prior to "is this a reusable concept."
+wikilink is first checked for a concrete entity — person, place, or organization,
+real or fictional. Only if that check is negative does it get evaluated against the
+deletion/declarative-title test; that second pass covers reusable concepts and named
+books/creative works, tools, or events. A person's name can technically pass the
+deletion test too (e.g. a name survives independent of any one source), but that's a
+coincidental technicality, not what the test is meant to check — "what kind of thing is
+this" is prior to "is this a reusable concept."
 
 **Scoping within a framework**: one Reference note per named framework, at the
 framework's own level — not one note per internal sub-component. A framework with
@@ -101,7 +103,7 @@ For evergreen notes, atomicity applies to the whole note — an evergreen note i
 - A Claim lives in a literature note; a Take lives in an evergreen note. They never coexist in the same note.
 - `make-literature-note` and `make-evergreen-note` both internally invoke the same skill, **`grounding`** (bare, fidelity-agnostic name, matching how `grill-with-docs` invokes `grilling`) — each states its own fidelity-direction inline (source-bound or notes-bound), rather than each having its own separate discussion skill. `grounding` is also user-invocable directly, unlike the old internal-only `discussion` skill it replaces.
 - `make-reference-note` (renamed from `ground-term`, then from `write-reference`; see [[find-terms-find-connections-merge]]) produces/extends Reference notes, triggered by the user naming a concept directly, or by `find-connections --references` (absorbed `find-terms`; see below) reporting one that recurs across notes but has no Reference note yet — a derived, on-demand report, not a stored queue. Its own job is synthesis, not citation-discipline: by the time a candidate crosses the recurrence threshold, the `/grounding` interview already happened at the claim level, inside whichever literature notes' `## Key Concepts` wikilink to it, via `make-literature-note`'s own session. `make-reference-note` pulls those already-grounded characterizations out, reconciles them into one definition, presents for confirmation, writes — it never runs `/grounding` itself. Extending an *existing* Reference note with a source that hasn't been grounded yet routes through `make-literature-note` first, always — grounding stays at the claim level with no special case for this skill.
-- `find-terms` and `find-connections` are merged into one skill, `find-connections`, taking an explicit mode flag: `--references` (the absorbed `find-terms` behavior — Reference/Person/Location/Organization recurrence, dedup, batch-presented, never auto-written) or `--evergreen` (the original `find-connections` behavior — mechanical links and sparked ideas, which do write directly). No flag given stops and asks which mode. `--references` scans literature notes' Key Concepts sections and other mentions of the same or similar things elsewhere in notes' bodies, running semantic clustering *before* threshold-counting (recurrence is counted per cluster of variant labels referring to the same thing, not per exact string) — otherwise two single-occurrence variant labels for one idea would never individually reach the threshold that gates the dedup pass.
+- `find-terms` and `find-connections` are merged into one skill, `find-connections`, taking an explicit mode flag: `--references` (the absorbed `find-terms` behavior — Reference and Mentioned-referent recurrence, dedup, batch-presented, never auto-written) or `--evergreen` (the original `find-connections` behavior — mechanical links and sparked ideas, which do write directly). No flag given stops and asks which mode. `--references` scans literature notes' `Key Concepts` and `Mentioned` sections, plus other mentions of the same or similar things elsewhere in notes' bodies, running semantic clustering *before* threshold-counting (recurrence is counted per cluster of variant labels referring to the same thing, not per exact string) — otherwise two single-occurrence variant labels for one idea would never individually reach the threshold that gates the dedup pass. It classifies each recurring cluster with the entity-check first, then the reusability test for non-entity candidates; people, places, and organizations remain surfacing-only, while reusable concepts and named works/tools/events are Reference candidates.
 - Each of the three note types has its own template file (Obsidian core Templates plugin or Templater, whichever the user has), discovered or offered by `setup-slipbox` per type, not a single shared template.
 
 ## Flagged ambiguities
