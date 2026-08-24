@@ -81,11 +81,12 @@ states something none of the individual notes said on their own.
 - Write into the folder from `.slipbox/bin/slipbox config get paths.evergreen`, filename per
   `.slipbox/bin/slipbox config get filenames.evergreen` casing convention.
 - Re-read the target path from disk right before writing.
-- Assemble the frontmatter from `/write-checks`' returned fields and write
-  the file — a full rewrite of existing content on a revisit, since unlike
+- Assemble the frontmatter from `/write-checks`' returned fields into the complete
+  temporary draft — a full rewrite of existing content on a revisit, since unlike
   a literature note this doesn't mean starting a new file.
 - Validate the complete assembled temporary draft with `/write-checks`, including the
-  complete basename and exact H1. After writing, re-read the saved path and run
+  complete basename and exact H1. This pre-write validation is a hard gate: write
+  only after it passes. Then write the validated draft, re-read the saved path, and run
   `.slipbox/bin/slipbox note validate --type evergreen --path <saved-path>
   --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
   check blocks success.

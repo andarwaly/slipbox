@@ -200,6 +200,27 @@ check "note validate accepts a complete artifact" "$SLIPBOX" note validate --typ
 sed 's/source: "\(.*\)"/source: \1/' "$SCRATCH/§ Exact source title.md" > "$SCRATCH/bad.md"
 check_exit "note validate rejects unquoted mapped text" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/bad.md" --basename "§ Exact source title.md" --title "Exact source title"
 check_exit "note validate rejects a basename mismatch" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Other title.md" --title "Exact source title"
+cat > "$SCRATCH/config.json" <<'EOF'
+{
+  "filenames": {"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},
+  "prefixes": {"literature":"§","reference":"※","evergreen":false},
+  "frontmatter": {"reference": {"type":{"name":"type","type":"text","zone":"top"},"created":{"name":"created","type":"date","zone":"top"},"sources":{"name":"sources","type":"list","zone":"bottom"}}}
+}
+EOF
+cat > "$SCRATCH/※ Reference.md" <<'EOF'
+---
+type: "reference"
+created: 2026-08-24
+sources: ["[[A resource]]"]
+---
+# Reference
+Definition.
+EOF
+check "note validate accepts a parsed list" "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Reference.md" --basename "※ Reference.md" --title "Reference"
+sed 's/sources: \[.*/sources: [not valid/' "$SCRATCH/※ Reference.md" > "$SCRATCH/malformed-list.md"
+check_exit "note validate rejects malformed list serialization" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/malformed-list.md" --basename "malformed-list.md" --title "Reference"
+sed 's/created: 2026-08-24/created: "2026-08-24"/' "$SCRATCH/※ Reference.md" > "$SCRATCH/quoted-date.md"
+check_exit "note validate rejects quoted date" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/quoted-date.md" --basename "quoted-date.md" --title "Reference"
 check_eq "unsafe filename characters are sanitized" "§ A title-with-unsafe-chars-yes" \
   "$("$SLIPBOX" filename format --type literature --title 'A Title/With: Unsafe*Chars? Yes')"
 check_eq "no prefix returns the complete unprefixed basename" "An evergreen idea" \

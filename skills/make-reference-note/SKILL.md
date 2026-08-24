@@ -95,14 +95,16 @@ Write fresh:
   the mapped `alt_names`/`aliases` field. This alias rule applies only to Reference notes.
 - Write into the folder from `.slipbox/bin/slipbox config get paths.reference`, filename per
   `.slipbox/bin/slipbox config get filenames.reference` casing convention.
-- Re-read the target path from disk right before writing.
-- Assemble the frontmatter from `/write-checks`' returned fields and write the file.
-- Filename collision → stop and ask, never auto-disambiguate.
-- Validate the complete assembled temporary draft with `/write-checks`, including the
-  complete basename and exact H1. After writing, re-read the saved path and run
+- Re-read the target path from disk before assembling the complete temporary draft.
+- Assemble the frontmatter from `/write-checks`' returned fields into the complete
+  temporary draft.
+- Validate the complete temporary draft with `/write-checks`, including the complete
+  basename and exact H1. This pre-write validation is a hard gate: write only after it
+  passes. Then write the validated draft, re-read the saved path, and run
   `.slipbox/bin/slipbox note validate --type reference --path <saved-path>
   --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
   check blocks success.
+- Filename collision → stop and ask, never auto-disambiguate.
 
 ## Write — extending an existing reference
 
@@ -112,14 +114,15 @@ Write fresh:
 write — no field resolution needed here.
 
 1. Run a `/write-checks` session on the draft in its checks-only mode (no field list).
-2. Re-read the file from disk immediately before writing (state can have changed since
-   the read in "Take the candidate").
+2. Re-read the file from disk immediately before assembling the new draft (state can
+   have changed since the read in "Take the candidate").
 3. Append the new resource(s) to the `sources` frontmatter array, formatted per the
-   note's existing recorded `type` (list) and `wikilink` flag, and write the file.
-   Never overwrite the file wholesale.
-4. Validate the complete assembled draft before writing and re-read/re-validate the
-   saved path afterward. Repair only mechanical defects; semantic conflicts remain
-   stop-and-ask cases.
+   note's existing recorded `type` (list) and `wikilink` flag, to assemble the complete
+   temporary draft. Never overwrite the file wholesale.
+4. Validate the complete assembled draft with `/write-checks` before writing. This
+   pre-write validation is a hard gate: write only after it passes. Then re-read the
+   saved path and re-validate it with `slipbox note validate`. Repair only mechanical
+   defects; semantic conflicts remain stop-and-ask cases.
 5. Insert a `links` row recording the relationship — this reference's own note is the
    target, the resource being folded in is the source:
 

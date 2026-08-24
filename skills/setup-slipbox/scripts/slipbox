@@ -388,12 +388,18 @@ else:
                 error("missing-field", f"mapped field {name!r} is missing")
                 continue
             raw = fields[name]
-            if kind in ("text", "datetime", "date") and raw and not (raw.startswith(chr(34)) and raw.endswith(chr(34))):
-                # Dates and datetimes are intentionally bare; other scalar text is quoted.
-                if kind == "text":
-                    error("yaml-quoting", f"text field {name!r} must use a quoted YAML value", True)
-            if kind == "list" and raw and not (raw.startswith("[") and raw.endswith("]")):
-                error("yaml-list", f"list field {name!r} must use a YAML array")
+            quoted = len(raw) >= 2 and raw.startswith(chr(34)) and raw.endswith(chr(34))
+            if kind in ("datetime", "date") and quoted:
+                error("yaml-quoting", f"{kind} field {name!r} must use a bare YAML value")
+            elif kind == "text" and raw and not quoted:
+                error("yaml-quoting", f"text field {name!r} must use a quoted YAML value", True)
+            if kind == "list" and raw:
+                try:
+                    parsed_list = json.loads(raw)
+                except json.JSONDecodeError:
+                    parsed_list = None
+                if not isinstance(parsed_list, list):
+                    error("yaml-list", f"list field {name!r} must be a valid YAML array")
             (top if zone == "top" else bottom).append(name)
         if order:
             top_positions = [order.index(name) for name in top if name in order]

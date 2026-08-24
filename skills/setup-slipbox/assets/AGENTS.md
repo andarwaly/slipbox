@@ -15,7 +15,12 @@ A vault typically moves through these skills in this order, though any skill can
 - `find-connections` — scans existing notes, in one of two modes. `--references` surfaces recurring Reference or Mentioned candidates; people, places, and organizations remain surfacing-only, while reusable non-entities can be acted on with `make-reference-note`. `--evergreen` surfaces missing links and sparked ideas, writing mechanical links directly and routing sparked ideas to the evergreen backlog.
 - `make-evergreen-note` — grounds a hunch, or a backlog entry, into a Take: the user's own synthesized position, checked against existing notes it connects, written as an evergreen note.
 - `grounding` and `ground-me` — the bare interview engine and its passthrough wrapper. Composable into any of the skills above, and directly invocable on their own for ad-hoc grounding with no note-type commitment.
-- `write-checks` — the shared pre-write gate every note-writing skill above runs before saving a draft: style, humanize signals, frontmatter field resolution, zone placement, and title prefix.
+- `write-checks` — the shared gate every note-writing skill above runs on the complete
+  assembled draft before saving: style, humanize signals, frontmatter field
+  resolution, zone placement, title prefix, and artifact validation. The caller writes
+  only after that pre-write gate passes, then re-reads the saved path and runs
+  `slipbox note validate --type TYPE --path PATH [--basename NAME] [--title TITLE]`;
+  a failed post-write validation blocks success.
 
 ## `.slipbox/` folder structure
 
