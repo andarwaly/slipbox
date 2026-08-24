@@ -13,6 +13,9 @@ inferrable.
 
 If the note already has claims from a prior session, it only offers what's left.
 
+The Literature H1 remains the exact Resource/source title. A configured Literature
+prefix belongs in the generated filename and link target, not in that H1.
+
 ## How it works
 
 1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming `setup-slipbox`

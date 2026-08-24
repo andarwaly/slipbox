@@ -9,7 +9,7 @@ claim entry once it's written.
 ## Structure
 
 ```markdown
-# {{prefix}} [Exact Resource/source title]
+# [Exact Resource/source title]
 
 [Core Idea — bare declarative sentence, no label]
 
@@ -25,11 +25,12 @@ claim entry once it's written.
   - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
 ```
 
-The H1 preserves the Resource/source title exactly. Construct the filename separately with
+The H1 preserves the Resource/source title exactly, including when
+`prefixes.literature` is configured. Construct the filename separately with
 `.slipbox/bin/slipbox filename format --type literature --title "<exact source title>"`;
-do not independently case, sanitize, or prepend its prefix. `{{prefix}}` resolves from
-`prefixes.literature` — see Resolving a note-type prefix
-below, never hardcode a literal character.
+do not independently case or sanitize it. The filename/link prefix resolves from
+`prefixes.literature` — see Resolving a note-type prefix below; never hardcode a literal
+character.
 
 **Core Idea** — one sentence stating the source's central argument, everything else in
 the note in service of it. Positional, not labeled: it's always the line directly after
@@ -73,9 +74,12 @@ what another vault does. (This can look identical to the Person/Location/Organiz
 format below for a vault with no reference prefix — the distinction is still meaningful
 once the vault does configure one.)
 
-This same resolution governs the note's own title prefix (`{{prefix}}` in Structure
-above, from `prefixes.literature`) and any cross-note link this file builds — an
-`*Answered*` Open Questions bullet pointing at another literature note, or a Key
+For Literature, the configured prefix belongs to the filename and link target, never
+the H1. The `/write-checks` caller passes the exact source title as the artifact title;
+it must preserve that H1 while retaining the complete prefixed basename and prefixed
+cross-note target. Reference-note prefixes retain their existing title, filename, and
+link-target behavior. This same resolution governs any cross-note link this file builds
+— an `*Answered*` Open Questions bullet pointing at another literature note, or a Key
 Concepts wikilink pointing at a Reference-note candidate.
 
 ## Open Questions

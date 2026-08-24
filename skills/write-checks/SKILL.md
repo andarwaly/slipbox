@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Write-checks
@@ -101,9 +101,12 @@ of that type), and wrap in wikilink or markdown-link syntax per
 ## Note-type prefix
 
 Check `.slipbox/bin/slipbox config get prefixes.<type>` for this note type. If it's a string,
-prepend it to the note's title (e.g. `§ Design Tokens`, not `Design Tokens`). If it's
-`false`, the title stays unprefixed. Never touch `resources/` — no prefix key exists for
-that type.
+retain it in the complete filename and any note link target. For `literature`, keep the
+H1/title exactly equal to the Resource/source title: the prefix is never added to that H1,
+even when `prefixes.literature` is configured. For other prefixed note types, preserve
+their existing title behavior (for example, `§ Design Tokens`, not `Design Tokens`). If
+it's `false`, the title and filename stay unprefixed. Never touch `resources/` — no prefix
+key exists for that type.
 
 ## Zone placement
 
@@ -116,7 +119,9 @@ the closing `---`.
 Hand back: a pass/revise signal for style and humanize (revise before writing if
 either flags a cluster), plus — on the full pass only — each resolved field's final
 property name, formatted value, and placement (already-positioned, or the zone it
-belongs in), and the resolved title prefix (or none), so the calling skill never
-re-derives field_map, zone, or prefix logic itself. Include the artifact-validation
+belongs in), and the resolved filename/link prefix (or none), so the calling skill never
+re-derives field_map, zone, or prefix logic itself. For Literature, the title returned for
+artifact validation remains the exact source title even when the filename/link prefix is
+present. Include the artifact-validation
 result for the complete draft. The checks-only mode hands back the pass/revise signal
 and validation result, with no resolved-field data.
