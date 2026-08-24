@@ -16,10 +16,12 @@ Socratic side of the work. There is no reason to invoke it standalone.
 1. **Prerequisite** — requires `.slipbox/AGENTS.md`, `.slipbox/config.json`,
    `.slipbox/style-profile.json`, and `.slipbox/humanize-checklist.json` to all exist,
    confirming `setup-slipbox` ran to completion.
-2. **Invocation modes** — called with a field list, it runs the full pass: Style,
-   Humanize, Frontmatter fields, and Zone placement. Called with no field list (fields
-   already resolved from an earlier write, e.g. extending a Reference note), it runs
-   Style and Humanize only.
+2. **Invocation modes** — full synthesized-note mode (field list) runs Style, Humanize,
+   Frontmatter fields, Zone placement, and whole-artifact validation. Checks-only
+   synthesized-note mode (no field list) runs Style and Humanize plus whole-artifact
+   validation for Literature, Reference, and Evergreen drafts. Resource mode is an
+   explicit caller mode for quoted template instructions: it runs Style and Humanize
+   only, with no field resolution, zone placement, or `note validate`.
 3. **Style** — reads the vault's own stated style-profile as a contract, never as a
    humanizer detection baseline and never inferred from a corpus.
 4. **Humanize** — runs the checklist's mechanical detection through the `slipbox`
@@ -38,7 +40,8 @@ Socratic side of the work. There is no reason to invoke it standalone.
 
 On the full pass, it hands back a pass/revise signal plus each field's resolved name,
 formatted value, and placement — so the calling skill never re-derives any of that
-itself. On the checks-only pass, it hands back the pass/revise signal alone.
+itself. Checks-only synthesized-note mode hands back the pass/revise signal and
+validation result; Resource mode hands back the pass/revise signal alone.
 
 ## Installation
 

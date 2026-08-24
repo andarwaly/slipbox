@@ -19,8 +19,9 @@ A vault typically moves through these skills in this order, though any skill can
   assembled draft before saving: style, humanize signals, frontmatter field
   resolution, zone placement, title prefix, and artifact validation. The caller writes
   only after that pre-write gate passes, then re-reads the saved path and runs
-  `slipbox note validate --type TYPE --path PATH [--basename NAME] [--title TITLE]`;
-  a failed post-write validation blocks success.
+  `slipbox note validate --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]`;
+  a failed post-write validation blocks success. Resource captures are not accepted
+  validator types; their frontmatter `type` remains the content subtype.
 
 ## `.slipbox/` folder structure
 

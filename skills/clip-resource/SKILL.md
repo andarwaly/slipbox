@@ -4,7 +4,7 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Clip Resource
@@ -65,7 +65,7 @@ Read the template first — its location comes from the `templates.<type>_path` 
 
 ### 05 - Write
 
-If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run a `/write-checks` session on the synthesized content in its checks-only mode (no field list — this is a Resource, not a note, so the full frontmatter-resolution pass doesn't apply) before writing, since the agent synthesized or rewrote that content. If this clip used only bare variables, skip this — nothing was synthesized to check.
+If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run a `/write-checks` session in explicit Resource mode on the synthesized content before writing. Resource mode runs Style and Humanize only and returns the pass/revise signal — it does not resolve fields, place zones, or invoke `note validate`. If this clip used only bare variables, skip this — nothing was synthesized to check.
 
 Save the file using the filename and frontmatter conventions resolved via `.slipbox/bin/slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
 

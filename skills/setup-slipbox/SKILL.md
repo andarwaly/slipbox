@@ -144,7 +144,7 @@ chmod +x .slipbox/bin/slipbox
 
 The script copy is always overwritten (versioned code, not user data — distinct from `.slipbox/evergreen/*.md`/`config.json`, which are never overwritten by this step). `mkdir -p`/`touch` are no-ops on a re-run — nothing here needs a conditional "does this already exist" branch the way SQLite's schema-version check once did, since there's no schema left to be at a version of.
 
-The installed CLI also exposes `slipbox note validate --type TYPE --path PATH [--basename NAME] [--title TITLE]`. Note writers run it on the assembled temporary draft and again after re-reading the saved path; a failed post-write validation blocks success.
+The installed CLI also exposes `slipbox note validate --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]`. Literature, Reference, and Evergreen note writers run it on the assembled temporary draft and again after re-reading the saved path; a failed post-write validation blocks success. Resource captures keep their content subtype in frontmatter and are checked by `/write-checks`' Resource mode without this validator.
 
 **Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/` and `.slipbox/links.jsonl` exist.
 

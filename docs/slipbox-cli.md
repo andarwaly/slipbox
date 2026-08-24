@@ -15,7 +15,7 @@ slipbox links find       [--source S] [--target T] [--rel cites|extends]
 slipbox config get       [<dotted.path>]
 slipbox config set       <dotted.path> <value>
 slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
-slipbox note validate    --type TYPE --path PATH [--basename NAME] [--title TITLE]
+slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
 slipbox humanize check   <file> [--language LANG]
 slipbox --help | --version
 ```
@@ -32,7 +32,10 @@ log of typed edges (`cites`, `extends`) — separate from, and in addition to, t
 Validate the complete assembled draft before writing and again after re-reading the
 saved path. It checks the complete basename and prefix position, mapped fields, YAML
 quoting and list serialization, frontmatter zones, Markdown structure, and exactly one
-terminal newline. Exit `0` means valid; exit `1` reports validation errors. It does not
+terminal newline. Exit `0` means valid; exit `1` reports validation errors. Accepted
+types are exactly `literature`, `reference`, and `evergreen`. Resource content
+subtypes (`article`, `news`, `social`, `video`) are not validator types; Resource-mode
+`/write-checks` checks synthesized content without this command. It does not
 auto-disambiguate collisions or resolve semantic conflicts.
 
 ## `humanize check`

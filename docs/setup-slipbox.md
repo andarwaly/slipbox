@@ -38,4 +38,6 @@ See the [skill source](../skills/setup-slipbox/) for the full agent-facing instr
 New vaults explicitly choose whether saved notes keep blank lines between adjacent
 Markdown blocks (`formatting.blank_lines_between_blocks`). Existing profiles may omit
 this optional key and retain the legacy spaced behavior. The installed CLI includes
-`slipbox note validate` for pre-write and post-write artifact checks.
+`slipbox note validate` for pre-write and post-write artifact checks on Literature,
+Reference, and Evergreen notes only. Resource captures retain their content subtype
+and use `/write-checks` Resource mode when synthesized content needs Style and Humanize checks.

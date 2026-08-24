@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Write-checks
@@ -17,20 +17,27 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Invocation modes
 
-Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
-Zone placement — the full pass below. Called with no field list (already-resolved
-fields, e.g. a Reference-note extension re-using its first write's mapping), it runs Style and
-Humanize only, skipping Frontmatter fields and Zone placement entirely. Both modes then
-validate the assembled artifact; checks-only mode validates the caller's complete draft
-without resolving fields.
+There are three explicit caller modes:
+
+- **Full synthesized-note mode** — called with a field list, runs Style, Humanize,
+  Frontmatter fields, Zone placement, and whole-artifact validation.
+- **Checks-only synthesized-note mode** — called with no field list for an already-
+  resolved note (for example, a Reference extension), runs Style and Humanize and
+  validates the caller's complete Literature, Reference, or Evergreen draft.
+- **Resource mode** — the caller explicitly identifies the draft as a synthesized
+  Resource. It runs Style and Humanize on the synthesized content and returns the
+  pass/revise signal only. It does not resolve fields, place zones, or invoke
+  `note validate`: Resource frontmatter `type` is the content subtype, and the
+  validator accepts only `literature`, `reference`, and `evergreen`.
 
 ## Artifact validation
 
-The caller supplies the complete draft, its note type, the intended final basename, and
-the exact H1/title before writing. Run the bundled validator against that temporary file:
+For full and checks-only synthesized-note modes, the caller supplies the complete draft,
+its note type, the intended final basename, and the exact H1/title before writing. Run
+the bundled validator against that temporary file:
 
 ```bash
-.slipbox/bin/slipbox note validate --type TYPE --path <temporary-draft> \
+.slipbox/bin/slipbox note validate --type literature|reference|evergreen --path <temporary-draft> \
   --basename "<complete basename>.md" --title "<exact H1>"
 ```
 
@@ -45,7 +52,8 @@ validation after every repair. Stop and ask the user for semantic conflicts, fil
 collisions, uncertain titles, or uncertain protected names; never auto-disambiguate or
 rewrite a claim to make validation pass.
 
-After writing, re-read the exact saved path and run the same validation command against
+Resource mode has no artifact-validation step. After writing a Literature, Reference,
+or Evergreen note, re-read the exact saved path and run the same validation command against
 the saved artifact. Do not report success when this post-write pass fails. If a caller
 writes incrementally, validate the complete file after every claim that changes its
 frontmatter or Markdown structure, and always run the final post-write pass after the
@@ -123,5 +131,6 @@ belongs in), and the resolved filename/link prefix (or none), so the calling ski
 re-derives field_map, zone, or prefix logic itself. For Literature, the title returned for
 artifact validation remains the exact source title even when the filename/link prefix is
 present. Include the artifact-validation
-result for the complete draft. The checks-only mode hands back the pass/revise signal
-and validation result, with no resolved-field data.
+result for the complete draft. Checks-only synthesized-note mode hands back the
+pass/revise signal and validation result, with no resolved-field data. Resource mode
+hands back only the pass/revise signal; it has no validator result or resolved-field data.

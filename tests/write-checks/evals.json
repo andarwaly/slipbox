@@ -47,6 +47,22 @@
         {"type": "contains", "text": "false"},
         {"type": "contains", "text": "compact"}
       ]
+    },
+    {
+      "prompt": "clip-resource resolved a quoted template instruction for an Article Resource. Run write-checks in explicit Resource mode on the synthesized body.",
+      "expected_output": "Runs Style and Humanize on the synthesized Resource content and returns a pass/revise signal. It skips field resolution, zone placement, and note validate because Resource frontmatter type is an Article content subtype.",
+      "assertions": [
+        {"type": "contains", "text": "Resource mode"},
+        {"type": "not_contains", "text": "note validate"}
+      ]
+    },
+    {
+      "prompt": "An extending Reference note invokes write-checks in checks-only synthesized-note mode with no field list.",
+      "expected_output": "Runs Style and Humanize, then validates the complete Reference draft with note validate; it does not resolve fields or place zones.",
+      "assertions": [
+        {"type": "contains", "text": "Reference"},
+        {"type": "contains", "text": "validate"}
+      ]
     }
   ]
 }

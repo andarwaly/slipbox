@@ -110,6 +110,15 @@
       ]
     },
     {
+      "prompt": "A configured Article template uses a quoted instruction to rewrite {{content}}. Clip the URL and run the required pre-write checks.",
+      "expected_output": "Invokes /write-checks explicitly in Resource mode for the synthesized Resource body, running Style and Humanize only. It does not invoke note validate; bare-variable capture behavior remains unchanged.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "Resource mode"},
+        {"type": "not_contains", "text": "note validate"}
+      ]
+    },
+    {
       "prompt": "clip this thread for me https://www.threads.net/@zudoplatov/post/DbPViUDEahD, and TinyFish is not available in this session",
       "expected_output": "Reaches for TinyFish first for the Social fetch, finds it unavailable, and falls back to Firecrawl rather than stopping — Social clipping still fully functions Firecrawl-only. Writes a frozen Resource with type: social. Never attempts to install TinyFish itself, and never tells the user to install it as a CLI or library, since it is MCP-based and has no local install step.",
       "fixture_vault": "fixtures/vault-configured",
