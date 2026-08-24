@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Make-reference-note
@@ -98,6 +98,11 @@ Write fresh:
 - Re-read the target path from disk right before writing.
 - Assemble the frontmatter from `/write-checks`' returned fields and write the file.
 - Filename collision → stop and ask, never auto-disambiguate.
+- Validate the complete assembled temporary draft with `/write-checks`, including the
+  complete basename and exact H1. After writing, re-read the saved path and run
+  `.slipbox/bin/slipbox note validate --type reference --path <saved-path>
+  --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
+  check blocks success.
 
 ## Write — extending an existing reference
 
@@ -112,7 +117,10 @@ write — no field resolution needed here.
 3. Append the new resource(s) to the `sources` frontmatter array, formatted per the
    note's existing recorded `type` (list) and `wikilink` flag, and write the file.
    Never overwrite the file wholesale.
-4. Insert a `links` row recording the relationship — this reference's own note is the
+4. Validate the complete assembled draft before writing and re-read/re-validate the
+   saved path afterward. Repair only mechanical defects; semantic conflicts remain
+   stop-and-ask cases.
+5. Insert a `links` row recording the relationship — this reference's own note is the
    target, the resource being folded in is the source:
 
    ```bash

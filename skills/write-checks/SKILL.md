@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.3.2"
+  version: "1.4.0"
 ---
 
 # Write-checks
@@ -20,11 +20,40 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 Called with a field list, `write-checks` runs Style, Humanize, Frontmatter fields, and
 Zone placement — the full pass below. Called with no field list (already-resolved
 fields, e.g. a Reference-note extension re-using its first write's mapping), it runs Style and
-Humanize only, skipping Frontmatter fields and Zone placement entirely.
+Humanize only, skipping Frontmatter fields and Zone placement entirely. Both modes then
+validate the assembled artifact; checks-only mode validates the caller's complete draft
+without resolving fields.
+
+## Artifact validation
+
+The caller supplies the complete draft, its note type, the intended final basename, and
+the exact H1/title before writing. Run the bundled validator against that temporary file:
+
+```bash
+.slipbox/bin/slipbox note validate --type TYPE --path <temporary-draft> \
+  --basename "<complete basename>.md" --title "<exact H1>"
+```
+
+The validator is the final authority for the assembled output. It checks the complete
+basename and configured prefix position, mapped property names, YAML quoting and list
+serialization, top/bottom field zones, one H1 and body order, and exactly one terminal
+newline with no empty trailing paragraph. A failed result blocks writing until repaired.
+
+Repair only unambiguous mechanical defects: prefix ordering, required scalar quoting,
+mapped-field placement, configured block spacing, and extra trailing blank lines. Re-run
+validation after every repair. Stop and ask the user for semantic conflicts, filename
+collisions, uncertain titles, or uncertain protected names; never auto-disambiguate or
+rewrite a claim to make validation pass.
+
+After writing, re-read the exact saved path and run the same validation command against
+the saved artifact. Do not report success when this post-write pass fails. If a caller
+writes incrementally, validate the complete file after every claim that changes its
+frontmatter or Markdown structure, and always run the final post-write pass after the
+last closeout batch.
 
 ## Style
 
-Read `.slipbox/style-profile.json` as the user's stated note-shape and editing preference contract. Follow its sentence shape, configured note-type tone, formatting, vocabulary, and editing preferences. Do not infer or mimic a corpus voice, and do not use the profile as a humanizer detection baseline.
+Read `.slipbox/style-profile.json` as the user's stated note-shape and editing preference contract. Follow its sentence shape, configured note-type tone, formatting, vocabulary, and editing preferences. If `formatting.blank_lines_between_blocks` is `false`, save compact Markdown: retain blank lines only for genuine semantic paragraph breaks or where Markdown parsing requires one. Do not insert them merely between a heading and prose, consecutive prose lines, prose and a list, list items and the next heading, or other adjacent blocks. If the key is absent, preserve the existing spaced behavior for compatibility. Do not infer or mimic a corpus voice, and do not use the profile as a humanizer detection baseline.
 
 ## Humanize
 
@@ -88,5 +117,6 @@ Hand back: a pass/revise signal for style and humanize (revise before writing if
 either flags a cluster), plus — on the full pass only — each resolved field's final
 property name, formatted value, and placement (already-positioned, or the zone it
 belongs in), and the resolved title prefix (or none), so the calling skill never
-re-derives field_map, zone, or prefix logic itself. The checks-only mode hands back the
-pass/revise signal alone.
+re-derives field_map, zone, or prefix logic itself. Include the artifact-validation
+result for the complete draft. The checks-only mode hands back the pass/revise signal
+and validation result, with no resolved-field data.

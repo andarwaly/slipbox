@@ -47,3 +47,13 @@ npx skills add andarwaly/slipbox
 ```
 
 See the [skill source](../skills/write-checks/) for the full agent-facing instructions.
+
+## Artifact validation
+
+The complete assembled temporary draft and complete basename are validated before
+writing, then the saved path is re-read and validated again. Checks cover mapped fields,
+YAML serialization, field zones, Markdown structure, block spacing, prefix position, and
+exactly one terminal newline. Only unambiguous mechanical defects may be repaired;
+collisions, uncertain titles, uncertain protected names, and semantic conflicts stop for
+the user's decision. When `formatting.blank_lines_between_blocks` is `false`, notes use
+compact Markdown; an absent key preserves the legacy spaced behavior.

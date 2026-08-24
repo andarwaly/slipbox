@@ -82,7 +82,11 @@
         "aliases": { "type": "string" },
         "headings": { "type": "string" },
         "quotes": { "type": "string" },
-        "citations": { "type": "string" }
+        "citations": { "type": "string" },
+        "blank_lines_between_blocks": {
+          "type": "boolean",
+          "description": "Whether saved notes use blank lines between adjacent Markdown blocks. Absent means preserve the legacy spaced format."
+        }
       }
     },
     "editing_style": {

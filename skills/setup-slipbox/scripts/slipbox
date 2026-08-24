@@ -298,6 +298,7 @@ Usage:
   slipbox config get       [<dotted.path>]
   slipbox config set       <dotted.path> <value>
   slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
+  slipbox note validate    --type TYPE --path PATH [--basename NAME] [--title TITLE]
   slipbox humanize check   <file> [--language LANG]
   slipbox --help | --version
 
@@ -305,6 +306,138 @@ Output is JSON by default (--format table optional on find/get commands).
 Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
 {"error": "..."} object on stderr.
 EOF
+}
+
+# ---- note (whole-artifact validation) ----
+cmd_note_validate() {
+  [ $# -ge 1 ] || usage_err "note validate requires arguments"
+  local note_type="" path="" basename="" title=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --type) [ $# -ge 2 ] || usage_err "flag --type needs a value"; note_type="$2"; shift 2 ;;
+      --path) [ $# -ge 2 ] || usage_err "flag --path needs a value"; path="$2"; shift 2 ;;
+      --basename) [ $# -ge 2 ] || usage_err "flag --basename needs a value"; basename="$2"; shift 2 ;;
+      --title) [ $# -ge 2 ] || usage_err "flag --title needs a value"; title="$2"; shift 2 ;;
+      --help|-h) print_help; exit 0 ;;
+      --*) usage_err "unknown flag: $1" ;;
+      *) usage_err "unexpected argument: $1" ;;
+    esac
+  done
+  [ -n "$note_type" ] || usage_err "note validate requires --type"
+  [ -n "$path" ] || usage_err "note validate requires --path"
+  case "$note_type" in literature|reference|evergreen) ;; *) usage_err "--type must be literature, reference, or evergreen" ;; esac
+  require_config
+  [ -f "$path" ] || runtime_err "file not found: $path"
+  CONFIG_PATH="$CONFIG" STYLE_PATH="$SELF_DIR/style-profile.json" NOTE_TYPE="$note_type" NOTE_PATH="$path" EXPECTED_BASENAME="$basename" EXPECTED_TITLE="$title" py <<'PYEOF'
+config = load_json(os.environ["CONFIG_PATH"], "config.json")
+note_type = os.environ["NOTE_TYPE"]
+path = os.environ["NOTE_PATH"]
+expected_basename = os.environ.get("EXPECTED_BASENAME", "")
+expected_title = os.environ.get("EXPECTED_TITLE", "")
+text = read_text(path, "note")
+errors = []
+repairs = []
+style_path = os.environ.get("STYLE_PATH", "")
+style = load_json(style_path, "style-profile.json") if style_path and os.path.exists(style_path) else {}
+
+def error(code, message, mechanical=False):
+    errors.append({"code": code, "message": message, "mechanical": mechanical})
+
+if not text.endswith("\n"):
+    error("terminal-newline", "note must end with exactly one newline", True)
+if text.endswith("\n\n"):
+    error("trailing-blank-line", "note must not contain an empty trailing paragraph", True)
+if not text.startswith("---\n"):
+    error("frontmatter", "note must start with a YAML frontmatter block")
+else:
+    closing = text.find("\n---\n", 4)
+    if closing < 0:
+        error("frontmatter", "frontmatter must close with a standalone --- line")
+        closing = -1
+    else:
+        body = text[closing + 5:]
+        raw_fields = text[4:closing]
+        fields = {}
+        order = []
+        for line_no, line in enumerate(raw_fields.splitlines(), 2):
+            if not line.strip():
+                continue
+            key, sep, raw = line.partition(":")
+            key, raw = key.strip(), raw.strip()
+            if not sep or not key:
+                error("yaml", f"malformed frontmatter line {line_no}")
+                continue
+            order.append(key)
+            fields[key] = raw
+
+        mapping = config.get("frontmatter", {}).get(note_type, {})
+        top, bottom = [], []
+        for field, entry in mapping.items():
+            if entry is False:
+                continue
+            if isinstance(entry, dict) and entry.get("deferred"):
+                error("unresolved-field", f"frontmatter.{note_type}.{field} is still deferred")
+                continue
+            if isinstance(entry, str):
+                name, kind, zone = entry, "text", "top"
+            else:
+                name = entry.get("name", field)
+                kind = entry.get("type", "text")
+                zone = entry.get("zone", "top")
+            if name not in fields:
+                error("missing-field", f"mapped field {name!r} is missing")
+                continue
+            raw = fields[name]
+            if kind in ("text", "datetime", "date") and raw and not (raw.startswith(chr(34)) and raw.endswith(chr(34))):
+                # Dates and datetimes are intentionally bare; other scalar text is quoted.
+                if kind == "text":
+                    error("yaml-quoting", f"text field {name!r} must use a quoted YAML value", True)
+            if kind == "list" and raw and not (raw.startswith("[") and raw.endswith("]")):
+                error("yaml-list", f"list field {name!r} must use a YAML array")
+            (top if zone == "top" else bottom).append(name)
+        if order:
+            top_positions = [order.index(name) for name in top if name in order]
+            bottom_positions = [order.index(name) for name in bottom if name in order]
+            if top_positions and bottom_positions and max(top_positions) > min(bottom_positions):
+                error("field-zone", "top fields must precede bottom fields", True)
+
+        h1 = re.findall(r"(?m)^# (.+?)\s*$", body)
+        if len(h1) != 1:
+            error("markdown-structure", "note body must contain exactly one level-one heading")
+        elif expected_title and h1[0] != expected_title:
+            error("title", f"H1 does not match expected title {expected_title!r}")
+        if body and not body.startswith("# "):
+            error("markdown-structure", "the H1 must be the first Markdown block")
+        formatting = style.get("formatting", {}) if isinstance(style, dict) else {}
+        if formatting.get("blank_lines_between_blocks") is False:
+            body_lines = body.splitlines()
+            for index, line in enumerate(body_lines):
+                if line.strip() or index == 0 or index == len(body_lines) - 1:
+                    continue
+                previous = body_lines[index - 1].strip()
+                following = body_lines[index + 1].strip()
+                block_marker = lambda value: value.startswith("#") or value.startswith(("- ", "* ", "+ "))
+                if block_marker(previous) or block_marker(following):
+                    error("block-spacing", "compact profile forbids a blank line between Markdown blocks", True)
+                    break
+        if body.endswith("\n\n"):
+            error("trailing-blank-line", "body has an empty trailing paragraph", True)
+
+if expected_basename:
+    actual = os.path.splitext(os.path.basename(path))[0]
+    wanted = os.path.splitext(os.path.basename(expected_basename))[0]
+    if actual != wanted:
+        error("basename", f"saved basename {actual!r} does not match expected {wanted!r}")
+prefix = config.get("prefixes", {}).get(note_type)
+if prefix is not False and prefix:
+    if expected_title and not os.path.basename(path).startswith(prefix + " "):
+        error("prefix", f"basename must begin with configured prefix {prefix!r}")
+
+valid = not errors
+print(json.dumps({"valid": valid, "path": path, "basename": os.path.basename(path), "errors": errors, "repairs": repairs}, indent=2))
+if not valid:
+    sys.exit(1)
+PYEOF
 }
 
 # ---- filename (deterministic note basename construction) ----
@@ -824,5 +957,6 @@ case "$1" in
   config) shift; dispatch config "get set" "$@" ;;
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
+  note) shift; dispatch note "validate" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

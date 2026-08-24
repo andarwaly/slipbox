@@ -20,6 +20,33 @@
       "assertions": [
         {"type": "not_contains", "text": "zone"}
       ]
+    },
+    {
+      "prompt": "A note writer has assembled a complete temporary Literature draft after resolving fields. Run write-checks before writing, then re-read the saved file and validate it again.",
+      "expected_output": "Validates the complete draft and complete basename, mapped field names, YAML quoting, field zones, Markdown structure, compact or legacy spacing, and exactly one terminal newline before writing; re-reads and validates the actual saved artifact before reporting success.",
+      "assertions": [
+        {"type": "contains", "text": "post-write"},
+        {"type": "contains", "text": "basename"},
+        {"type": "contains", "text": "temporary"}
+      ]
+    },
+    {
+      "prompt": "The assembled note has a semantic title collision and an uncertain protected proper name, while its only defects are extra trailing blank lines and missing scalar YAML quotes.",
+      "expected_output": "Repairs only the trailing blank lines and missing quotes, then validates again; stops and asks the user about the collision and uncertain name instead of guessing or auto-disambiguating.",
+      "assertions": [
+        {"type": "contains", "text": "stop and ask"},
+        {"type": "contains", "text": "mechanical"},
+        {"type": "contains", "text": "collision"}
+      ]
+    },
+    {
+      "prompt": "A vault created before the compact Markdown preference has no formatting.blank_lines_between_blocks key; another new vault explicitly answers false.",
+      "expected_output": "The absent key preserves the existing spaced behavior for compatibility. The explicit false answer saves compact Markdown, retaining blank lines only for genuine semantic paragraph breaks or Markdown parsing requirements.",
+      "assertions": [
+        {"type": "contains", "text": "absent"},
+        {"type": "contains", "text": "false"},
+        {"type": "contains", "text": "compact"}
+      ]
     }
   ]
 }

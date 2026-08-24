@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.14.0"
+  version: "1.15.0"
 ---
 
 # Make-literature-note
@@ -145,6 +145,14 @@ toward the next one, if there is a next one:
 - Assemble and review the claim per `references/writing-a-claim.md` — the
   declarative heading, condensed Evidence, the review checklist, quote
   formatting, and Key Concepts wikilink resolution.
+- Assemble the complete temporary draft, then run `/write-checks` artifact validation
+  with the complete basename and exact Resource title. Repair only mechanical defects;
+  stop and ask for semantic conflicts, collisions, uncertain titles, or uncertain
+  protected names.
+- Write the assembled draft, re-read the saved path, and run
+  `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
+  --basename "<complete basename>.md" --title "<exact Resource title>"`. A failed
+  post-write check blocks the next claim and the success acknowledgment.
 - Filename collision on the note's first claim → stop and ask, never
   auto-disambiguate. On a second or later claim for an existing note, the
   existing file is expected, not a collision.
@@ -348,9 +356,11 @@ reopened rather than superseded by a new heading.
 
 Run `/write-checks` against the complete artifact after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
-surfacing sections on the file already written. Validation is a handoff, not
-permission to silently rewrite a claim; any material claim change returns to
-the convergent source audit.
+surfacing sections on the file already written. Then run
+`.slipbox/bin/slipbox note validate --type literature --path <saved-path>
+--basename "<complete basename>.md" --title "<exact Resource title>"`. Validation
+is a handoff, not permission to silently rewrite a claim; any material claim
+change returns to the convergent source audit.
 
 ## Done
 

@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Make-evergreen-note
@@ -84,6 +84,11 @@ states something none of the individual notes said on their own.
 - Assemble the frontmatter from `/write-checks`' returned fields and write
   the file — a full rewrite of existing content on a revisit, since unlike
   a literature note this doesn't mean starting a new file.
+- Validate the complete assembled temporary draft with `/write-checks`, including the
+  complete basename and exact H1. After writing, re-read the saved path and run
+  `.slipbox/bin/slipbox note validate --type evergreen --path <saved-path>
+  --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
+  check blocks success.
 - Cite every note it draws on, each with a one-line reason. Never link
   silently.
 - Every citation also gets written as a links row:

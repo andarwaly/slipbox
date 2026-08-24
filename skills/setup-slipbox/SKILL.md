@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Setup Slipbox
@@ -111,7 +111,7 @@ Never map any of these onto the reserved `tags`, `aliases`, or `cssclasses` prop
 
 Build one user-stated preference profile at `.slipbox/style-profile.json`. Do not analyze a corpus or infer a voice fingerprint. The profile tells note-writing skills how to shape and edit notes; it is not a sample-mimicry model.
 
-Start from `assets/style-profile.schema.json` and interview the user against its fixed sections:
+Start from `assets/style-profile.schema.json` and interview the user against its fixed sections. In the `formatting` question, ask explicitly: "Should saved notes use blank lines between adjacent Markdown blocks?" Record the answer as `formatting.blank_lines_between_blocks`. A new vault must receive an explicit answer; an existing profile with this key absent keeps the legacy spaced format and is not migrated silently.
 
 - `voice`: stated descriptors such as overall quality, verbosity, confidence, hedging, and energy. Record what the user says; never infer these from a corpus.
 - `sentence_style`: average length, structure, list preference, paragraph shape, and conclusion placement.
@@ -143,6 +143,8 @@ chmod +x .slipbox/bin/slipbox
 ```
 
 The script copy is always overwritten (versioned code, not user data — distinct from `.slipbox/evergreen/*.md`/`config.json`, which are never overwritten by this step). `mkdir -p`/`touch` are no-ops on a re-run — nothing here needs a conditional "does this already exist" branch the way SQLite's schema-version check once did, since there's no schema left to be at a version of.
+
+The installed CLI also exposes `slipbox note validate --type TYPE --path PATH [--basename NAME] [--title TITLE]`. Note writers run it on the assembled temporary draft and again after re-reading the saved path; a failed post-write validation blocks success.
 
 **Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/` and `.slipbox/links.jsonl` exist.
 

@@ -178,6 +178,28 @@ check_eq "Sentence case preserves proper name and prefixes after casing" "§ Sof
   "$("$SLIPBOX" filename format --type literature --title 'Software Fundamentals Matter More Than Ever: Matt Pocock' --preserve 'Matt Pocock')"
 check_eq "Sentence case preserves acronyms" "§ API design for NASA teams" \
   "$("$SLIPBOX" filename format --type literature --title 'API Design for NASA Teams')"
+
+echo "--- whole-artifact validation ---"
+cat > "$SCRATCH/config.json" <<'EOF'
+{
+  "filenames": {"literature":"Sentence case","reference":"kebab-case","evergreen":"Sentence case"},
+  "prefixes": {"literature":"§","reference":"※","evergreen":false},
+  "frontmatter": {"literature": {"type":{"name":"type","type":"text","zone":"top"},"created":{"name":"created","type":"date","zone":"top"},"source":{"name":"source","type":"text","zone":"bottom"}}}
+}
+EOF
+cat > "$SCRATCH/§ Exact source title.md" <<'EOF'
+---
+type: "literature"
+created: 2026-08-24
+source: "[[A resource]]"
+---
+# Exact source title
+One compact paragraph.
+EOF
+check "note validate accepts a complete artifact" "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Exact source title.md" --title "Exact source title"
+sed 's/source: "\(.*\)"/source: \1/' "$SCRATCH/§ Exact source title.md" > "$SCRATCH/bad.md"
+check_exit "note validate rejects unquoted mapped text" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/bad.md" --basename "§ Exact source title.md" --title "Exact source title"
+check_exit "note validate rejects a basename mismatch" 1 "$SLIPBOX" note validate --type literature --path "$SCRATCH/§ Exact source title.md" --basename "§ Other title.md" --title "Exact source title"
 check_eq "unsafe filename characters are sanitized" "§ A title-with-unsafe-chars-yes" \
   "$("$SLIPBOX" filename format --type literature --title 'A Title/With: Unsafe*Chars? Yes')"
 check_eq "no prefix returns the complete unprefixed basename" "An evergreen idea" \
