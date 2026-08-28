@@ -69,7 +69,9 @@ The five kinds are `literature-note`, `reference-note`, `note-connection`,
 `evergreen-note`, and `grounding`. Paths may repeat, are vault-relative, and must
 exist at capture time; kind and paths are required together. Stored paths are
 immutable and may become stale after a move. Legacy candidates read with empty
-kind and paths. This is queue-entry context, distinct from Evergreen `derived-from`
+kind and paths. Origin paths are the actual configured, vault-relative note-file
+paths observed at capture time—not logical or config-relative abstractions—and are
+not recomputed from config values. This is queue-entry context, distinct from Evergreen `derived-from`
 note lineage. Duplicate slugs still fail unchanged; no provenance update flags exist.
 
 ## When a `slipbox` command fails

@@ -57,7 +57,7 @@ origin_paths:
   - Notes/Compounding.md
 ```
 
-Table output joins paths for display. No provenance update flags exist; duplicate slugs still fail. Provenance is queue-entry context, distinct from Evergreen `derived-from` note lineage, and is not recomputed from `config.json`.
+Table output joins paths for display. Origin paths are the actual configured, vault-relative note-file paths observed at capture time—not logical or config-relative abstractions—and are not recomputed from config values. No provenance update flags exist; duplicate slugs still fail. Provenance is queue-entry context, distinct from Evergreen `derived-from` note lineage.
 
 ## Slug rules
 
