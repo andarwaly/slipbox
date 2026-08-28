@@ -7,7 +7,7 @@ This page documents the CLI itself, for anyone reading or auditing the skill fam
 ## Command surface
 
 ```
-slipbox evergreen add    --slug SLUG --reason "..."
+slipbox evergreen add    --slug SLUG --reason "..." [--origin-kind KIND] [--origin-path PATH]...
 slipbox evergreen find   [--status S]
 slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
 slipbox links add        --source S --target T --rel cites|extends
@@ -45,6 +45,19 @@ auto-disambiguate collisions or resolve semantic conflicts.
 The JSON result includes per-signal hits, signals that passed their own thresholds, the mechanical cross-signal result, and a reminder that the caller must apply `detection.judgment` separately.
 
 `created_at`/`updated_at` on evergreen candidates are handled automatically — `created_at` on `add`, `updated_at` on any subsequent `update` call. No flag exists to set either directly; nothing needs one.
+
+### `evergreen provenance`
+
+`evergreen add` records immutable provenance with five kinds: `literature-note`, `reference-note`, `note-connection`, `evergreen-note`, and `grounding`. Paths are vault-relative and must exist at capture time; kind and paths are required together. Legacy rows read with empty values, and stale paths remain unchanged after moves. JSON uses `origin_kind` and `origin_paths`:
+
+```yaml
+origin_kind: note-connection
+origin_paths:
+  - Notes/Spacing.md
+  - Notes/Compounding.md
+```
+
+Table output joins paths for display. No provenance update flags exist; duplicate slugs still fail. Provenance is queue-entry context, distinct from Evergreen `derived-from` note lineage, and is not recomputed from `config.json`.
 
 ## Slug rules
 

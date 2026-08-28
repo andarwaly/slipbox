@@ -1,5 +1,7 @@
 # make-literature-note
 
+Candidate provenance uses `origin_kind: literature-note` and `origin_paths`: Resource path before the first note write, Literature path afterward.
+
 Ground a clipped source into one or more Claims — the source's own position, restated in
 your own words and checked against the source — writing each as a Key Claim in a shared
 literature note for that source.
@@ -68,3 +70,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/make-literature-note/) for the full
 agent-facing instructions.
+# Make literature note
+
+Provenance maps to the Resource path before the first note write, and to the Literature note path afterward.

@@ -56,6 +56,22 @@ Skills may retain the exact commands they execute, but defer shared semantics,
 status meanings, and lifecycle rules to this section rather than duplicating
 that explanation.
 
+Candidates may carry immutable queue-entry provenance. Capture it when adding:
+
+```bash
+.slipbox/bin/slipbox evergreen add --slug literature-reaction \
+  --reason "The source assumes coordination is cheap" \
+  --origin-kind literature-note \
+  --origin-path "Notes/§ Coordination.md"
+```
+
+The five kinds are `literature-note`, `reference-note`, `note-connection`,
+`evergreen-note`, and `grounding`. Paths may repeat, are vault-relative, and must
+exist at capture time; kind and paths are required together. Stored paths are
+immutable and may become stale after a move. Legacy candidates read with empty
+kind and paths. This is queue-entry context, distinct from Evergreen `derived-from`
+note lineage. Duplicate slugs still fail unchanged; no provenance update flags exist.
+
 ## When a `slipbox` command fails
 
 Check the exit code of every `.slipbox/bin/slipbox` call before using its output, and read stderr when it's nonzero — the CLI prints one JSON object there, `{"error": "..."}`, and never a bare traceback.

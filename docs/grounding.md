@@ -80,3 +80,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/grounding/) for the full agent-facing
 instructions.
+# Grounding
+
+The write-free handoff carries `origin_kind: grounding` and `origin_paths` context to the caller.

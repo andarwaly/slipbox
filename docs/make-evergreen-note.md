@@ -53,3 +53,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/make-evergreen-note/) for the full
 agent-facing instructions.
+# Make evergreen note
+
+Provenance uses `origin_kind: evergreen-note` and records notes-in-play in `origin_paths`, or a standalone origin when no notes are involved.

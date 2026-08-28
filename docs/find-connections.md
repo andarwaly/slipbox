@@ -95,3 +95,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/find-connections/) for the full agent-facing
 instructions.
+# Find connections
+
+Provenance uses `origin_kind: note-connection` and includes every note participating in a spark in `origin_paths`.

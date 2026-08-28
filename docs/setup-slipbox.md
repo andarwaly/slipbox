@@ -4,6 +4,8 @@ One-time onboarding for the slipbox skill family. Discovers your vault's convent
 
 ## When to use
 
+Installed backlog entries expose immutable `origin_kind` and `origin_paths`; templates remain unchanged.
+
 Run this before using any other slipbox skill. It discovers conventions from your vault structure and existing notes (filename casing, folder paths, Obsidian templates), interviews you about clip preferences (content types and transcript languages), and interviews you for a stated profile of note shape, tone by note type, language, vocabulary, formatting, and editing behavior. It does not infer a voice model from a corpus. If you already have a `.slipbox/config.json`, it can re-run to detect and reconcile drift.
 
 ## How it works
@@ -41,3 +43,6 @@ this optional key and retain the legacy spaced behavior. The installed CLI inclu
 `slipbox note validate` for pre-write and post-write artifact checks on Literature,
 Reference, and Evergreen notes only. Resource captures retain their content subtype
 and use `/write-checks` Resource mode when synthesized content needs Style and Humanize checks.
+# Setup slipbox
+
+The installed CLI supports immutable candidate provenance; templates and template configuration remain unchanged.

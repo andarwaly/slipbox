@@ -15,11 +15,11 @@ The rule that a note expresses exactly one independently citable thing: for an e
 _Avoid_: One-topic rule (a coarser reading; atomicity is about one citable claim, not one broad subject).
 
 **Backlog**
-The persistent, CLI-tracked queue of pending evergreen candidates, read and written through `slipbox evergreen add/find/update`.
+The persistent, CLI-tracked queue of pending evergreen candidates, read and written through `slipbox evergreen add/find/update`; its candidate provenance contract is defined in `.slipbox/AGENTS.md`.
 _Avoid_: Candidate (one item held in a Backlog, not the queue itself, see its own entry); Private backlog (a different, session-scoped, never-persisted list, see its own entry).
 
 **Candidate**
-One item held in a Backlog: a flagged tension, a sparked idea, or any other draft-stage entry waiting to become a Take.
+One item held in a Backlog: a flagged tension, a sparked idea, or any other draft-stage entry waiting to become a Take. It carries immutable queue-entry provenance when captured.
 _Avoid_: Backlog (the queue that holds Candidates, not a Candidate itself).
 
 **Challenge**
