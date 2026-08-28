@@ -230,7 +230,7 @@ def parse_frontmatter(text, path):
         if not sep or not key:
             raise FrontmatterError(f"malformed frontmatter line {offset} in {path}: {line.strip()!r}")
         order.append(key)
-        if raw.startswith("["):
+        if raw.startswith("[") and key == "origin_paths":
             if key != "origin_paths":
                 raise FrontmatterError(f"sequence value is only supported for origin_paths on line {offset} in {path}")
             try:
@@ -831,6 +831,11 @@ for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
     slug = os.path.splitext(os.path.basename(path))[0]
     fields.setdefault("origin_kind", "unknown")
     fields.setdefault("origin_paths", [])
+    if (not isinstance(fields["origin_kind"], str) or
+            not isinstance(fields["origin_paths"], list) or
+            not all(isinstance(item, str) for item in fields["origin_paths"])):
+        warn(f"skipped evergreen candidate with malformed provenance: {path}")
+        continue
     row = {"slug": slug, **fields}
     if fmt == "table":
         row["origin_paths"] = "; ".join(row["origin_paths"])

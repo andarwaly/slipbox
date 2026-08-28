@@ -173,13 +173,22 @@ check_exit "provenance cannot be updated" 2 \
 
 printf '%s\n' '---' 'status: "to-discuss"' 'reason: "legacy file"' 'discussion_path:' \
   'note_path:' 'iteration: 1' 'created_at: "2026-08-29T00:00:00Z"' \
-  'updated_at: "2026-08-29T00:00:00Z"' '---' > "$PROV_VAULT/.slipbox/evergreen/legacy-file.md"
+  'updated_at: "2026-08-29T00:00:00Z"' 'legacy_list: [foo]' '---' > "$PROV_VAULT/.slipbox/evergreen/legacy-file.md"
 LEGACY_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss)
 check_json "legacy candidates receive read-time defaults" \
   'row = next(item for item in data if item["slug"] == "legacy-file"); assert row["origin_kind"] == "unknown"; assert row["origin_paths"] == []' \
   <<< "$LEGACY_FIND"
 check_no_match "legacy file is not backfilled on disk" '*origin_kind*' \
   "$(cat "$PROV_VAULT/.slipbox/evergreen/legacy-file.md")"
+check_json "legacy scalar beginning with bracket remains readable" \
+  'row = next(item for item in data if item["slug"] == "legacy-file"); assert row["legacy_list"] == "[foo]"' \
+  <<< "$LEGACY_FIND"
+printf '%s\n' '---' 'status: "to-discuss"' 'reason: "bad provenance"' \
+  'origin_kind:' 'origin_paths: bad' '---' > "$PROV_VAULT/.slipbox/evergreen/bad-provenance.md"
+MALFORMED_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss 2>/dev/null)
+check_json "malformed provenance rows are skipped" \
+  'assert all(isinstance(item["origin_kind"], str) and isinstance(item["origin_paths"], list) and all(isinstance(path, str) for path in item["origin_paths"]) for item in data); assert not any(item["slug"] == "bad-provenance" for item in data)' \
+  <<< "$MALFORMED_FIND"
 rm "$PROV_VAULT/Resources/Article.md"
 STALE_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss)
 check_json "a stale captured path does not break find" \
