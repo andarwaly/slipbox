@@ -42,6 +42,16 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "grounding confirms a tension with participating paths Notes/§ A.md and Notes/§ B.md",
+      "expected_output": "Returns the confirmed statement and origin context to its caller, including the actual paths or explicit no-path context; grounding itself performs no CLI/database write, and the caller decides whether to write note-connection or standalone provenance.",
+      "assertions": [
+        {"type": "contains", "text": "origin context"},
+        {"type": "contains", "text": "no CLI write"},
+        {"type": "contains", "text": "note-connection"},
+        {"type": "contains", "text": "standalone"}
+      ]
     }
   ]
 }

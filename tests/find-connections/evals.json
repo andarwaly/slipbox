@@ -55,6 +55,15 @@
         {"type": "not_contains", "text": "Reference candidate"},
         {"type": "not_contains", "text": "make-reference-note"}
       ]
+    },
+    {
+      "prompt": "find-connections --evergreen finds a spark between Notes/Spacing.md and Notes/Compounding.md",
+      "expected_output": "Routes the spark with note-connection provenance and repeats both exact scanned vault-relative paths as origin-path flags.",
+      "assertions": [
+        {"type": "contains", "text": "--origin-kind note-connection"},
+        {"type": "contains", "text": "--origin-path \"Notes/Spacing.md\""},
+        {"type": "contains", "text": "--origin-path \"Notes/Compounding.md\""}
+      ]
     }
   ]
 }

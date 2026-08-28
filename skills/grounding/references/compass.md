@@ -84,9 +84,10 @@ decides what the next question is about.
   answer that comes out of a direction can become its own new center idea,
   with its own SOUTH/EAST/WEST branches. This is real and worth noticing,
   but never mandatory to chase within the current session: a spawned
-  sub-idea that isn't pursued now is flagged for the evergreen backlog
-  (e.g. `slipbox evergreen add --slug <draft-slug> --reason "<what came up>"`)
-  for a later, separate session — the same way any other flagged tension
+  sub-idea that isn't pursued now is flagged for the evergreen backlog by the
+  invoking skill, with `note-connection` and every participating actual path,
+  or with `standalone` and no path when no notes were retrieved, for a later,
+  separate session — the same way any other flagged tension
   gets carried forward, not lost. Compass itself performs no database write
   of any kind; that write, like every other one in this family, belongs to
   whichever skill invoked this one.

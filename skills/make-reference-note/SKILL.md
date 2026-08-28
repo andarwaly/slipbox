@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Make-reference-note
@@ -72,8 +72,16 @@ Reconcile the gathered characterizations into one definition:
   semantics and lifecycle; this skill retains the command it executes:
 
   ```bash
-  .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
+  .slipbox/bin/slipbox evergreen add --slug framework-conflict \
+    --reason "The framework alternates between a diagnostic and a sequence" \
+    --origin-kind note-connection \
+    --origin-path "Notes/§ A.md" \
+    --origin-path "Notes/§ B.md"
   ```
+
+  Repeat every actual Literature-note path whose grounded characterization
+  participates in the conflict. Do not use the Reference output path: the
+  tension arose among the input notes. Never reconstruct paths from config.
 
 - Present the synthesized definition to the user for confirmation before writing
   anything to disk. If extending an existing note, the user's confirmation must keep

@@ -4,7 +4,7 @@ description: Scan existing notes for missing links, sparked ideas, and recurring
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.2"
+  version: "1.5.0"
 ---
 
 # Find-connections
@@ -137,8 +137,17 @@ For each sparked idea, insert it as its own candidate — never write a note dir
 never fold it into a link suggestion:
 
 ```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the spark, described>"
+.slipbox/bin/slipbox evergreen add --slug compounding-repetition \
+  --reason "Spacing and compounding share delayed reinforcement" \
+  --origin-kind note-connection \
+  --origin-path "Notes/Spacing.md" \
+  --origin-path "Notes/Compounding.md"
 ```
+
+Repeat `--origin-path` for every note participating in the generated spark,
+using the actual vault-relative paths from the files scanned, regardless of
+which configured note folder contains them. Never reconstruct paths from
+`paths.*`, `filenames.*`, or prefixes.
 
 `make-evergreen-note` picks these up from its own backlog read, same as any other flagged
 tension.

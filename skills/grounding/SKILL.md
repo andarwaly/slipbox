@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.5.1"
+  version: "1.6.0"
 ---
 
 # Grounding
@@ -248,11 +248,16 @@ Hand back at most two things, nothing else:
 
 - the confirmed statement, verbatim
 - only if the user opted in above, a short description of the flagged tension
+- the origin context returned to the caller: the actual vault-relative paths
+  participating in the session, or an explicit no-path context when no notes or
+  source were retrieved
 
-No filename, no format, no note-type label, no database write of any kind — all of that
+No filename, no format, no note-type label, and grounding performs no CLI write or
+database write of any kind — all of that
 belongs to whichever skill invoked this one. This holds regardless of which technique
 ran or which caller invoked the session — `grounding`'s output never depends on who's
-calling it.
+calling it. The caller chooses `note-connection` with the participating paths,
+or `standalone` with no path flag, when it records a candidate.
 
 ## References
 

@@ -27,6 +27,17 @@
       "assertions": [
         {"type": "not_contains", "text": "cannot proceed"}
       ]
+    },
+    {
+      "prompt": "make-evergreen-note has notes in play from Notes/Spacing.md and Notes/Compounding.md, then a bare hunch finds no related notes",
+      "expected_output": "Uses note-connection with every participating note path for the notes-in-play candidate. For the unrelated bare hunch, uses standalone and explicitly omits --origin-path.",
+      "assertions": [
+        {"type": "contains", "text": "--origin-kind note-connection"},
+        {"type": "contains", "text": "--origin-path \"Notes/Spacing.md\""},
+        {"type": "contains", "text": "--origin-path \"Notes/Compounding.md\""},
+        {"type": "contains", "text": "--origin-kind standalone"},
+        {"type": "contains", "text": "no --origin-path"}
+      ]
     }
   ]
 }

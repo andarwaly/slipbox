@@ -75,6 +75,15 @@
         {"type": "contains", "text": "aliases: [\"Zettelkasten\"]"},
         {"type": "contains", "text": "extends"}
       ]
+    },
+    {
+      "prompt": "A deferred conflict is grounded by Literature notes at Notes/§ A.md and Notes/§ B.md",
+      "expected_output": "Logs the deferred conflict with note-connection provenance and repeats both actual participating Literature paths as origin-path flags; it does not use the Reference output path as provenance.",
+      "assertions": [
+        {"type": "contains", "text": "--origin-kind note-connection"},
+        {"type": "contains", "text": "--origin-path \"Notes/§ A.md\""},
+        {"type": "contains", "text": "--origin-path \"Notes/§ B.md\""}
+      ]
     }
   ]
 }

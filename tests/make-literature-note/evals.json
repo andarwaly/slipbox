@@ -147,6 +147,16 @@
         {"type": "contains", "text": "one nudge"},
         {"type": "not_contains", "text": "for both states"}
       ]
+    },
+    {
+      "prompt": "A first Literature claim reveals a tension with the Resource at resources/design-tokens.md, then a reaction is confirmed after the Literature note is saved as Notes/§ Design Tokens.md",
+      "expected_output": "Uses explicit provenance on each evergreen candidate: source with resources/design-tokens.md before the first Literature write, then literature-note with the exact saved path Notes/§ Design Tokens.md for the later reaction/tension. It does not reconstruct either path from configured names.",
+      "assertions": [
+        {"type": "contains", "text": "--origin-kind source"},
+        {"type": "contains", "text": "--origin-path \"resources/design-tokens.md\""},
+        {"type": "contains", "text": "--origin-kind literature-note"},
+        {"type": "contains", "text": "--origin-path \"Notes/§ Design Tokens.md\""}
+      ]
     }
   ]
 }

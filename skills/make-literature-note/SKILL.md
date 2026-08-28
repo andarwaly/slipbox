@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Claims — the source's
   source.
 license: MIT
 metadata:
-  version: "1.16.0"
+  version: "1.17.0"
 ---
 
 # Make-literature-note
@@ -98,8 +98,25 @@ If a tension comes back from a Gate pass, insert it into the evergreen
 backlog before continuing:
 
 ```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
+.slipbox/bin/slipbox evergreen add --slug source-tension \
+  --reason "The source treats coordination as free" \
+  --origin-kind source \
+  --origin-path "resources/design-tokens.md"
 ```
+
+Before the first Literature write, use the actual vault-relative Resource path
+already accepted during Take the source. After the Literature file exists, use
+that exact saved path for a reaction or tension:
+
+```bash
+.slipbox/bin/slipbox evergreen add --slug literature-reaction \
+  --reason "I think coordination cost is the real bottleneck" \
+  --origin-kind literature-note \
+  --origin-path "Notes/§ Design Tokens.md"
+```
+
+These paths must be the files actually read or written in this session; never
+reconstruct them from `paths.*`, `filenames.*`, or configured prefixes.
 
 When the user notices a genuine gap in the source itself — something the
 source leaves unclear, ambiguous, or unanswered — offer to record it as an

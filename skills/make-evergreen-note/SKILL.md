@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Make-evergreen-note
@@ -61,8 +61,24 @@ in — a flagged tension. If a tension came back, insert it into the evergreen
 backlog:
 
 ```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
+.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>" \
+  --origin-kind note-connection \
+  --origin-path "<actual participating note path>"
 ```
+
+When notes are in play, repeat `--origin-path` for every note contributing to
+the tension or spawned Compass branch, using the exact vault-relative paths
+actually retrieved. If a bare hunch found no related notes, use
+`--origin-kind standalone` and omit `--origin-path` entirely:
+
+```bash
+.slipbox/bin/slipbox evergreen add --slug independent-hunch \
+  --reason "Good prompts may benefit from deliberate incompleteness" \
+  --origin-kind standalone
+```
+
+Do not reconstruct provenance from configured names, and reading an existing
+backlog candidate never rewrites its provenance.
 
 before moving on to writing.
 
