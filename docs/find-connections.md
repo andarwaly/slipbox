@@ -71,7 +71,9 @@ connections relating to just those notes, instead of a whole-vault scan.
    `.slipbox/bin/slipbox links add --source <slug> --target <slug> --rel cites`.
 3. **Sparked ideas, routed to the evergreen backlog** — never written as a note directly;
    logged with `.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the
-   spark, described>"`, and `make-evergreen-note` picks them up from there later.
+   spark, described>" --origin-kind note-connection --origin-path "<each actual
+   participating note path>"`, repeating `--origin-path` for every note in the spark.
+   `make-evergreen-note` picks them up from there later.
 
 ## Done
 
