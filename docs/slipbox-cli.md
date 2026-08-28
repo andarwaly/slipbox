@@ -48,7 +48,7 @@ The JSON result includes per-signal hits, signals that passed their own threshol
 
 ### `evergreen provenance`
 
-`evergreen add` records immutable provenance with five kinds: `source`, `literature-note`, `note-connection`, `standalone`, and `unknown`. Paths are vault-relative and must exist at capture time; kind and paths are required together. Legacy rows read as `unknown` with an empty path list, and stale paths remain unchanged after moves. JSON uses `origin_kind` and `origin_paths`:
+`evergreen add` records immutable provenance with five kinds: `source`, `literature-note`, `note-connection`, `standalone`, and `unknown`. Paths are vault-relative and must exist at capture time. Cardinality is per kind: `source` and `literature-note` require exactly one path; `note-connection` requires one or more paths; `standalone` and `unknown` require no paths. Legacy rows read as `unknown` with an empty path list, and stale paths remain unchanged after moves. JSON uses `origin_kind` and `origin_paths`:
 
 ```yaml
 origin_kind: note-connection

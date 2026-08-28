@@ -43,6 +43,6 @@ this optional key and retain the legacy spaced behavior. The installed CLI inclu
 `slipbox note validate` for pre-write and post-write artifact checks on Literature,
 Reference, and Evergreen notes only. Resource captures retain their content subtype
 and use `/write-checks` Resource mode when synthesized content needs Style and Humanize checks.
-# Setup slipbox
+## Provenance
 
 The installed CLI supports immutable candidate provenance; templates and template configuration remain unchanged.

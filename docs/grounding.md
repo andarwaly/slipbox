@@ -80,6 +80,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/grounding/) for the full agent-facing
 instructions.
-# Grounding
+## Provenance
 
 The write-free handoff carries grounding context to the caller; the caller determines the valid provenance kind and actual paths from the returned session context when it records an evergreen candidate. `grounding` itself never writes or assigns an `origin_kind`.

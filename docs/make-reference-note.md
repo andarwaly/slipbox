@@ -65,6 +65,6 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/make-reference-note/) for the full
 agent-facing instructions.
-# Make reference note
+## Provenance
 
 Provenance uses `origin_kind: note-connection` and includes the actual vault-relative paths of all participating Literature notes in `origin_paths`.

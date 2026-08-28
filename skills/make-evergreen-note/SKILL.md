@@ -78,9 +78,7 @@ actually retrieved. If a bare hunch found no related notes, use
 ```
 
 Do not reconstruct provenance from configured names, and reading an existing
-backlog candidate never rewrites its provenance.
-
-before moving on to writing.
+backlog candidate never rewrites its provenance before moving on to writing.
 
 Before writing, run a purity check on the draft: test each sentence — is it
 attributable to a single cited note's claim, unchanged? If yes for any
