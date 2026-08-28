@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Setup Slipbox
@@ -145,6 +145,8 @@ chmod +x .slipbox/bin/slipbox
 The script copy is always overwritten (versioned code, not user data — distinct from `.slipbox/evergreen/*.md`/`config.json`, which are never overwritten by this step). `mkdir -p`/`touch` are no-ops on a re-run — nothing here needs a conditional "does this already exist" branch the way SQLite's schema-version check once did, since there's no schema left to be at a version of.
 
 The installed CLI also exposes `slipbox note validate --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]`. Literature, Reference, and Evergreen note writers run it on the assembled temporary draft and again after re-reading the saved path; a failed post-write validation blocks success. Resource captures keep their content subtype in frontmatter and are checked by `/write-checks`' Resource mode without this validator.
+
+Evergreen candidates are captured with `slipbox evergreen add --slug SLUG --reason "..." [--origin-kind KIND] [--origin-path PATH]...`. The origin kind is one of `source`, `literature-note`, `note-connection`, `standalone`, or `unknown`; paths are vault-relative Markdown paths validated at capture time. Omitting provenance preserves compatibility and records `unknown` with an empty path list. Existing candidates receive those defaults at read time without being rewritten, and provenance cannot be changed by `evergreen update`.
 
 **Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/` and `.slipbox/links.jsonl` exist.
 

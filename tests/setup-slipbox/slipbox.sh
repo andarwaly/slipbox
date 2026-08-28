@@ -109,6 +109,88 @@ check_exit "init is not a recognized command" 2 "$SLIPBOX" init
 check_exit "migrate is not a recognized command" 2 "$SLIPBOX" migrate
 
 echo "--- evergreen ---"
+PROV_VAULT="$SCRATCH/provenance-vault"
+mkdir -p "$PROV_VAULT/.slipbox/bin" "$PROV_VAULT/.slipbox/evergreen" \
+  "$PROV_VAULT/Notes" "$PROV_VAULT/Resources"
+cp "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox" "$PROV_VAULT/.slipbox/bin/slipbox"
+chmod +x "$PROV_VAULT/.slipbox/bin/slipbox"
+PROV_SLIPBOX="$PROV_VAULT/.slipbox/bin/slipbox"
+printf '%s\n' '# Article' > "$PROV_VAULT/Resources/Article.md"
+printf '%s\n' '# Literature' > "$PROV_VAULT/Notes/§ Article Name.md"
+printf '%s\n' '# Related' > "$PROV_VAULT/Notes/Related Idea.md"
+
+SOURCE_ADD=$(
+  "$PROV_SLIPBOX" evergreen add --slug source-spark --reason "the reaction" \
+    --origin-kind source --origin-path "Resources/Article.md"
+)
+check_json "source provenance is returned" \
+  'assert data["origin_kind"] == "source"; assert data["origin_paths"] == ["Resources/Article.md"]' \
+  <<< "$SOURCE_ADD"
+
+CONNECTION_ADD=$(
+  "$PROV_SLIPBOX" evergreen add --slug connected-spark --reason "the connection" \
+    --origin-kind note-connection \
+    --origin-path "Notes/§ Article Name.md" \
+    --origin-path "Notes/Related Idea.md"
+)
+check_json "repeated origin paths preserve order and Unicode" \
+  'assert data["origin_kind"] == "note-connection"; assert data["origin_paths"] == ["Notes/§ Article Name.md", "Notes/Related Idea.md"]' \
+  <<< "$CONNECTION_ADD"
+
+UNKNOWN_ADD=$("$PROV_SLIPBOX" evergreen add --slug legacy-call --reason "old caller")
+check_json "omitted provenance defaults to unknown" \
+  'assert data["origin_kind"] == "unknown"; assert data["origin_paths"] == []' \
+  <<< "$UNKNOWN_ADD"
+
+check_exit "source requires one path" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug source-none --reason r --origin-kind source
+check_exit "source rejects two paths" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug source-two --reason r --origin-kind source \
+    --origin-path "Resources/Article.md" --origin-path "Notes/Related Idea.md"
+check_exit "note-connection requires a path" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug connection-none --reason r --origin-kind note-connection
+check_exit "standalone rejects paths" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug standalone-path --reason r --origin-kind standalone \
+    --origin-path "Notes/Related Idea.md"
+check_exit "unknown rejects paths" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug unknown-path --reason r --origin-path "Notes/Related Idea.md"
+check_exit "unknown kind is rejected" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug bad-kind --reason r --origin-kind conversation
+check_exit "absolute origin path is rejected" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug absolute --reason r --origin-kind source \
+    --origin-path "$PROV_VAULT/Resources/Article.md"
+check_exit "traversal is rejected" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug traversal --reason r --origin-kind source \
+    --origin-path "../outside.md"
+check_exit "non-Markdown path is rejected" 2 \
+  "$PROV_SLIPBOX" evergreen add --slug text-file --reason r --origin-kind source \
+    --origin-path "Resources/Article.txt"
+check_exit "missing origin is rejected" 1 \
+  "$PROV_SLIPBOX" evergreen add --slug missing --reason r --origin-kind source \
+    --origin-path "Resources/Missing.md"
+check_exit "provenance cannot be updated" 2 \
+  "$PROV_SLIPBOX" evergreen update source-spark --origin-kind standalone
+
+printf '%s\n' '---' 'status: "to-discuss"' 'reason: "legacy file"' 'discussion_path:' \
+  'note_path:' 'iteration: 1' 'created_at: "2026-08-29T00:00:00Z"' \
+  'updated_at: "2026-08-29T00:00:00Z"' '---' > "$PROV_VAULT/.slipbox/evergreen/legacy-file.md"
+LEGACY_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss)
+check_json "legacy candidates receive read-time defaults" \
+  'row = next(item for item in data if item["slug"] == "legacy-file"); assert row["origin_kind"] == "unknown"; assert row["origin_paths"] == []' \
+  <<< "$LEGACY_FIND"
+check_no_match "legacy file is not backfilled on disk" '*origin_kind*' \
+  "$(cat "$PROV_VAULT/.slipbox/evergreen/legacy-file.md")"
+rm "$PROV_VAULT/Resources/Article.md"
+STALE_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss)
+check_json "a stale captured path does not break find" \
+  'row = next(item for item in data if item["slug"] == "source-spark"); assert row["origin_paths"] == ["Resources/Article.md"]' \
+  <<< "$STALE_FIND"
+TABLE_FIND=$("$PROV_SLIPBOX" evergreen find --status to-discuss --format table)
+check_match "table exposes origin columns" '*origin_kind*origin_paths*' "$(printf '%s\n' "$TABLE_FIND" | head -1)"
+check_match "table joins repeated paths readably" '*Notes/§ Article Name.md; Notes/Related Idea.md*' "$TABLE_FIND"
+check_exit "duplicate slug still fails" 1 \
+  "$PROV_SLIPBOX" evergreen add --slug connected-spark --reason "second event" --origin-kind standalone
+
 check "evergreen add" "$SLIPBOX" evergreen add --slug "draft-test-1" --reason "flagged tension"
 check_file "evergreen file exists on disk" "$SCRATCH/evergreen/draft-test-1.md"
 check_exit "evergreen add rejects a duplicate slug" 1 "$SLIPBOX" evergreen add --slug "draft-test-1" --reason "dup"
@@ -128,7 +210,7 @@ check_exit "evergreen add rejects an absolute-path slug" 2 "$SLIPBOX" evergreen 
 check_exit "evergreen add rejects a dot-segment slug" 2 "$SLIPBOX" evergreen add --slug "foo..bar" --reason "x"
 check_exit "evergreen update rejects a traversal --slug" 2 "$SLIPBOX" evergreen update "final-test-1" --slug "../pwned"
 check_exit "evergreen update rejects a non-numeric --iteration" 2 "$SLIPBOX" evergreen update "final-test-1" --iteration abc
-find "$SCRATCH" -mindepth 1 -maxdepth 1 ! -name bin ! -name evergreen ! -name config.json ! -name style-profile.json ! -name humanize-checklist.json | grep -q . \
+find "$SCRATCH" -mindepth 1 -maxdepth 1 ! -name bin ! -name evergreen ! -name provenance-vault ! -name config.json ! -name style-profile.json ! -name humanize-checklist.json | grep -q . \
   && failed "unexpected file written outside evergreen/" \
   || pass "no file written outside evergreen/"
 

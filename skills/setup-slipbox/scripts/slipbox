@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.3.0"
+CLI_VERSION="2.4.0"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -199,17 +199,51 @@ def parse_frontmatter(text, path):
     if not match:
         raise FrontmatterError(f"no YAML frontmatter block in {path}")
     fields, order = {}, []
+    list_key = None
     for offset, line in enumerate(match.group(1).splitlines(), start=2):
         if not line.strip():
             continue
+        indent = len(line) - len(line.lstrip())
+        stripped = line.strip()
+        if indent and stripped.startswith("-"):
+            if list_key is None:
+                raise FrontmatterError(f"sequence item without a preceding key on line {offset} in {path}")
+            if list_key != "origin_paths":
+                raise FrontmatterError(f"sequence value is only supported for origin_paths on line {offset} in {path}")
+            item = stripped[1:].strip()
+            if not item.startswith('"'):
+                raise FrontmatterError(f"non-string sequence item for {list_key!r} on line {offset} in {path}")
+            try:
+                value = json.loads(item)
+            except json.JSONDecodeError:
+                raise FrontmatterError(f"unparsable sequence item for {list_key!r} on line {offset} in {path}")
+            if not isinstance(value, str):
+                raise FrontmatterError(f"non-string sequence item for {list_key!r} on line {offset} in {path}")
+            if fields[list_key] is None:
+                fields[list_key] = []
+            fields[list_key].append(value)
+            continue
+        list_key = None
         key, sep, raw = line.partition(":")
         key = key.strip()
         raw = raw.strip()
         if not sep or not key:
             raise FrontmatterError(f"malformed frontmatter line {offset} in {path}: {line.strip()!r}")
         order.append(key)
-        if raw == "":
+        if raw.startswith("["):
+            if key != "origin_paths":
+                raise FrontmatterError(f"sequence value is only supported for origin_paths on line {offset} in {path}")
+            try:
+                parsed = json.loads(raw)
+            except json.JSONDecodeError:
+                raise FrontmatterError(f"unparsable sequence value for {key!r} on line {offset} in {path}")
+            if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
+                raise FrontmatterError(f"non-string sequence item for {key!r} on line {offset} in {path}")
+            fields[key] = parsed
+            list_key = key
+        elif raw == "":
             fields[key] = None
+            list_key = key
         elif raw.startswith('"'):
             try:
                 fields[key] = json.loads(raw)
@@ -226,7 +260,13 @@ def serialize_frontmatter(fields, order):
     lines = ["---"]
     for key in order:
         value = fields.get(key)
-        if value is None:
+        if isinstance(value, list):
+            if not value:
+                lines.append(f"{key}: []")
+            else:
+                lines.append(f"{key}:")
+                lines.extend(f"  - {json.dumps(item)}" for item in value)
+        elif value is None:
             lines.append(f"{key}:")
         elif isinstance(value, str):
             lines.append(f"{key}: {json.dumps(value)}")
@@ -290,7 +330,7 @@ print_help() {
 slipbox — CLI for .slipbox/evergreen/*.md, .slipbox/links.jsonl, and .slipbox/config.json
 
 Usage:
-  slipbox evergreen add    --slug SLUG --reason "..."
+  slipbox evergreen add    --slug SLUG --reason "..." [--origin-kind KIND] [--origin-path PATH]...
   slipbox evergreen find   [--status S]
   slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
   slipbox links add        --source S --target T --rel cites|extends
@@ -681,27 +721,80 @@ PYEOF
 # ---- evergreen (file-per-candidate, YAML frontmatter, no body) ----
 cmd_evergreen_add() {
   require_evergreen_dir
-  reject_unknown_flags "slug reason" "$@"
-  local slug reason
-  slug=$(flag slug "$@")
-  reason=$(flag reason "$@")
+  local slug="" reason="" origin_kind="unknown" arg
+  local -a origin_paths
+  origin_paths=()
+  while [ $# -gt 0 ]; do
+    arg="$1"; shift
+    case "$arg" in
+      --slug|--reason|--origin-kind|--origin-path)
+        [ $# -ge 1 ] || usage_err "flag $arg needs a value"
+        case "$arg" in
+          --slug) slug="$1" ;; --reason) reason="$1" ;;
+          --origin-kind) origin_kind="$1" ;; --origin-path) origin_paths[${#origin_paths[@]}]="$1" ;;
+        esac
+        shift ;;
+      --*) usage_err "unknown flag: $arg" ;;
+      *) usage_err "unexpected argument: $arg" ;;
+    esac
+  done
   [ -n "$slug" ] || usage_err "evergreen add requires --slug"
   [ -n "$reason" ] || usage_err "evergreen add requires --reason"
   validate_slug "$slug"
-  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" py <<'PYEOF'
+  local origin_paths_json
+  if [ "${#origin_paths[@]}" -gt 0 ]; then
+    origin_paths_json=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "${origin_paths[@]}")
+  else
+    origin_paths_json='[]'
+  fi
+  EVERGREEN_DIR="$EVERGREEN_DIR" SLUG="$slug" REASON="$reason" ORIGIN_KIND="$origin_kind" ORIGIN_PATHS_JSON="$origin_paths_json" py <<'PYEOF'
 evergreen_dir = os.environ["EVERGREEN_DIR"]
 slug = os.environ["SLUG"]
 reason = os.environ["REASON"]
+origin_kind = os.environ.get("ORIGIN_KIND", "unknown")
+origin_paths = json.loads(os.environ.get("ORIGIN_PATHS_JSON", "[]"))
+
+ORIGIN_KINDS = {"source", "literature-note", "note-connection", "standalone", "unknown"}
+def validate_origin(kind, paths, vault_root):
+    if kind not in ORIGIN_KINDS:
+        fail(f"--origin-kind must be one of {', '.join(sorted(ORIGIN_KINDS))}", USAGE_EXIT)
+    required = {"source": (1, 1), "literature-note": (1, 1), "note-connection": (1, None)}
+    if kind in required:
+        minimum, maximum = required[kind]
+        if len(paths) < minimum or (maximum is not None and len(paths) > maximum):
+            fail(f"origin kind {kind} received {len(paths)} path(s), expected " +
+                 (str(minimum) if maximum == minimum else f"at least {minimum}"), USAGE_EXIT)
+    elif paths:
+        fail(f"origin kind {kind} does not accept --origin-path", USAGE_EXIT)
+    vault_real = os.path.realpath(vault_root)
+    normalized = []
+    for raw in paths:
+        if os.path.isabs(raw) or ".." in raw.replace("\\", "/").split("/"):
+            fail(f"origin path must be vault-relative without traversal: {raw}", USAGE_EXIT)
+        candidate = os.path.normpath(raw).replace(os.sep, "/")
+        if not candidate.lower().endswith(".md"):
+            fail(f"origin path must name a Markdown file: {raw}", USAGE_EXIT)
+        resolved = os.path.realpath(os.path.join(vault_real, candidate))
+        if os.path.commonpath([vault_real, resolved]) != vault_real:
+            fail(f"origin path escapes the vault: {raw}", USAGE_EXIT)
+        if not os.path.isfile(resolved):
+            fail(f"origin path not found: {candidate}")
+        normalized.append(candidate)
+    return normalized
+
+origin_paths = validate_origin(origin_kind, origin_paths, os.path.dirname(os.path.dirname(evergreen_dir)))
 path = os.path.join(evergreen_dir, f"{slug}.md")
 
 if os.path.exists(path):
     fail(f"evergreen slug already exists: {slug}")
 
 now = now_stamp()
-order = ["status", "reason", "discussion_path", "note_path", "iteration", "created_at", "updated_at"]
+order = ["status", "reason", "origin_kind", "origin_paths", "discussion_path", "note_path", "iteration", "created_at", "updated_at"]
 fields = {
     "status": "to-discuss",
     "reason": reason,
+    "origin_kind": origin_kind,
+    "origin_paths": origin_paths,
     "discussion_path": None,
     "note_path": None,
     "iteration": 1,
@@ -736,7 +829,11 @@ for path in sorted(glob.glob(os.path.join(evergreen_dir, "*.md"))):
         warn(f"skipped unparsable evergreen candidate: {err}")
         continue
     slug = os.path.splitext(os.path.basename(path))[0]
+    fields.setdefault("origin_kind", "unknown")
+    fields.setdefault("origin_paths", [])
     row = {"slug": slug, **fields}
+    if fmt == "table":
+        row["origin_paths"] = "; ".join(row["origin_paths"])
     if status_filter and row.get("status") != status_filter:
         continue
     rows.append(row)
