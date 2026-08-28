@@ -55,4 +55,4 @@ See the [skill source](../skills/make-evergreen-note/) for the full
 agent-facing instructions.
 # Make evergreen note
 
-Provenance uses `origin_kind: evergreen-note` and records notes-in-play in `origin_paths`, or a standalone origin when no notes are involved.
+Provenance uses `origin_kind: note-connection` and records the actual vault-relative paths of notes-in-play in `origin_paths`, or uses `origin_kind: standalone` with no paths when no notes are involved.

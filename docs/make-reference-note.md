@@ -67,4 +67,4 @@ See the [skill source](../skills/make-reference-note/) for the full
 agent-facing instructions.
 # Make reference note
 
-Provenance uses `origin_kind: reference-note` and includes all participating Literature note paths in `origin_paths`.
+Provenance uses `origin_kind: note-connection` and includes the actual vault-relative paths of all participating Literature notes in `origin_paths`.
