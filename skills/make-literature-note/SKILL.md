@@ -335,8 +335,16 @@ persistent-opinion offer:
 Only on a yes:
 
 ```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the user's own reaction, in their words>"
+.slipbox/bin/slipbox evergreen add --slug <draft-slug> \
+  --reason "<the user's own reaction, in their words>" \
+  --origin-kind literature-note \
+  --origin-path "<the exact saved Literature path>"
 ```
+
+Use the exact vault-relative Literature path already saved on disk; never
+reconstruct it from configured names or prefixes. If no Literature file exists,
+retain the actual source path instead with `--origin-kind source` and its
+`--origin-path`.
 
 A shrug, a "nothing really," or a decline is a complete, valid end to the
 session.

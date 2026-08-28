@@ -244,11 +244,12 @@ Never manufacture a tension to fill this slot; only surface one you actually not
 
 ## Done
 
-Hand back at most two things, nothing else:
+Hand back one grounding result envelope containing at most two semantic items,
+plus origin metadata — nothing else:
 
 - the confirmed statement, verbatim
 - only if the user opted in above, a short description of the flagged tension
-- the origin context returned to the caller: the actual vault-relative paths
+- origin metadata returned to the caller: the actual vault-relative paths
   participating in the session, or an explicit no-path context when no notes or
   source were retrieved
 
