@@ -224,11 +224,15 @@ check_json "work list defaults to JSON" 'assert isinstance(data, list) and any(r
 check_match "work list table has a header" '*work_id*' "$("$SLIPBOX" work list --format table | head -1)"
 check_eq "work inspect defaults to JSON" "$work_id" "$("$SLIPBOX" work inspect "$work_id" | json_at '["work_id"]')"
 check_match "work inspect table has a header" '*work_id*' "$("$SLIPBOX" work inspect "$work_id" --format table | head -1)"
+for action in create list inspect update resume discard; do
+  check_exit "work $action --help exits 0" 0 "$SLIPBOX" work "$action" --help
+done
 check_exit "work rejects unknown status" 2 "$SLIPBOX" work update "$work_id" --status nope
 check_exit "work rejects unknown flag" 2 "$SLIPBOX" work list --bogus
 check_exit "work discard requires explicit confirmation" 2 "$SLIPBOX" work discard "$work_id" --no-input
 check_file "work remains after unconfirmed discard" "$SCRATCH/work/$work_id/manifest.json"
 check "work update changes status" "$SLIPBOX" work update "$work_id" --status blocked
+check_json "work update keeps affected paths consistent" 'assert data["source_identity"] in data["affected_paths"] and data["target_identity"] in data["affected_paths"]' <<<"$("$SLIPBOX" work update "$work_id" --source resources/changed.md)"
 check_json "work resume returns state" 'assert data["work_id"] == "'"$work_id"'" and data["status"] == "blocked"' <<<"$("$SLIPBOX" work resume "$work_id")"
 check "work discard accepts --yes" "$SLIPBOX" work discard "$work_id" --yes --no-input
 check_no_file "discard removes selected work only" "$SCRATCH/work/$work_id/manifest.json"

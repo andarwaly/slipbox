@@ -439,6 +439,7 @@ PYEOF
 
 cmd_work_inspect() {
   [ $# -ge 1 ] || usage_err "work inspect requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
   local work_id="$1"; shift; local format="json"
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -457,6 +458,7 @@ PYEOF
 
 cmd_work_update() {
   [ $# -ge 1 ] || usage_err "work update requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
   local work_id="$1"; shift; local status="" activity="" source="" target="" affected="" has=0
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -482,8 +484,12 @@ for field in ("source", "target"):
         manifest[field + "_identity"] = value
         manifest[field + "_starting_fingerprint"] = file_fingerprint(Path(os.environ["WORK_ROOT"]).parent.parent / value)
         manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
-paths = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
-if paths: manifest["affected_paths"] = paths
+paths = list(manifest.get("affected_paths", []))
+for path in os.environ.get("AFFECTED", "").splitlines():
+    if path and path not in paths: paths.append(path)
+for identity in (manifest.get("source_identity"), manifest.get("target_identity")):
+    if identity and identity not in paths: paths.append(identity)
+manifest["affected_paths"] = paths
 manifest["updated_at"] = now_stamp()
 save_work_manifest(work_dir, manifest)
 print(json.dumps(manifest, indent=2))
@@ -492,6 +498,7 @@ PYEOF
 
 cmd_work_resume() {
   [ $# -ge 1 ] || usage_err "work resume requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
   [ $# -le 1 ] || usage_err "work resume takes exactly WORK_ID"
   WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
 work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
@@ -508,6 +515,7 @@ PYEOF
 
 cmd_work_discard() {
   [ $# -ge 1 ] || usage_err "work discard requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
   local work_id="$1"; shift; local yes=0 no_input=0
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -522,7 +530,8 @@ root = Path(os.environ["WORK_ROOT"])
 work_dir, manifest = load_work(root, os.environ["WORK_ID"])
 if os.environ.get("YES") != "1":
     if os.environ.get("NO_INPUT") == "1" or not sys.stdin.isatty(): fail("work discard requires --yes in non-interactive mode", USAGE_EXIT)
-    answer = input("Discard this work? [y/N] ")
+    print("Discard this work? [y/N] ", end="", file=sys.stderr, flush=True)
+    answer = input()
     if answer.strip().lower() not in {"y", "yes"}: print(json.dumps({"work_id": manifest["work_id"], "discarded": False})); sys.exit(0)
 shutil.rmtree(work_dir)
 print(json.dumps({"work_id": manifest["work_id"], "discarded": True}, indent=2))
