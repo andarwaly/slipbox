@@ -1,0 +1,30 @@
+{
+  "skill": "using-slipbox",
+  "cases": [
+    {
+      "prompt": "A Literature workflow has an approved reader-owned proposition with origin paths. Record it.",
+      "expected_output": "Routes to the Record an Evergreen candidate action, requires proposition, reason, origin kind and origin paths, and does not reinterpret the proposition.",
+      "assertions": [
+        {"type": "contains", "text": "Record an Evergreen candidate"},
+        {"type": "not_contains", "text": "Run /using-slipbox"}
+      ]
+    },
+    {
+      "prompt": "A specialist has assembled a complete note draft. Publish the artifact.",
+      "expected_output": "Routes to Publish an artifact, runs /write-checks before any write, and uses the CLI only for the transaction.",
+      "assertions": [
+        {"type": "contains", "text": "/write-checks"},
+        {"type": "contains", "text": "Publish an artifact"}
+      ]
+    },
+    {
+      "prompt": "Record a link between two notes, then inspect source analysis.",
+      "expected_output": "Routes to Record a link and Inspect source analysis; exact CLI flags are obtained from the relevant reference rather than repeated in each action.",
+      "assertions": [
+        {"type": "contains", "text": "Record a link"},
+        {"type": "contains", "text": "Inspect source analysis"},
+        {"type": "contains", "text": "reference"}
+      ]
+    }
+  ]
+}
