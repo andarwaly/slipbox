@@ -314,6 +314,87 @@ p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations'
 PY
 check_exit "manifest save failure is terminal" 1 env SLIPBOX_TEST_FAIL_MANIFEST_SAVE=1 "$SLIPBOX" work finalize "$savefail_id"
 check_json "manifest save failure records repair" 'assert data["status"] == "repair-required"' <<<"$("$SLIPBOX" work inspect "$savefail_id")"
+cp "$SCRATCH/links.jsonl" "$SCRATCH/links-before-publication-tests.jsonl"
+
+result=$("$SLIPBOX" work create --kind migration --activity ledger-compensation)
+ledger_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"add","source_slug":"ledger-source","target_slug":"ledger-target","rel_type":"cites"}' > "$SCRATCH/work/$ledger_id/link.jsonl"
+printf 'never-published\n' > "$SCRATCH/work/$ledger_id/after.md"
+python3 - "$SCRATCH/work/$ledger_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"links.jsonl", "expected_fingerprint":"sha256:" + __import__("hashlib").sha256(open(__import__("os").path.join(__import__("os").path.dirname(p), "..", "..", "links.jsonl"), "rb").read()).hexdigest(), "replacement_path":"link.jsonl", "kind":"ledger-add", "source_slug":"ledger-source", "target_slug":"ledger-target", "rel_type":"cites"},
+    {"path":"ledger-after.md", "expected_fingerprint":None, "replacement_path":"after.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+check_exit "ledger compensation failure rolls back with tombstone" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$ledger_id"
+check_json "ledger compensation records failed state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$ledger_id")"
+check_json "ledger compensation appends tombstone" 'assert len(data) == 0' <<<"$("$SLIPBOX" links find --source ledger-source --target ledger-target --rel cites)"
+check_match "ledger compensation preserves append-only history" '*"op": "add"*"op": "remove"*' "$(<"$SCRATCH/links.jsonl")"
+
+result=$("$SLIPBOX" work create --kind migration --activity ledger-repair)
+repair_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"add","source_slug":"repair-source","target_slug":"repair-target","rel_type":"extends"}' > "$SCRATCH/work/$repair_id/link.jsonl"
+printf 'repair-target\n' > "$SCRATCH/work/$repair_id/after.md"
+python3 - "$SCRATCH/work/$repair_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"links.jsonl", "expected_fingerprint":"sha256:" + __import__("hashlib").sha256(open(__import__("os").path.join(__import__("os").path.dirname(p), "..", "..", "links.jsonl"), "rb").read()).hexdigest(), "replacement_path":"link.jsonl", "kind":"ledger-add", "source_slug":"repair-source", "target_slug":"repair-target", "rel_type":"extends"},
+    {"path":"repair-after.md", "expected_fingerprint":None, "replacement_path":"after.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+check_exit "failed ledger compensation requires repair" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 SLIPBOX_TEST_FAIL_COMPENSATION=1 "$SLIPBOX" work finalize "$repair_id"
+check_json "compensation failure records repair-required diagnostics" 'assert data["status"] == "repair-required" and data["repair_errors"]' <<<"$("$SLIPBOX" work inspect "$repair_id")"
+check_json "uncompensated ledger addition remains visible" 'assert len(data) == 1 and data[0]["source_slug"] == "repair-source"' <<<"$("$SLIPBOX" links find --source repair-source --target repair-target --rel extends)"
+cp "$SCRATCH/links-before-publication-tests.jsonl" "$SCRATCH/links.jsonl"
+
+result=$("$SLIPBOX" work create --kind literature --activity lock-contention)
+lock_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'locked replacement\n' > "$SCRATCH/work/$lock_id/replacement.md"
+printf 'second replacement\n' > "$SCRATCH/work/$lock_id/second.md"
+python3 - "$SCRATCH/work/$lock_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"z-ordered-lock-target.md", "expected_fingerprint":None, "replacement_path":"replacement.md", "kind":"artifact"},
+    {"path":"a-ordered-lock-target.md", "expected_fingerprint":None, "replacement_path":"second.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+LOCK_PATH=$(python3 - "$SCRATCH" <<'PY'
+import hashlib, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+target = root / "a-ordered-lock-target.md"
+print(root / "work" / ".locks" / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock"))
+PY
+)
+mkdir -p "$(dirname "$LOCK_PATH")"
+LOCK_READY="$SCRATCH/lock-ready"
+python3 - "$LOCK_PATH" "$LOCK_READY" <<'PY' &
+import fcntl, sys, time
+with open(sys.argv[1], "a+") as handle:
+    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+    open(sys.argv[2], "w").close()
+    time.sleep(2)
+PY
+holder=$!
+for _ in $(seq 1 40); do [ -f "$LOCK_READY" ] && break; sleep 0.05; done
+check_exit "contended lock prevents publication" 1 "$SLIPBOX" work finalize "$lock_id"
+assert_contains "locks are acquired in deterministic path order" "a-ordered-lock-target.md" /tmp/slipbox-test-err
+wait "$holder"
+check_json "contended work remains ready" 'assert data["status"] == "ready-to-finalize"' <<<"$("$SLIPBOX" work inspect "$lock_id")"
+check_no_file "contended target is untouched" "$SCRATCH/a-ordered-lock-target.md"
+check_no_file "later target is untouched after contention" "$SCRATCH/z-ordered-lock-target.md"
 
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"
