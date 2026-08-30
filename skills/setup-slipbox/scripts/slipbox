@@ -521,6 +521,7 @@ if root.is_dir():
         state="compatible" if existing and any(file_fingerprint(vault / p) == fp for p in existing) else ("unresolved-source" if paths else "orphaned")
     except SystemExit:
       state="incompatible"
+      fp = "sha256:" + path.stem
     except Exception:
       state="incompatible"
     rows.append({"fingerprint":fp, "state":state, "path":str(path)})
