@@ -25,6 +25,7 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
 LINKS_FILE="$SELF_DIR/links.jsonl"
 CONFIG="$SELF_DIR/config.json"
+CACHE_DIR="$SELF_DIR/cache/source-maps"
 
 # ---- helpers ----
 # json_escape <string> — minimal JSON string-body escaping, so an error message
@@ -333,6 +334,39 @@ def file_fingerprint(path: Path) -> str | None:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+CACHE_TOP_LEVEL = {"schema_version", "map_contract_version", "producer_version", "source", "contract", "posture", "source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates", "created_at", "updated_at"}
+CACHE_REQUIRED = CACHE_TOP_LEVEL
+
+
+def validate_cache_map(data, label="source-map cache"):
+    if not isinstance(data, dict):
+        fail(f"{label} must be a JSON object")
+    unknown = set(data) - CACHE_TOP_LEVEL
+    missing = CACHE_REQUIRED - set(data)
+    if unknown:
+        fail(f"{label} has unknown top-level keys: {', '.join(sorted(unknown))}")
+    if missing:
+        fail(f"{label} is missing required top-level sections: {', '.join(sorted(missing))}")
+    for key in ("schema_version", "map_contract_version", "producer_version", "created_at", "updated_at"):
+        if not isinstance(data[key], str) or not data[key].strip():
+            fail(f"{label}.{key} must be a non-empty string")
+    if not isinstance(data["source"], dict): fail(f"{label}.source must be an object")
+    source = data["source"]
+    fingerprint = source.get("fingerprint") or source.get("sha256")
+    if not isinstance(fingerprint, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", fingerprint):
+        fail(f"{label}.source.fingerprint must be a sha256:<64 hex> value")
+    paths = source.get("known_paths", [])
+    if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths):
+        fail(f"{label}.source.known_paths must be an array of strings")
+    for key in ("contract", "posture"):
+        if not isinstance(data[key], dict): fail(f"{label}.{key} must be an object")
+    for key in ("source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates"):
+        if not isinstance(data[key], list): fail(f"{label}.{key} must be an array")
+    for unit in data["source_units"]:
+        if not isinstance(unit, dict): fail(f"{label}.source_units entries must be objects")
+    return fingerprint
 EOF
 }
 py() { { py_prelude; cat; } | python3 -; }
@@ -353,12 +387,113 @@ Usage:
   slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
   slipbox humanize check   <file> [--language LANG]
   slipbox work create|list|inspect|update|resume|discard [options]
+  slipbox cache status|inspect|store|remove [options]
   slipbox --help | --version
 
 Output is JSON by default (--format table optional on find/get commands).
 Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
 {"error": "..."} object on stderr.
 EOF
+}
+
+print_cache_help() {
+  cat <<'EOF'
+Usage:
+  slipbox cache status [--format table]
+  slipbox cache inspect <sha256|RESOURCE_PATH> [--format table]
+  slipbox cache store --source RESOURCE_PATH [--file MAP_JSON]
+  slipbox cache remove <sha256|RESOURCE_PATH> [--yes] [--no-input]
+EOF
+}
+
+cmd_cache_store() {
+  local source="" file="" payload=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --source|--resource) [ $# -ge 2 ] || usage_err "flag $1 needs a value"; source="$2"; shift 2 ;;
+      --file|--input) [ $# -ge 2 ] || usage_err "flag $1 needs a value"; file="$2"; shift 2 ;;
+      --help|-h) print_cache_help; exit 0 ;;
+      *) usage_err "unknown cache store argument: $1" ;;
+    esac
+  done
+  [ -n "$source" ] || usage_err "cache store requires --source"
+  if [ -n "$file" ]; then [ -f "$file" ] || runtime_err "file not found: $file"; payload=$(<"$file") || runtime_err "cannot read cache map: $file"; else payload=$(cat); fi
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ROOT="$CACHE_DIR" VAULT_ROOT="$vault_root" SOURCE_PATH="$source" MAP_JSON="$payload" py <<'CACHEPY'
+root = Path(os.environ["CACHE_ROOT"])
+source_path = Path(os.environ["VAULT_ROOT"]) / os.environ["SOURCE_PATH"]
+if not source_path.is_file(): fail(f"resource not found: {os.environ['SOURCE_PATH']}")
+try:
+    data = json.loads(os.environ.get("MAP_JSON", ""))
+except json.JSONDecodeError as err:
+    fail(f"source-map cache input is not valid JSON (line {err.lineno}, column {err.colno}): {err.msg}")
+fingerprint = validate_cache_map(data)
+actual = file_fingerprint(source_path)
+if fingerprint != actual: fail(f"source fingerprint mismatch: cache has {fingerprint}, resource is {actual}")
+if os.environ["SOURCE_PATH"] not in data["source"]["known_paths"]:
+    data["source"]["known_paths"].append(os.environ["SOURCE_PATH"])
+name = fingerprint.split(":", 1)[1] + ".json"
+root.mkdir(parents=True, exist_ok=True)
+atomic_write(str(root / name), json.dumps(data, indent=2) + "\n", "source-map cache")
+print(json.dumps({"status":"stored", "fingerprint":fingerprint, "path":str(root / name)}, indent=2))
+CACHEPY
+}
+
+cache_fingerprint_arg() {
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ARG="$1" VAULT_ROOT="$vault_root" py <<'CACHEPY'
+arg = os.environ["CACHE_ARG"]
+if re.fullmatch(r"[0-9a-f]{64}", arg): print("sha256:" + arg)
+elif re.fullmatch(r"sha256:[0-9a-f]{64}", arg): print(arg)
+else:
+    value = file_fingerprint(Path(os.environ["VAULT_ROOT"]) / arg)
+    if value is None: fail(f"resource not found: {arg}")
+    print(value)
+CACHEPY
+}
+
+cmd_cache_inspect() {
+  [ $# -ge 1 ] || usage_err "cache inspect requires SHA256 or RESOURCE_PATH"
+  local arg="$1"; shift; local format="json"
+  while [ $# -gt 0 ]; do case "$1" in --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache inspect argument: $1" ;; esac; done
+  resolve_format --format "$format"; local fp; fp=$(cache_fingerprint_arg "$arg")
+  CACHE_ROOT="$CACHE_DIR" FINGERPRINT="$fp" FORMAT="$FORMAT" py <<'CACHEPY'
+path = Path(os.environ["CACHE_ROOT"]) / (os.environ["FINGERPRINT"].split(":",1)[1] + ".json")
+if not path.is_file(): fail(f"cache not found for {os.environ['FINGERPRINT']}")
+data = load_json(str(path), "source-map cache"); validate_cache_map(data)
+print(json.dumps(data, indent=2) if os.environ["FORMAT"] != "table" else "\n".join(f"{k}\t{v}" for k,v in data.items()))
+CACHEPY
+}
+
+cmd_cache_remove() {
+  [ $# -ge 1 ] || usage_err "cache remove requires SHA256 or RESOURCE_PATH"
+  local arg="$1"; shift; local yes=0 no_input=0
+  while [ $# -gt 0 ]; do case "$1" in --yes) yes=1; shift ;; --no-input) no_input=1; shift ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache remove argument: $1" ;; esac; done
+  [ "$yes" = 1 ] || { [ "$no_input" = 1 ] && usage_err "cache remove requires --yes in non-interactive mode"; [ -t 0 ] || usage_err "cache remove requires --yes in non-interactive mode"; }
+  local fp; fp=$(cache_fingerprint_arg "$arg")
+  CACHE_ROOT="$CACHE_DIR" FINGERPRINT="$fp" YES="$yes" py <<'CACHEPY'
+path = Path(os.environ["CACHE_ROOT"]) / (os.environ["FINGERPRINT"].split(":",1)[1] + ".json")
+if not path.is_file(): fail(f"cache not found for {os.environ['FINGERPRINT']}")
+if os.environ.get("YES") != "1" and input("Remove this cache? [y/N] ").strip().lower() not in {"y","yes"}: print(json.dumps({"removed":False})); sys.exit(0)
+path.unlink(); print(json.dumps({"status":"removed", "fingerprint":os.environ["FINGERPRINT"]}, indent=2))
+CACHEPY
+}
+
+cmd_cache_status() {
+  local format="json"
+  while [ $# -gt 0 ]; do case "$1" in --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache status argument: $1" ;; esac; done
+  resolve_format --format "$format"
+  CACHE_ROOT="$CACHE_DIR" FORMAT="$FORMAT" py <<'CACHEPY'
+root = Path(os.environ["CACHE_ROOT"]); rows=[]
+if root.is_dir():
+  for path in sorted(root.glob("*.json")):
+    try:
+      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data); state="compatible" if path.stem == fp.split(":",1)[1] else "incompatible"
+    except SystemExit: raise
+    except Exception: state="incompatible"; fp=None
+    rows.append({"fingerprint":fp or "sha256:"+path.stem, "state":state, "path":str(path)})
+emit_rows(rows, os.environ.get("FORMAT", "json"))
+CACHEPY
 }
 
 print_work_help() {
@@ -1325,5 +1460,6 @@ case "$1" in
   filename) shift; dispatch filename "format" "$@" ;;
   note) shift; dispatch note "validate" "$@" ;;
   work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume discard" "$@" ;;
+  cache) shift; [ $# -ge 1 ] || usage_err "cache requires an action: status, inspect, store, remove"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_cache_help; exit 0; }; dispatch cache "status inspect store remove" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

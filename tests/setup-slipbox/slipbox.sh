@@ -692,6 +692,24 @@ check_no_tmp_files "a failed write leaves no temp file behind" "$READONLY/evergr
 chmod u+w "$READONLY" "$READONLY/evergreen"
 rm -rf "$READONLY"
 
+echo "--- source-map cache ---"
+printf 'frozen resource bytes\n' > "$SCRATCH/resources.md"
+RESOURCE_FP="sha256:$(shasum -a 256 "$SCRATCH/resources.md" | cut -d' ' -f1)"
+python3 - "$SCRATCH/map.json" "$RESOURCE_FP" <<'PY'
+import json, sys
+data = {"schema_version":"1", "map_contract_version":"1", "producer_version":"1",
+        "source":{"fingerprint":sys.argv[2],"known_paths":[]}, "contract":{}, "posture":{},
+        "source_spine":[], "source_units":[], "relations":[], "core_idea_candidates":[],
+        "integrity_flags":[], "concept_candidates":[], "referent_candidates":[],
+        "created_at":"2026-08-30T00:00:00Z", "updated_at":"2026-08-30T00:00:00Z"}
+json.dump(data, open(sys.argv[1], "w"))
+PY
+check "cache store validates and writes by Resource fingerprint" "$SLIPBOX" cache store --source resources.md --file "$SCRATCH/map.json"
+check_eq "cache status reports one compatible entry" compatible "$($SLIPBOX cache status | json_at '[0]["state"]')"
+check_exit "cache build is not a semantic command" 2 "$SLIPBOX" cache build
+check_exit "cache remove requires explicit confirmation" 2 "$SLIPBOX" cache remove "$RESOURCE_FP" --no-input
+check "cache remove accepts explicit confirmation" "$SLIPBOX" cache remove "$RESOURCE_FP" --yes
+
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"
 else

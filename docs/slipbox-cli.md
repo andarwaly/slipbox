@@ -23,6 +23,10 @@ slipbox work inspect WORK_ID [--format table]
 slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY]
 slipbox work resume  WORK_ID
 slipbox work discard WORK_ID [--yes] [--no-input]
+slipbox cache status [--format table]
+slipbox cache inspect SHA256_OR_RESOURCE_PATH [--format table]
+slipbox cache store --source RESOURCE_PATH [--file MAP_JSON]
+slipbox cache remove SHA256_OR_RESOURCE_PATH [--yes] [--no-input]
 slipbox --help | --version
 ```
 
