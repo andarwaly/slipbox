@@ -928,9 +928,12 @@ cmd_work_commit() {
       *) usage_err "unknown work commit argument: $1" ;;
     esac
   done
-  [ "$yes" = 1 ] || [ "$leave" = 1 ] || { [ -t 0 ] || { echo '{"status":"confirmation-required"}'; exit 0; }; printf 'Commit this work? [y/N] ' >&2; read -r answer; case "$answer" in y|Y|yes|YES) yes=1 ;; *) leave=1 ;; esac; }
-  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" LEAVE="$leave" py <<'PYEOF'
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" LEAVE="$leave" INTERACTIVE="$( [ -t 0 ] && echo 1 || echo 0 )" py <<'PYEOF'
 root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if manifest.get("status") not in {"published", "commit-failed"}:
+    fail("work commit requires status published or commit-failed")
+if manifest.get("git_commit_status") == "committed":
+    print(json.dumps(manifest, indent=2)); raise SystemExit
 if os.environ.get("LEAVE") == "1":
     manifest["status"] = "published"; manifest["git_commit_status"] = "left-uncommitted"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
 vault = root.parent
@@ -945,10 +948,20 @@ git_config = config.get("git", {}) if isinstance(config, dict) else {}
 mode = git_config.get("mode", "ask")
 if mode == "off":
     manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+if mode == "ask" and os.environ.get("YES") != "1":
+    if os.environ.get("INTERACTIVE") == "1":
+        print("Commit this work? [y/N] ", end="", file=sys.stderr, flush=True)
+        if input().strip().lower() not in {"y", "yes"}:
+            print(json.dumps({"status":"confirmation-required", "work_id":manifest["work_id"]})); raise SystemExit
+    else:
+        print(json.dumps({"status":"confirmation-required", "work_id":manifest["work_id"]})); raise SystemExit
 paths = list(manifest.get("published_paths", []))
 if not paths:
     mutations = manifest.get("mutations") or ([] if not (work_dir / "mutations.json").is_file() else load_json(str(work_dir / "mutations.json"), "staged mutations"))
     paths = [m.get("path") for m in mutations if isinstance(m, dict) and isinstance(m.get("path"), str)]
+cache_persistence = config.get("cache", {}).get("source_maps", {}).get("persistence") if isinstance(config.get("cache", {}), dict) else None
+if cache_persistence != "tracked":
+    paths = [p for p in paths if not p.startswith("cache/source-maps/")]
 baselines = manifest.get("git_baselines", {})
 safe_paths = [p for p in paths if not baselines.get(p, {}).get("status")]
 downgraded = [p for p in paths if p not in safe_paths]
@@ -970,6 +983,9 @@ try:
     subprocess.run(["git", "-C", repo, "read-tree", before], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
     rels = [os.path.relpath(str((vault / p).resolve()), repo) for p in safe_paths]
     subprocess.run(["git", "-C", repo, "add", "--"] + rels, check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    current = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+    if current != before:
+        raise RuntimeError("HEAD moved concurrently during commit preparation")
     subprocess.run(["git", "-C", repo, "commit", "-m", message], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
 except (OSError, subprocess.CalledProcessError) as exc:
     manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = (exc.stderr or str(exc)).strip(); manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: " + manifest["commit_error"])
@@ -977,6 +993,9 @@ finally:
     try: index.unlink()
     except OSError: pass
 after = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+parent = subprocess.run(["git", "-C", repo, "rev-parse", "HEAD^"], text=True, capture_output=True).stdout.strip()
+if parent != before:
+    manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = "HEAD moved concurrently during commit"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: HEAD moved concurrently")
 manifest["status"] = "published"; manifest["git_commit_status"] = "committed"; manifest["commit"] = {"id": after, "parent": before, "paths": safe_paths, "subject": message.split("\n", 1)[0]}; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2))
 PYEOF
 }
