@@ -282,6 +282,38 @@ PY
 check_exit "failed second mutation rolls back first" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$rollback_id"
 check_match "rollback restores first target" '*after*' "$(<"$SCRATCH/publish-target.md")"
 check_json "rollback records terminal failure state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$rollback_id")"
+check_no_file "rolled-back new target is absent" "$SCRATCH/publish-second.md"
+
+result=$("$SLIPBOX" work create --kind literature --activity collision)
+collision_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'collision\n' > "$SCRATCH/work/$collision_id/replacement.md"
+printf 'already here\n' > "$SCRATCH/collision.md"
+python3 - "$SCRATCH/work/$collision_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'collision.md','expected_fingerprint':None,'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+check_exit "new-file collision is rejected" 1 "$SLIPBOX" work finalize "$collision_id"
+check_match "collision target is untouched" '*already here*' "$(<"$SCRATCH/collision.md")"
+
+result=$("$SLIPBOX" work create --kind literature --activity changed --target publish-target.md)
+changed_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'changed\n' > "$SCRATCH/work/$changed_id/replacement.md"
+python3 - "$SCRATCH/work/$changed_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'publish-target.md','expected_fingerprint':m['target_starting_fingerprint'],'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+printf 'concurrent\n' > "$SCRATCH/publish-target.md"
+check_exit "changed target CAS is rejected" 1 "$SLIPBOX" work finalize "$changed_id"
+
+result=$("$SLIPBOX" work create --kind literature --activity savefail)
+savefail_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'saved\n' > "$SCRATCH/work/$savefail_id/replacement.md"
+python3 - "$SCRATCH/work/$savefail_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'savefail.md','expected_fingerprint':None,'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+check_exit "manifest save failure is terminal" 1 env SLIPBOX_TEST_FAIL_MANIFEST_SAVE=1 "$SLIPBOX" work finalize "$savefail_id"
+check_json "manifest save failure records repair" 'assert data["status"] == "repair-required"' <<<"$("$SLIPBOX" work inspect "$savefail_id")"
 
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"

@@ -144,7 +144,7 @@ reject_unknown_flags() {
 # py — runs a Python body (on stdin) with the shared prelude prepended.
 py_prelude() {
   cat <<'EOF'
-import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time
+import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time, fcntl
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -410,9 +410,12 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
                 if not isinstance(mutation.get(key), str) or not mutation[key].strip(): fail(f"ledger mutation requires {key}")
             if mutation["rel_type"] not in {"cites", "extends"}: fail("ledger mutation rel_type must be cites or extends")
             try:
-                for line in replacement_file.read_text(encoding="utf-8").splitlines():
+                ledger_lines = replacement_file.read_text(encoding="utf-8").splitlines()
+                if len(ledger_lines) != 1 or not ledger_lines[0].strip(): raise ValueError("exactly one event is required")
+                for line in ledger_lines:
                     row = json.loads(line)
                     if not isinstance(row, dict): raise ValueError("event must be an object")
+                    if set(row) != {"op", "source_slug", "target_slug", "rel_type"}: raise ValueError("event has unknown or missing fields")
                     canonical = normalize_link_event(row)
                     if canonical["op"] != "add": raise ValueError("ledger replacement events must be adds")
                     if canonical["source_slug"] != mutation["source_slug"] or canonical["target_slug"] != mutation["target_slug"] or canonical["rel_type"] != mutation["rel_type"]:
@@ -857,26 +860,12 @@ locks = []
 try:
     for target in _lock_paths(vault, staged):
         lock = lock_root / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock")
-        try: lock.mkdir()
-        except FileExistsError:
-            owner = lock / "owner.json"
-            stale = False
-            try:
-                info = json.loads(owner.read_text(encoding="utf-8")); age = time.time() - float(info.get("created_at", time.time()))
-                pid = int(info.get("pid", -1))
-                alive = False
-                if pid > 0:
-                    try: os.kill(pid, 0); alive = True
-                    except OSError: alive = False
-                stale = age > 3600 and not alive
-            except Exception: stale = False
-            if stale:
-                try: lock.rename(lock.with_name(lock.name + ".stale"))
-                except OSError: fail(f"path is locked: {target}")
-                lock.mkdir()
-            else: fail(f"path is locked: {target}")
-        (lock / "owner.json").write_text(json.dumps({"pid": os.getpid(), "created_at": time.time(), "path": str(target)}), encoding="utf-8")
-        locks.append(lock)
+        handle = lock.open("a+")
+        try: fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            handle.close(); fail(f"path is locked: {target}")
+        handle.seek(0); handle.truncate(); handle.write(json.dumps({"pid": os.getpid(), "created_at": time.time(), "path": str(target)})); handle.flush()
+        locks.append(handle)
     for mutation, backup in zip(staged, backups):
         if _mutation_fingerprint(_safe_vault_path(vault, mutation["path"])) != backup["fingerprint"]:
             fail(f"target changed while waiting for lock: {mutation['path']}")
@@ -906,10 +895,7 @@ try:
     print(json.dumps(manifest, indent=2))
 finally:
     for lock in reversed(locks):
-        try:
-            try: (lock / "owner.json").unlink()
-            except FileNotFoundError: pass
-            lock.rmdir()
+        try: fcntl.flock(lock.fileno(), fcntl.LOCK_UN); lock.close()
         except OSError: pass
 PYEOF
 }
