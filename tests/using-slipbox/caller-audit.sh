@@ -25,4 +25,21 @@ if python3 "$checker" "$malformed" >/dev/null 2>&1; then
   exit 1
 fi
 rm -rf "$malformed"
+
+for mutation in missing altered-first duplicate; do
+  malformed="$(mktemp -d)"
+  mkdir -p "$malformed/skills/using-slipbox"
+  cp "$root/skills/using-slipbox/SKILL.md" "$malformed/skills/using-slipbox/SKILL.md"
+  case "$mutation" in
+    missing) awk 'NR < 13 || NR > 15' "$malformed/skills/using-slipbox/SKILL.md" > "$malformed/skills/using-slipbox/tmp" ;;
+    altered-first) sed 's/Caller skills state/Caller instruction states/' "$malformed/skills/using-slipbox/SKILL.md" > "$malformed/skills/using-slipbox/tmp" ;;
+    duplicate) cat "$malformed/skills/using-slipbox/SKILL.md" > "$malformed/skills/using-slipbox/tmp"; sed -n '13,15p' "$malformed/skills/using-slipbox/SKILL.md" >> "$malformed/skills/using-slipbox/tmp" ;;
+  esac
+  mv "$malformed/skills/using-slipbox/tmp" "$malformed/skills/using-slipbox/SKILL.md"
+  if python3 "$checker" "$malformed" >/dev/null 2>&1; then
+    echo "checker failed open on $mutation quotation mutation" >&2
+    exit 1
+  fi
+  rm -rf "$malformed"
+done
 echo "operative caller audit: PASS"

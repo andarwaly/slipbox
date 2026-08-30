@@ -15,6 +15,10 @@ QUOTE = (
 def operative_lines(path: Path):
     lines = path.read_text(encoding="utf-8").splitlines()
     is_engine = path.as_posix().endswith("skills/using-slipbox/SKILL.md")
+    if is_engine:
+        exact_starts = [index for index in range(len(lines) - 2) if tuple(lines[index:index + 3]) == QUOTE]
+        if len(exact_starts) != 1:
+            raise ValueError(f"expected exactly one intact required caller quotation in {path}, found {len(exact_starts)}")
     excluded = set()
     for index, line in enumerate(lines):
         if is_engine and line.startswith("Caller skills state the natural imperative"):
