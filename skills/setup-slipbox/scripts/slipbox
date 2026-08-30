@@ -987,7 +987,7 @@ try:
     if current != before:
         raise RuntimeError("HEAD moved concurrently during commit preparation")
     subprocess.run(["git", "-C", repo, "commit", "-m", message], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-except (OSError, subprocess.CalledProcessError) as exc:
+except (OSError, subprocess.CalledProcessError, RuntimeError) as exc:
     manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = (exc.stderr or str(exc)).strip(); manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: " + manifest["commit_error"])
 finally:
     try: index.unlink()

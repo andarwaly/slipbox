@@ -901,6 +901,24 @@ check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox
 check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
 check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
 check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
+check_json "auto mode commits without confirmation" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$git_id" --yes)"
+
+NO_REPO_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity no-repo --affected-path no-repo.md)" | json_at '["work_id"]')
+printf 'no repo\n' > "$SCRATCH/no-repo.md"
+python3 - "$SCRATCH/work/$NO_REPO_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["no-repo.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "no repository is treated as Git off" 'assert data["git_commit_status"] == "off"' <<<"$($SLIPBOX work commit "$NO_REPO_ID" --yes)"
+
+printf '%s\n' '{"git":{"mode":"ask","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+ASK_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity ask --affected-path ask.md)" | json_at '["work_id"]')
+printf 'ask\n' > "$GIT_SCRATCH/.slipbox/ask.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$ASK_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["ask.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "ask mode requires confirmation" 'assert data["status"] == "confirmation-required"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$ASK_ID")"
 
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"
