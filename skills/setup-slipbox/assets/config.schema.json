@@ -4,7 +4,7 @@
   "$id": "https://slipbox.local/schemas/config.schema.json",
   "title": ".slipbox/config.json",
   "type": "object",
-  "required": ["paths", "filenames", "frontmatter", "links", "templates", "transcript_languages", "prefixes"],
+  "required": ["paths", "filenames", "frontmatter", "links", "templates", "transcript_languages", "prefixes", "git", "cache"],
   "additionalProperties": false,
   "properties": {
     "paths": {
@@ -84,6 +84,38 @@
         "literature": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] },
         "reference": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] },
         "evergreen": { "oneOf": [{ "type": "string" }, { "type": "boolean", "const": false }] }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": ["mode", "commit_style", "activity_trailers"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "type": "string", "enum": ["off", "ask", "auto"] },
+        "commit_style": {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "type": "string", "enum": ["detected", "fallback"] }
+          }
+        },
+        "activity_trailers": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "required": ["source_maps"],
+      "additionalProperties": false,
+      "properties": {
+        "source_maps": {
+          "type": "object",
+          "required": ["persistence"],
+          "additionalProperties": false,
+          "properties": {
+            "persistence": { "type": "string", "enum": ["local", "tracked"] }
+          }
+        }
       }
     }
   },

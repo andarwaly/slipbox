@@ -25,12 +25,16 @@ A vault typically moves through these skills in this order, though any skill can
 
 ## `.slipbox/` folder structure
 
-- `config.json` — vault conventions: paths, filename casing, note-type prefixes, frontmatter field mappings, clip settings, and template paths. Every other skill reads this before writing anything.
+- `config.json` — vault conventions: paths, filename/link-target casing and prefixes, frontmatter field mappings, clip settings, template paths, Git policy, and source-map cache persistence. `git.mode` is `off`, `ask`, or `auto`; `git.commit_style.mode` is `detected` or `fallback`; no Git-detection boolean is stored. `cache.source_maps.persistence` is `local` or `tracked`. Every other skill reads this before writing anything.
 - `bin/slipbox` — the CLI binary. Always invoked by its full path, `.slipbox/bin/slipbox`, never bare `slipbox`.
 - `evergreen/` — the persistent backlog of pending evergreen candidates, read and written through `slipbox evergreen add/find/update`.
 - `links.jsonl` — the mechanical link ledger between notes, read and written through `slipbox links add/find`.
+- `work/` — recoverable transient setup/runtime work; always local and never tracked.
+- `cache/source-maps/` — source-map cache entries, local or tracked according to `config.json`.
 - `style-profile.json` — the user's stated note-shape and editing preferences, interviewed once by `setup-slipbox` and consulted by `write-checks`.
 - `humanize-checklist.json` — the humanizer workflow snapshot `write-checks` runs against a draft before it's saved.
+
+Setup migration inventory reports compatible, missing, incompatible, older-compatible, unresolved-source, and orphaned cache entries. Build scopes are independently authorized: missing + incompatible, a chosen scope, refresh all, or defer. Cache migration authorization is separate from note-format migration authorization.
 - `GLOSSARY.md` — the term reference below.
 - `AGENTS.md` — this file.
 

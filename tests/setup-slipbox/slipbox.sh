@@ -82,6 +82,48 @@ check_json_file() {
 data = json.load(open(sys.argv[1]))
 $2" "$3"; then pass "$1"; else failed "$1"; fi
 }
+
+echo "--- setup config schema: git/cache contract ---"
+SCHEMA="$REPO_ROOT/skills/setup-slipbox/assets/config.schema.json"
+python3 - "$SCHEMA" <<'PY'
+import copy, json, sys
+try:
+    from jsonschema import Draft7Validator
+except ImportError:
+    Draft7Validator = None
+
+schema = json.load(open(sys.argv[1]))
+base = {
+    "paths": {"resources":"resources", "literature":"literature", "evergreen":"evergreen", "reference":"reference"},
+    "filenames": {"literature":"kebab-case", "reference":"kebab-case", "evergreen":"kebab-case"},
+    "frontmatter": {"literature":{}, "reference":{}, "evergreen":{}},
+    "links": {"style":"wikilink"},
+    "templates": {k:"templates/" + k + ".md" for k in ("literature_path","reference_path","evergreen_path","article_path","news_path","social_path","video_path")},
+    "transcript_languages": ["en"],
+    "prefixes": {"literature":False, "reference":False, "evergreen":False},
+    "git": {"mode":"ask", "commit_style":{"mode":"detected"}, "activity_trailers":True},
+    "cache": {"source_maps":{"persistence":"local"}},
+}
+if Draft7Validator:
+    Draft7Validator(schema).validate(base)
+    valid = lambda candidate: Draft7Validator(schema).is_valid(candidate)
+else:
+    # Keep this smoke test runnable with Python alone (jsonschema is not a
+    # setup prerequisite), while checking the same contract branches.
+    valid = lambda candidate: (
+        candidate.get("git", {}).get("mode") in {"off", "ask", "auto"}
+        and candidate.get("git", {}).get("commit_style", {}).get("mode") in {"detected", "fallback"}
+        and isinstance(candidate.get("git", {}).get("activity_trailers"), bool)
+        and candidate.get("cache", {}).get("source_maps", {}).get("persistence") in {"local", "tracked"}
+        and "work" not in candidate.get("cache", {})
+    )
+assert valid({**base, "git": {**base["git"], "mode":"never"}}) is False
+assert valid({**base, "cache": {"source_maps":{}}}) is False
+tracked_work = copy.deepcopy(base)
+tracked_work["cache"]["work"] = {"persistence":"tracked"}
+assert valid(tracked_work) is False
+PY
+pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
