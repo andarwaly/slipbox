@@ -13,8 +13,16 @@
       "prompt": "Setup found 2 compatible, 1 missing, 3 incompatible, 1 older-compatible, 1 unresolved-source, and 4 orphaned cache entries.",
       "expected_output": "Reports each cache category count, offers build missing + incompatible, a chosen scope, refresh all, or defer, and asks separately before any note-format migration.",
       "assertions": [
+        {"type": "contains", "text": "compatible"},
+        {"type": "contains", "text": "missing"},
+        {"type": "contains", "text": "incompatible"},
+        {"type": "contains", "text": "older-compatible"},
         {"type": "contains", "text": "unresolved-source"},
         {"type": "contains", "text": "orphaned"},
+        {"type": "contains", "text": "build missing + incompatible"},
+        {"type": "contains", "text": "chosen scope"},
+        {"type": "contains", "text": "refresh all"},
+        {"type": "contains", "text": "defer"},
         {"type": "contains", "text": "note-format"}
       ]
     },

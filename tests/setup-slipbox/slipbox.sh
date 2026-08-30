@@ -108,15 +108,24 @@ if Draft7Validator:
     Draft7Validator(schema).validate(base)
     valid = lambda candidate: Draft7Validator(schema).is_valid(candidate)
 else:
-    # Keep this smoke test runnable with Python alone (jsonschema is not a
-    # setup prerequisite), while checking the same contract branches.
-    valid = lambda candidate: (
-        candidate.get("git", {}).get("mode") in {"off", "ask", "auto"}
-        and candidate.get("git", {}).get("commit_style", {}).get("mode") in {"detected", "fallback"}
-        and isinstance(candidate.get("git", {}).get("activity_trailers"), bool)
-        and candidate.get("cache", {}).get("source_maps", {}).get("persistence") in {"local", "tracked"}
-        and "work" not in candidate.get("cache", {})
-    )
+    # jsonschema is not a setup prerequisite. Keep a structural fallback
+    # equivalent for every contract constraint exercised here.
+    def valid(candidate):
+        required = {"paths","filenames","frontmatter","links","templates","transcript_languages","prefixes","git","cache"}
+        if not isinstance(candidate, dict) or set(candidate) != required: return False
+        if set(candidate["paths"]) != {"resources","literature","evergreen","reference"} or not all(isinstance(v,str) for v in candidate["paths"].values()): return False
+        casing = {"kebab-case","Title Case","snake_case","Sentence case","verbatim","other"}
+        if set(candidate["filenames"]) != {"literature","reference","evergreen"} or not all(v in casing for v in candidate["filenames"].values()): return False
+        if set(candidate["frontmatter"]) != {"literature","reference","evergreen"} or not all(isinstance(v,dict) for v in candidate["frontmatter"].values()): return False
+        if set(candidate["links"]) != {"style"} or candidate["links"]["style"] not in {"wikilink","markdown"}: return False
+        template_keys = {"literature_path","reference_path","evergreen_path","article_path","news_path","social_path","video_path"}
+        if set(candidate["templates"]) != template_keys or not all(isinstance(v,str) for v in candidate["templates"].values()): return False
+        if not isinstance(candidate["transcript_languages"],list) or not candidate["transcript_languages"] or not all(isinstance(v,str) for v in candidate["transcript_languages"]): return False
+        if set(candidate["prefixes"]) != {"literature","reference","evergreen"} or not all(isinstance(v,str) or v is False for v in candidate["prefixes"].values()): return False
+        git = candidate["git"]
+        if set(git) != {"mode","commit_style","activity_trailers"} or git["mode"] not in {"off","ask","auto"} or set(git["commit_style"]) != {"mode"} or git["commit_style"]["mode"] not in {"detected","fallback"} or not isinstance(git["activity_trailers"],bool): return False
+        cache = candidate["cache"]
+        return set(cache) == {"source_maps"} and set(cache["source_maps"]) == {"persistence"} and cache["source_maps"]["persistence"] in {"local","tracked"}
 assert valid({**base, "git": {**base["git"], "mode":"never"}}) is False
 assert valid({**base, "cache": {"source_maps":{}}}) is False
 tracked_work = copy.deepcopy(base)
@@ -124,6 +133,22 @@ tracked_work["cache"]["work"] = {"persistence":"tracked"}
 assert valid(tracked_work) is False
 PY
 pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
+
+echo "--- setup bootstrap contract ---"
+SETUP_SKILL="$REPO_ROOT/skills/setup-slipbox/SKILL.md"
+check_match "setup creates work and source-map cache directories" '* .slipbox/work .slipbox/cache/source-maps*' "$(grep -F 'mkdir -p .slipbox/bin .slipbox/evergreen .slipbox/work .slipbox/cache/source-maps' "$SETUP_SKILL")"
+AGENTS_LINE=$(grep -n 'Copy `assets/AGENTS.md`' "$SETUP_SKILL" | head -1 | cut -d: -f1)
+CONFIG_LINE=$(grep -n 'config.json` is written' "$SETUP_SKILL" | head -1 | cut -d: -f1)
+if [ "$AGENTS_LINE" -gt "$CONFIG_LINE" ]; then pass "completion sentinel is ordered after config"; else failed "completion sentinel ordering"; fi
+for category in compatible missing incompatible older-compatible unresolved-source orphaned; do
+  assert_contains "migration inventory names $category" "$category" "$SETUP_SKILL"
+done
+for choice in 'missing + incompatible' 'chosen scope' 'refresh all' 'defer'; do
+  assert_contains "migration inventory offers $choice" "$choice" "$SETUP_SKILL"
+done
+assert_contains "cache and note-format authorization stay separate" "separate" "$SETUP_SKILL"
+assert_contains "local cache ignore is conditional" 'when cache persistence is `local`' "$SETUP_SKILL"
+assert_contains "tracked source-map cache omits ignore" "Never add an ignore rule for tracked source maps" "$SETUP_SKILL"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
