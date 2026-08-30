@@ -874,6 +874,34 @@ printf '{"not":"a cache"}\n' > "$SCRATCH/cache/source-maps/aaaaaaaaaaaaaaaaaaaaa
 check_json "cache status classifies malformed entries as incompatible" 'assert any(row["state"] == "incompatible" and row["fingerprint"].endswith("a" * 64) for row in data)' <<<"$($SLIPBOX cache status)"
 check_exit "cache store rejects absolute source paths" 2 "$SLIPBOX" cache store --source /etc/passwd --file "$SCRATCH/map.json"
 
+echo "--- isolated Git finalization ---"
+GIT_SCRATCH="$SCRATCH/git-repo"
+mkdir -p "$GIT_SCRATCH/.slipbox/bin" "$GIT_SCRATCH/.slipbox/work" "$GIT_SCRATCH/.slipbox/evergreen"
+cp "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox" "$GIT_SCRATCH/.slipbox/bin/slipbox"
+chmod +x "$GIT_SCRATCH/.slipbox/bin/slipbox"
+printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+printf 'base\n' > "$GIT_SCRATCH/.slipbox/target.md"
+printf 'unrelated\n' > "$GIT_SCRATCH/unrelated.md"
+git -C "$GIT_SCRATCH" init -q
+git -C "$GIT_SCRATCH" config user.email test@example.com
+git -C "$GIT_SCRATCH" config user.name Test
+git -C "$GIT_SCRATCH" add .
+git -C "$GIT_SCRATCH" commit -qm baseline
+printf 'unrelated staged\n' >> "$GIT_SCRATCH/unrelated.md"
+git -C "$GIT_SCRATCH" add unrelated.md
+INDEX_BEFORE=$(git -C "$GIT_SCRATCH" write-tree)
+commit_result=$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity create --affected-path target.md)
+git_id=$(printf '%s' "$commit_result" | json_at '["work_id"]')
+printf 'updated\n' > "$GIT_SCRATCH/.slipbox/target.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$git_id/manifest.json" <<'PY'
+import json, sys
+p=sys.argv[1]; m=json.load(open(p)); m.update(status="published", published_paths=["target.md"]); json.dump(m, open(p, "w"))
+PY
+check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$git_id' --yes"
+check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
+check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
+check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
+
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"
 else

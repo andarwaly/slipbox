@@ -24,6 +24,7 @@ slipbox work inspect WORK_ID [--format table]
 slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY]
 slipbox work resume  WORK_ID
 slipbox work finalize WORK_ID
+slipbox work commit WORK_ID [--yes|--leave-uncommitted]
 slipbox work discard WORK_ID [--yes] [--no-input]
 slipbox cache status [--format table]
 slipbox cache inspect SHA256_OR_RESOURCE_PATH [--format table]
@@ -104,6 +105,14 @@ change therefore cannot silently overwrite a target. Partial publication is rest
 from byte backups and marked `failed`; compensation failure is marked
 `repair-required` with diagnostics. Link additions use append-only tombstones during
 compensation rather than rewriting ledger history.
+
+`work commit WORK_ID` finalizes Git separately from publication. It detects the repository
+at runtime, seeds a temporary index from `HEAD`, stages only successful published paths,
+runs normal hooks, and leaves the user's real index unchanged. Pre-dirty affected paths are
+excluded and recorded as a safety downgrade. `git.mode` supports `off`, `ask`, and `auto`;
+`--yes` confirms an ask-mode commit and `--leave-uncommitted` closes work without a commit.
+Failures preserve published files and mark the work `commit-failed`. Enabled trailers are
+`Slipbox-Activity: <kind>.<activity>` and `Slipbox-Work-ID: <work-id>`.
 
 ## Atomicity
 

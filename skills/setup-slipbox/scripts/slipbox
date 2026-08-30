@@ -144,7 +144,7 @@ reject_unknown_flags() {
 # py — runs a Python body (on stdin) with the shared prelude prepended.
 py_prelude() {
   cat <<'EOF'
-import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time, fcntl
+import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time, fcntl, subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -692,6 +692,7 @@ Usage:
   slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY] [--source PATH] [--target PATH] [--affected-path PATH]...
   slipbox work resume  WORK_ID
   slipbox work finalize WORK_ID
+  slipbox work commit WORK_ID [--yes|--leave-uncommitted]
   slipbox work discard WORK_ID [--yes] [--no-input]
 EOF
 }
@@ -729,7 +730,21 @@ target_fp = file_fingerprint(vault_root / target) if target else None
 affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
 for path in (source, target):
     if path and path not in affected: affected.append(path)
-manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}}
+def git_root_and_baselines(paths):
+    try:
+        root = subprocess.check_output(["git", "-C", str(vault_root), "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None, {}
+    baselines = {}
+    for path in paths:
+        target_path = (vault_root / path).resolve()
+        rel = os.path.relpath(str(target_path), root)
+        status = subprocess.run(["git", "-C", root, "status", "--porcelain=v1", "--", rel], text=True, capture_output=True).stdout.rstrip("\n")
+        blob_result = subprocess.run(["git", "-C", root, "rev-parse", "HEAD:" + rel], text=True, capture_output=True)
+        baselines[path] = {"status": status, "blob": blob_result.stdout.strip() or None, "worktree": file_fingerprint(target_path)}
+    return root, baselines
+git_root, git_baselines = git_root_and_baselines(affected)
+manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}, "git_baselines": git_baselines}
 save_work_manifest(work_root / work_id, manifest)
 print(json.dumps(manifest, indent=2))
 PYEOF
@@ -897,6 +912,72 @@ finally:
     for lock in reversed(locks):
         try: fcntl.flock(lock.fileno(), fcntl.LOCK_UN); lock.close()
         except OSError: pass
+PYEOF
+}
+
+cmd_work_commit() {
+  [ $# -ge 1 ] || usage_err "work commit requires WORK_ID"
+  [ $# -le 2 ] || usage_err "work commit takes WORK_ID and one option"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  local work_id="$1"; shift; local yes=0 leave=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --yes) yes=1; shift ;;
+      --leave-uncommitted) leave=1; shift ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work commit argument: $1" ;;
+    esac
+  done
+  [ "$yes" = 1 ] || [ "$leave" = 1 ] || { [ -t 0 ] || { echo '{"status":"confirmation-required"}'; exit 0; }; printf 'Commit this work? [y/N] ' >&2; read -r answer; case "$answer" in y|Y|yes|YES) yes=1 ;; *) leave=1 ;; esac; }
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" LEAVE="$leave" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if os.environ.get("LEAVE") == "1":
+    manifest["status"] = "published"; manifest["git_commit_status"] = "left-uncommitted"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+vault = root.parent
+try:
+    repo = subprocess.check_output(["git", "-C", str(vault), "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).strip()
+except (OSError, subprocess.CalledProcessError):
+    manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+config = {}
+try: config = load_json(str(vault / "config.json"), "config")
+except SystemExit: config = {}
+git_config = config.get("git", {}) if isinstance(config, dict) else {}
+mode = git_config.get("mode", "ask")
+if mode == "off":
+    manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+paths = list(manifest.get("published_paths", []))
+if not paths:
+    mutations = manifest.get("mutations") or ([] if not (work_dir / "mutations.json").is_file() else load_json(str(work_dir / "mutations.json"), "staged mutations"))
+    paths = [m.get("path") for m in mutations if isinstance(m, dict) and isinstance(m.get("path"), str)]
+baselines = manifest.get("git_baselines", {})
+safe_paths = [p for p in paths if not baselines.get(p, {}).get("status")]
+downgraded = [p for p in paths if p not in safe_paths]
+if downgraded: manifest["git_safety_downgrade"] = {"affected_paths": downgraded, "reason": "path was dirty before work started"}
+if not safe_paths:
+    manifest["git_commit_status"] = "left-uncommitted"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+before = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+index = work_dir / "git-index"
+message = manifest.get("subject") or manifest.get("commit_subject")
+if not message:
+    if git_config.get("commit_style", {}).get("mode") == "detected":
+        latest = subprocess.run(["git", "-C", repo, "log", "-1", "--pretty=%s"], text=True, capture_output=True).stdout.strip()
+        message = latest.split(":", 1)[0] + ": update slipbox" if latest and ":" in latest else "Update slipbox"
+    else: message = "Update slipbox"
+if git_config.get("activity_trailers", True):
+    message += "\n\nSlipbox-Activity: " + str(manifest.get("kind", "work")) + "." + str(manifest.get("activity", "update")) + "\nSlipbox-Work-ID: " + str(manifest["work_id"])
+try:
+    env = os.environ.copy(); env["GIT_INDEX_FILE"] = str(index)
+    subprocess.run(["git", "-C", repo, "read-tree", before], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    rels = [os.path.relpath(str((vault / p).resolve()), repo) for p in safe_paths]
+    subprocess.run(["git", "-C", repo, "add", "--"] + rels, check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    subprocess.run(["git", "-C", repo, "commit", "-m", message], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+except (OSError, subprocess.CalledProcessError) as exc:
+    manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = (exc.stderr or str(exc)).strip(); manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: " + manifest["commit_error"])
+finally:
+    try: index.unlink()
+    except OSError: pass
+after = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+manifest["status"] = "published"; manifest["git_commit_status"] = "committed"; manifest["commit"] = {"id": after, "parent": before, "paths": safe_paths, "subject": message.split("\n", 1)[0]}; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2))
 PYEOF
 }
 
@@ -1762,7 +1843,7 @@ case "$1" in
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
   note) shift; dispatch note "validate" "$@" ;;
-  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, finalize, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume finalize discard" "$@" ;;
+  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, finalize, commit, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume finalize commit discard" "$@" ;;
   cache) shift; [ $# -ge 1 ] || usage_err "cache requires an action: status, inspect, store, remove"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_cache_help; exit 0; }; dispatch cache "status inspect store remove" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac
