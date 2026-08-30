@@ -901,7 +901,23 @@ check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox
 check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
 check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
 check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
-check_json "auto mode commits without confirmation" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$git_id" --yes)"
+printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+AUTO_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity auto --affected-path auto.md)" | json_at '["work_id"]')
+printf 'auto\n' > "$GIT_SCRATCH/.slipbox/auto.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$AUTO_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["auto.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "auto mode commits without confirmation" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$AUTO_ID")"
+
+RACE_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity race --affected-path race.md)" | json_at '["work_id"]')
+printf 'race\n' > "$GIT_SCRATCH/.slipbox/race.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$RACE_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["race.md"]);json.dump(m,open(p,"w"))
+PY
+check_exit "concurrent HEAD movement is a persisted commit failure" 1 env SLIPBOX_TEST_HEAD_MOVE=1 bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$RACE_ID'"
+check_json "race failure remains retryable" 'assert data["status"] == "commit-failed" and "HEAD moved concurrently" in data["commit_error"]' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$RACE_ID")"
 
 NO_REPO_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity no-repo --affected-path no-repo.md)" | json_at '["work_id"]')
 printf 'no repo\n' > "$SCRATCH/no-repo.md"
