@@ -11,6 +11,7 @@ slipbox evergreen add    --slug SLUG --reason "..."
 slipbox evergreen find   [--status S]
 slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
 slipbox links add        --source S --target T --rel cites|extends
+slipbox links remove     --source S --target T --rel cites|extends
 slipbox links find       [--source S] [--target T] [--rel cites|extends]
 slipbox config get       [<dotted.path>]
 slipbox config set       <dotted.path> <value>
@@ -36,6 +37,12 @@ per candidate under `.slipbox/evergreen/`, written by `make-literature-note`, `m
 `find-connections` and read back by `make-evergreen-note`. `links` is an append-only JSONL
 log of typed edges (`cites`, `extends`) — separate from, and in addition to, the
 `[[wikilink]]`s a note's own prose uses for Obsidian's backlink pane.
+
+`links remove` appends a tombstone and never rewrites prior events. `links find` folds
+legacy rows (which default to add), explicit add events, and removals in file order;
+remove→add therefore restores the edge. Removing an already-inactive edge succeeds with
+a warning, which lets transaction compensation remain idempotent. A malformed event
+fails with its JSONL line number.
 
 ## `note validate`
 

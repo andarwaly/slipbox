@@ -210,6 +210,21 @@ check_eq "links find returns the inserted edge" 1 "$("$SLIPBOX" links find | jso
 check "links find filters by --source" "$SLIPBOX" links add --source "other-slug" --target "some-term" --rel extends
 check_eq "links find --source filters correctly" 1 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
 
+echo "--- links append-only fold and tombstones ---"
+printf '%s\n' '{"source_id":"legacy-source","target_id":"legacy-target","rel_type":"cites"}' >> "$SCRATCH/links.jsonl"
+"$SLIPBOX" links find --source legacy-source | check_json "legacy rows are active adds" 'assert len(data) == 1 and data[0]["target_id"] == "legacy-target"'
+check "links remove appends a tombstone" "$SLIPBOX" links remove --source final-test-1 --target some-term --rel cites
+check_eq "removed edge is absent" 0 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
+check "links remove is idempotent" "$SLIPBOX" links remove --source final-test-1 --target some-term --rel cites
+check "add after remove restores edge" "$SLIPBOX" links add --source final-test-1 --target some-term --rel cites
+check_eq "re-added edge is active" 1 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
+printf '%s\n' '{"op":"remove","source_slug":"exact","target_slug":"exact","rel_type":"extends"}' >> "$SCRATCH/links.jsonl"
+check_eq "relationship identity remains exact" 0 "$("$SLIPBOX" links find --source exact --target exact --rel cites | json_len)"
+printf '%s\n' '{"op":"bogus","source_slug":"bad","target_slug":"bad","rel_type":"cites"}' >> "$SCRATCH/links.jsonl"
+check_exit "invalid link event reports failure" 1 "$SLIPBOX" links find
+check_match "invalid event error identifies line" '*line 8*' "$(stderr_of "$SLIPBOX" links find)"
+sed -i '' '$d' "$SCRATCH/links.jsonl"
+
 echo "--- usage errors ---"
 check_exit "unknown command exits 2" 2 "$SLIPBOX" bogus
 check_exit "evergreen add missing --reason exits 2" 2 "$SLIPBOX" evergreen add --slug x
@@ -490,9 +505,9 @@ echo "--- links edge cases ---"
 "$SLIPBOX" links find --source final-test-1 --rel cites | check_json "links find combines source and relation filters" "assert len(data) == 1"
 cp "$SCRATCH/links.jsonl" "$SCRATCH/links.jsonl.before-blank-line"
 printf '\n' >> "$SCRATCH/links.jsonl"
-"$SLIPBOX" links find | check_json "links find skips a blank JSONL line" "assert len(data) == 2"
+"$SLIPBOX" links find | check_json "links find skips a blank JSONL line" "assert len(data) == 3"
 mv "$SCRATCH/links.jsonl.before-blank-line" "$SCRATCH/links.jsonl"
-check_table links $'source_id\ttarget_id*' 2 "$("$SLIPBOX" links find --format table)"
+check_table links $'source_id\ttarget_id*' 3 "$("$SLIPBOX" links find --format table)"
 check_eq "links table output marks an empty result" "(no rows)" "$("$SLIPBOX" links find --target no-such-target --format table)"
 mv "$SCRATCH/links.jsonl" "$SCRATCH/links.saved"
 "$SLIPBOX" links find | check_json "links find without links.jsonl returns an empty array" "assert data == []"
@@ -535,7 +550,7 @@ rm "$SCRATCH/evergreen/broken.md"
 
 printf 'not json\n' >> "$SCRATCH/links.jsonl"
 check_exit "links find on a corrupt log exits 1" 1 "$SLIPBOX" links find
-check_match "corrupt links log error names the offending line" '*line 3*' \
+check_match "corrupt links log error names the offending line" '*line 8*' \
   "$(stderr_of "$SLIPBOX" links find)"
 python3 -c "
 import sys

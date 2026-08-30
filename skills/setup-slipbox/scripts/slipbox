@@ -174,6 +174,32 @@ def now_stamp():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def normalize_link_event(row):
+    source = row.get("source_slug", row.get("source_id"))
+    target = row.get("target_slug", row.get("target_id"))
+    rel = row.get("rel_type")
+    op = row.get("op", "add")
+    if op not in ("add", "remove"):
+        raise ValueError("op must be add or remove")
+    if not source or not target or not rel:
+        raise KeyError("source_slug, target_slug, and rel_type")
+    if rel not in ("cites", "extends"):
+        raise ValueError("rel_type must be cites or extends")
+    return {"op": op, "source_slug": source, "target_slug": target, "rel_type": rel}
+
+
+def fold_link_events(rows):
+    active = {}
+    for event in rows:
+        key = (event["source_slug"], event["target_slug"], event["rel_type"])
+        if event["op"] == "remove":
+            active.pop(key, None)
+        else:
+            active.pop(key, None)
+            active[key] = {"source_slug": key[0], "target_slug": key[1], "rel_type": key[2]}
+    return list(active.values())
+
+
 def read_text(path, label):
     try:
         with open(path, encoding="utf-8") as f:
@@ -391,6 +417,7 @@ Usage:
   slipbox evergreen find   [--status S]
   slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
   slipbox links add        --source S --target T --rel cites|extends
+  slipbox links remove     --source S --target T --rel cites|extends
   slipbox links find       [--source S] [--target T] [--rel cites|extends]
   slipbox config get       [<dotted.path>]
   slipbox config set       <dotted.path> <value>
@@ -1230,8 +1257,9 @@ cmd_links_add() {
   LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 row = {
-    "source_id": os.environ["SOURCE"],
-    "target_id": os.environ["TARGET"],
+    "op": "add",
+    "source_slug": os.environ["SOURCE"],
+    "target_slug": os.environ["TARGET"],
     "rel_type": os.environ["REL"],
     "created_at": now_stamp(),
 }
@@ -1242,7 +1270,53 @@ try:
         os.fsync(f.fileno())
 except OSError as err:
     fail(f"cannot append to links log at {links_file}: {err.strerror or err}")
-print(json.dumps({"status": "ok", **row}))
+print(json.dumps({"status": "ok", **row, "source_id": row["source_slug"], "target_id": row["target_slug"]}))
+PYEOF
+}
+
+cmd_links_remove() {
+  require_links_dir
+  reject_unknown_flags "source target rel" "$@"
+  local source target rel
+  source=$(flag source "$@")
+  target=$(flag target "$@")
+  rel=$(flag rel "$@")
+  [ -n "$source" ] || usage_err "links remove requires --source"
+  [ -n "$target" ] || usage_err "links remove requires --target"
+  require_rel "$rel" required
+  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
+links_file = os.environ["LINKS_FILE"]
+source = os.environ["SOURCE"]
+target = os.environ["TARGET"]
+rel = os.environ["REL"]
+
+events = []
+if os.path.exists(links_file):
+    for lineno, line in enumerate(read_text(links_file, "links log").splitlines(), start=1):
+        if not line.strip(): continue
+        try:
+            raw = json.loads(line)
+            if not isinstance(raw, dict): raise ValueError("not a JSON object")
+            events.append(normalize_link_event(raw))
+        except json.JSONDecodeError as err:
+            fail(f"links log at {links_file} has invalid JSON on line {lineno}: {err.msg}")
+        except (KeyError, ValueError) as err:
+            fail(f"links log at {links_file} line {lineno} is invalid: {err}")
+active = fold_link_events(events)
+present = any((r["source_slug"], r["target_slug"], r["rel_type"]) == (source, target, rel) for r in active)
+row = {"op": "remove", "source_slug": source, "target_slug": target,
+       "rel_type": rel, "created_at": now_stamp()}
+try:
+    with open(links_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+except OSError as err:
+    fail(f"cannot append to links log at {links_file}: {err.strerror or err}")
+if not present:
+    warn(f"link {source} -> {target} ({rel}) was not active")
+print(json.dumps({"status": "removed" if present else "absent", **row,
+                  "source_id": source, "target_id": target}))
 PYEOF
 }
 
@@ -1262,6 +1336,7 @@ rel_filter = os.environ.get("REL_FILTER", "")
 fmt = os.environ.get("FORMAT", "json")
 
 rows = []
+events = []
 if os.path.exists(links_file):
     for lineno, line in enumerate(read_text(links_file, "links log").splitlines(), start=1):
         line = line.strip()
@@ -1270,20 +1345,23 @@ if os.path.exists(links_file):
         try:
             row = json.loads(line)
         except json.JSONDecodeError as err:
-            # A corrupt log means the result set is incomplete in a way the
-            # caller can't detect from the output — fail instead of filtering
-            # the bad line out and returning a plausible-looking subset.
             fail(f"links log at {links_file} has invalid JSON on line {lineno}: {err.msg}")
         if not isinstance(row, dict):
             fail(f"links log at {links_file} line {lineno} is not a JSON object")
-        if source_filter and row.get("source_id") != source_filter:
-            continue
-        if target_filter and row.get("target_id") != target_filter:
-            continue
-        if rel_filter and row.get("rel_type") != rel_filter:
-            continue
-        rows.append(row)
+        try:
+            event = normalize_link_event(row)
+        except (KeyError, ValueError) as err:
+            fail(f"links log at {links_file} line {lineno} is invalid: {err}")
+        events.append(event)
 
+active = fold_link_events(events)
+for event in active:
+    if source_filter and event["source_slug"] != source_filter: continue
+    if target_filter and event["target_slug"] != target_filter: continue
+    if rel_filter and event["rel_type"] != rel_filter: continue
+    rows.append({"source_id": event["source_slug"], "target_id": event["target_slug"],
+                 "source_slug": event["source_slug"], "target_slug": event["target_slug"],
+                 "rel_type": event["rel_type"]})
 emit_rows(rows, fmt)
 PYEOF
 }
@@ -1493,7 +1571,7 @@ case "$1" in
   --help|-h) print_help; exit 0 ;;
   --version|-v) echo "slipbox $CLI_VERSION"; exit 0 ;;
   evergreen) shift; dispatch evergreen "find add update" "$@" ;;
-  links) shift; dispatch links "add find" "$@" ;;
+  links) shift; dispatch links "add remove find" "$@" ;;
   config) shift; dispatch config "get set" "$@" ;;
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
