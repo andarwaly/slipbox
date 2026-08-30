@@ -58,6 +58,19 @@
       "assertions": [
         {"type": "contains", "text": "sources"}
       ]
+    },
+    {
+      "prompt": "Set up the runtime for Resource, Literature, Reference, Evergreen, and migration work, with local work and tracked source maps.",
+      "expected_output": "Creates the runtime directories and writes configuration for all supported work kinds. .slipbox/work remains local and untracked even when cache.source_maps.persistence is tracked; cache migration is authorized independently from note-format migration.",
+      "assertions": [
+        {"type": "contains", "text": "resource"},
+        {"type": "contains", "text": "literature"},
+        {"type": "contains", "text": "reference"},
+        {"type": "contains", "text": "evergreen"},
+        {"type": "contains", "text": "migration"},
+        {"type": "contains", "text": "untracked"},
+        {"type": "contains", "text": "tracked"}
+      ]
     }
   ]
 }

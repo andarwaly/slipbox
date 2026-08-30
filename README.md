@@ -30,12 +30,23 @@ npx skills add andarwaly/slipbox
 
 Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and installs the `slipbox` CLI.
 
+All stateful skill work uses the shared `/using-slipbox` runtime. It gives each
+operation a recoverable `work_id`, checkpoints interrupted work under
+`.slipbox/work/`, runs `/write-checks` before publication, and delegates atomic
+filesystem changes, cache handling, link tombstones, and optional Git commits to
+the installed `.slipbox/bin/slipbox` CLI. Work is always local; source-map cache
+persistence is independently `local` or `tracked`. The runtime supports
+`resource`, `literature`, `reference`, `evergreen`, and `migration` work kinds.
+Specialist workflow migration to this contract is shipped separately; this
+runtime documentation describes the shared interface only.
+
 ## Skills
 
 - **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `slipbox` CLI install. Run once per vault.
 - **[clip-resource](./docs/clip-resource.md)**: fetches a URL and freezes it as a Resource, for anyone without a clipper tool.
 - **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links, sparked ideas, and Reference/Person/Location/Organization recurrence across your notes.
 - **[grounding](./docs/grounding.md)**: the Socratic-discussion engine underlying the note-writing skills.
+- **[using-slipbox](./docs/using-slipbox.md)**: shared recoverable work, publication, cache, link-ledger, and Git runtime actions.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
 - **[make-literature-note](./docs/make-literature-note.md)**: grounds a clipped source into a literature note, the source's own Claim, in your words.
 - **[make-reference-note](./docs/make-reference-note.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.

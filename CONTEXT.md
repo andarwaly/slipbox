@@ -97,6 +97,25 @@ For evergreen notes, atomicity applies to the whole note — an evergreen note i
 
 ## Relationships
 
+## Runtime contract
+
+Stateful operations use `/using-slipbox` as the shared transaction boundary.
+The specialist supplies the semantic artifact decision; the runtime assigns a
+`work_id`, keeps transient work local under `.slipbox/work/`, checkpoints and
+recovers by comparing fingerprints, and invokes `/write-checks` before
+publication. The installed `.slipbox/bin/slipbox` owns schema validation, path
+safety, atomic compare-and-swap publication, append-only link tombstones, source
+map cache operations, and optional Git finalization. CLI syntax and failure
+shapes are authoritative in the installed CLI's `--help` output and the runtime
+CLI reference.
+
+Work kinds are `resource`, `literature`, `reference`, `evergreen`, and
+`migration`. Source-map cache identity is the Resource SHA-256, and cache
+persistence (`local` or `tracked`) is independent of local work persistence.
+Failed work is preserved for repair; a runtime failure never becomes a reported
+success. Specialist workflow migration is a separate concern from this shared
+runtime contract.
+
 - A literature note is anchored to exactly one source and holds one or more Claims, each its own Key Claim entry.
 - A Reference note is anchored to a concept, accumulates across multiple sources over separate runs, and holds a definition, not a stance.
 - An evergreen note cites zero or more literature/Reference/evergreen notes as support; it does not contain them, and holds the Take.

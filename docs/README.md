@@ -2,6 +2,11 @@
 
 Human-facing documentation for the slipbox skill family.
 
+The shared runtime contract is documented in [using-slipbox](./using-slipbox.md).
+It owns recoverable work, transactional publication, source-map cache policy,
+link tombstones, and optional Git finalization. Specialist pages describe their
+domain decisions; they do not redefine this shared contract.
+
 - [setup-slipbox](./setup-slipbox.md) — One-time onboarding: discovers vault conventions, analyzes writing style, installs the `slipbox` CLI
 - [clip-resource](./clip-resource.md) — Fetch one or more URLs and write each as a frozen Resource, for users without a clipper tool
 - [find-connections](./find-connections.md) — Scan existing notes for missing links, sparked ideas, and recurring Reference or Mentioned candidates — takes an explicit `--references` or `--evergreen` mode flag (absorbed the old `find-terms` skill entirely)

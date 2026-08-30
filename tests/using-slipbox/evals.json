@@ -28,6 +28,41 @@
         {"type": "contains", "text": "/using-slipbox"},
         {"type": "contains", "text": "reference"}
       ]
+    },
+    {
+      "prompt": "A Resource workflow needs to start recoverable work, checkpoint it, and publish the approved artifact. Record the work `/using-slipbox`.",
+      "expected_output": "Uses the natural imperative caller form and routes start, checkpoint, and publish through the shared engine. Work is identified by work_id, remains local under .slipbox/work, and publication runs /write-checks before the CLI transaction.",
+      "assertions": [
+        {"type": "contains", "text": "work_id"},
+        {"type": "contains", "text": ".slipbox/work"},
+        {"type": "contains", "text": "/write-checks"},
+        {"type": "contains", "text": "/using-slipbox"},
+        {"type": "not_contains", "text": "Run `/using-slipbox`"}
+      ]
+    },
+    {
+      "prompt": "A command failed after a source changed. Recover the interrupted Literature work `/using-slipbox`, then inspect the source-map cache.",
+      "expected_output": "Inspects the work before resuming, compares fingerprints, preserves failed or blocked evidence, and does not claim success when repair is required. Cache reuse is decided from Resource SHA-256 identity and compatibility metadata; cache persistence is independent from local work.",
+      "assertions": [
+        {"type": "contains", "text": "fingerprint"},
+        {"type": "contains", "text": "repair-required"},
+        {"type": "contains", "text": "SHA-256"},
+        {"type": "contains", "text": "cache"},
+        {"type": "contains", "text": "/using-slipbox"}
+      ]
+    },
+    {
+      "prompt": "Prepare Resource, Literature, Reference, Evergreen, and migration work through the shared runtime `/using-slipbox`.",
+      "expected_output": "Accepts exactly the runtime work kinds resource, literature, reference, evergreen, and migration. Shared work, cache, transaction, tombstone, and Git procedures come from /using-slipbox and the CLI/help references rather than being re-described as specialist workflow.",
+      "assertions": [
+        {"type": "contains", "text": "resource"},
+        {"type": "contains", "text": "literature"},
+        {"type": "contains", "text": "reference"},
+        {"type": "contains", "text": "evergreen"},
+        {"type": "contains", "text": "migration"},
+        {"type": "contains", "text": "CLI"},
+        {"type": "contains", "text": "tombstone"}
+      ]
     }
   ]
 }

@@ -206,9 +206,29 @@ _Avoid_: Claim (the source's position, lives only in a literature note; a Take a
 Something noticed in real conflict with the material during a grounding session: the agent's own prior knowledge, or anything else that doesn't belong in the statement itself. Surfaced at most once, after the Gate passes, and only if actually noticed.
 _Avoid_: Sparked idea (a generative connection between existing notes, not a conflict noticed against material in play).
 
+**Tombstone**
+An append-only link-ledger removal event. It deactivates a previously recorded
+edge without rewriting history; a later add can restore that edge, and
+transaction compensation uses the same mechanism.
+_Avoid_: Delete (rewriting or removing ledger history; link removal is recorded,
+not erased).
+
 **Verification**
 The grounding technique for a confident answer: treat the restatement as a hypothesis about the source's meaning and check it against the actual source text, escalating to Elenchus only on a genuine mismatch.
 _Avoid_: Elenchus (checks a claim's own internal logic once granted; Verification checks the claim against the source text itself).
+
+**Work ID**
+The sortable 26-character identifier assigned to one recoverable runtime
+operation. It names the manifest under `.slipbox/work/` and is the identity used
+by checkpoint, resume, finalize, discard, and optional Git commit actions.
+_Avoid_: Slug (a note or evergreen-candidate filename identity, not a runtime
+operation identity).
+
+**Source-map cache**
+Analysis state for a frozen Resource, keyed by that Resource's SHA-256 rather
+than its path. It carries compatibility and provenance metadata and persists as
+`local` or `tracked` independently of local recoverable work.
+_Avoid_: Note (a cache entry is analysis metadata, never published note content).
 
 **Warrant**
 In Question/Evidence/Warrant reasoning, the source's own stated or implied reason why its Evidence supports its Conclusion. A report on the source's inferential move, never the note-writer's own judgment of whether that move holds.

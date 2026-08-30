@@ -58,6 +58,16 @@
         {"type": "not_contains", "text": "zone placement"},
         {"type": "not_contains", "text": "note validate"}
       ]
+    },
+    {
+      "prompt": "A specialist has assembled a complete draft and wants to publish it through the shared runtime.",
+      "expected_output": "write-checks remains the pre-write validation gate; it does not own work creation, cache persistence, transaction finalization, tombstones, or Git commits. Those shared runtime actions belong to /using-slipbox and the CLI.",
+      "assertions": [
+        {"type": "contains", "text": "pre-write"},
+        {"type": "contains", "text": "does not own"},
+        {"type": "contains", "text": "Git"},
+        {"type": "contains", "text": "/using-slipbox"}
+      ]
     }
   ]
 }
