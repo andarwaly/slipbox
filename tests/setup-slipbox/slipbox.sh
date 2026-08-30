@@ -281,7 +281,7 @@ m["mutations"]=[{"path":"publish-target.md","expected_fingerprint":fp,"replaceme
 PY
 check_exit "failed second mutation rolls back first" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$rollback_id"
 check_match "rollback restores first target" '*after*' "$(<"$SCRATCH/publish-target.md")"
-check_json "rollback records failed state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$rollback_id")"
+check_json "rollback records terminal failure state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$rollback_id")"
 
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"

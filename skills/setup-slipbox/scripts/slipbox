@@ -403,7 +403,20 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
             fail(f"mutation {index}.replacement_path must stay inside work directory")
         replacement_file = work_dir / replacement_path
         if not replacement_file.is_file(): fail(f"replacement file not found: {replacement}")
-        backups.append({"path": path_value, "existed": target.is_file(), "bytes": target.read_bytes() if target.is_file() else None, "fingerprint": actual})
+        kind = mutation.get("kind", "artifact")
+        if kind in {"ledger-add", "link-add"}:
+            if path_value != "links.jsonl": fail("ledger mutations must target links.jsonl")
+            for key in ("source_slug", "target_slug", "rel_type"):
+                if not isinstance(mutation.get(key), str) or not mutation[key].strip(): fail(f"ledger mutation requires {key}")
+            if mutation["rel_type"] not in {"cites", "extends"}: fail("ledger mutation rel_type must be cites or extends")
+            try:
+                for line in replacement_file.read_text(encoding="utf-8").splitlines():
+                    row = json.loads(line)
+                    if not isinstance(row, dict): raise ValueError("event must be an object")
+            except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+                fail(f"invalid ledger replacement: {exc}")
+        replacement_bytes = replacement_file.read_bytes()
+        backups.append({"path": path_value, "existed": target.is_file(), "bytes": target.read_bytes() if target.is_file() else None, "fingerprint": actual, "replacement_bytes": replacement_bytes, "replacement_fingerprint": "sha256:" + hashlib.sha256(replacement_bytes).hexdigest()})
     return backups
 
 
@@ -422,12 +435,20 @@ def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path
         target = _safe_vault_path(vault_root, mutation["path"])
         target.parent.mkdir(parents=True, exist_ok=True)
         replacement = work_dir / mutation["replacement_path"]
+        replacement_bytes = backups[index]["replacement_bytes"]
         if mutation.get("kind") in {"ledger-add", "link-add"}:
-            with target.open("ab") as handle: handle.write(replacement.read_bytes())
-            replacement.unlink()
+            with target.open("ab") as handle: handle.write(replacement_bytes)
+            applied.append(index)
+            try: replacement.unlink()
+            except OSError as exc:
+                error = exc; error.applied = applied; raise error
         else:
-            os.replace(str(replacement), str(target))
-        applied.append(index)
+            fd, tmp = tempfile.mkstemp(prefix=".slipbox-publish-", dir=str(target.parent))
+            with os.fdopen(fd, "wb") as handle: handle.write(replacement_bytes)
+            os.replace(tmp, target)
+            try: replacement.unlink()
+            except FileNotFoundError: pass
+            applied.append(index)
     return applied
 
 
@@ -439,7 +460,7 @@ def compensate(mutations: list[dict], backups: list[dict], applied: list[int], v
         mutation, backup = mutations[index], backups[index]
         try:
             target = _safe_vault_path(vault_root, mutation["path"])
-            if mutation.get("kind") in {"ledger-add", "link-add"} and mutation.get("source_slug"):
+            if mutation.get("kind") in {"ledger-add", "link-add"}:
                 ledger = vault_root / "links.jsonl"
                 row = {"op": "remove", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}
                 with ledger.open("a", encoding="utf-8") as handle: handle.write(json.dumps(row, separators=(",", ":")) + "\n")
@@ -833,7 +854,24 @@ try:
     for target in _lock_paths(vault, staged):
         lock = lock_root / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock")
         try: lock.mkdir()
-        except FileExistsError: fail(f"path is locked: {target}")
+        except FileExistsError:
+            owner = lock / "owner.json"
+            stale = False
+            try:
+                info = json.loads(owner.read_text(encoding="utf-8")); age = time.time() - float(info.get("created_at", time.time()))
+                pid = int(info.get("pid", -1))
+                alive = False
+                if pid > 0:
+                    try: os.kill(pid, 0); alive = True
+                    except OSError: alive = False
+                stale = age > 3600 and not alive
+            except Exception: stale = False
+            if stale:
+                try: lock.rename(lock.with_name(lock.name + ".stale"))
+                except OSError: fail(f"path is locked: {target}")
+                lock.mkdir()
+            else: fail(f"path is locked: {target}")
+        (lock / "owner.json").write_text(json.dumps({"pid": os.getpid(), "created_at": time.time(), "path": str(target)}), encoding="utf-8")
         locks.append(lock)
     for mutation, backup in zip(staged, backups):
         if _mutation_fingerprint(_safe_vault_path(vault, mutation["path"])) != backup["fingerprint"]:
@@ -851,11 +889,23 @@ try:
         save_work_manifest(work_dir, manifest)
         fail("publication requires repair: " + "; ".join(errors) if errors else "publication failed and was rolled back")
     manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); manifest["published_paths"] = [m["path"] for m in staged]
-    save_work_manifest(work_dir, manifest)
+    try:
+        if os.environ.get("SLIPBOX_TEST_FAIL_MANIFEST_SAVE") == "1":
+            os.environ["SLIPBOX_TEST_FAIL_MANIFEST_SAVE"] = "0"
+            raise OSError("simulated manifest persistence failure")
+        save_work_manifest(work_dir, manifest)
+    except Exception as exc:
+        manifest["status"] = "repair-required"; manifest["finalize_error"] = f"published but manifest persistence failed: {exc}"; manifest["repair_errors"] = ["manifest.json does not confirm publication"]
+        try: save_work_manifest(work_dir, manifest)
+        except Exception: pass
+        fail("publication completed but manifest requires repair")
     print(json.dumps(manifest, indent=2))
 finally:
     for lock in reversed(locks):
-        try: lock.rmdir()
+        try:
+            try: (lock / "owner.json").unlink()
+            except FileNotFoundError: pass
+            lock.rmdir()
         except OSError: pass
 PYEOF
 }
