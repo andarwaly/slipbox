@@ -338,6 +338,9 @@ def file_fingerprint(path: Path) -> str | None:
 
 CACHE_TOP_LEVEL = {"schema_version", "map_contract_version", "producer_version", "source", "contract", "posture", "source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates", "created_at", "updated_at"}
 CACHE_REQUIRED = CACHE_TOP_LEVEL
+CACHE_SCHEMA_VERSION = "1"
+CACHE_MAP_CONTRACT_VERSION = "1"
+CACHE_PRODUCER_VERSION = "1"
 
 
 def validate_cache_map(data, label="source-map cache"):
@@ -354,6 +357,8 @@ def validate_cache_map(data, label="source-map cache"):
             fail(f"{label}.{key} must be a non-empty string")
     if not isinstance(data["source"], dict): fail(f"{label}.source must be an object")
     source = data["source"]
+    if "fingerprint" in source and "sha256" in source and source["fingerprint"] != source["sha256"]:
+        fail(f"{label}.source has conflicting fingerprint and sha256 aliases")
     fingerprint = source.get("fingerprint") or source.get("sha256")
     if not isinstance(fingerprint, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", fingerprint):
         fail(f"{label}.source.fingerprint must be a sha256:<64 hex> value")
@@ -366,6 +371,8 @@ def validate_cache_map(data, label="source-map cache"):
         if not isinstance(data[key], list): fail(f"{label}.{key} must be an array")
     for unit in data["source_units"]:
         if not isinstance(unit, dict): fail(f"{label}.source_units entries must be objects")
+        if any(key not in {"id", "text", "title", "epistemic_status", "confidence", "evidence"} for key in unit):
+            fail(f"{label}.source_units contains unknown fields")
     return fingerprint
 EOF
 }
@@ -417,6 +424,7 @@ cmd_cache_store() {
     esac
   done
   [ -n "$source" ] || usage_err "cache store requires --source"
+  case "$source" in /*|../*|*/../*|*/./*|.|..) usage_err "cache source must be a vault-relative path" ;; esac
   if [ -n "$file" ]; then [ -f "$file" ] || runtime_err "file not found: $file"; payload=$(<"$file") || runtime_err "cannot read cache map: $file"; else payload=$(cat); fi
   local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
   CACHE_ROOT="$CACHE_DIR" VAULT_ROOT="$vault_root" SOURCE_PATH="$source" MAP_JSON="$payload" py <<'CACHEPY'
@@ -446,6 +454,8 @@ arg = os.environ["CACHE_ARG"]
 if re.fullmatch(r"[0-9a-f]{64}", arg): print("sha256:" + arg)
 elif re.fullmatch(r"sha256:[0-9a-f]{64}", arg): print(arg)
 else:
+    if Path(arg).is_absolute() or ".." in Path(arg).parts:
+        fail("resource path must be vault-relative", USAGE_EXIT)
     value = file_fingerprint(Path(os.environ["VAULT_ROOT"]) / arg)
     if value is None: fail(f"resource not found: {arg}")
     print(value)
@@ -483,15 +493,34 @@ cmd_cache_status() {
   local format="json"
   while [ $# -gt 0 ]; do case "$1" in --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache status argument: $1" ;; esac; done
   resolve_format --format "$format"
-  CACHE_ROOT="$CACHE_DIR" FORMAT="$FORMAT" py <<'CACHEPY'
-root = Path(os.environ["CACHE_ROOT"]); rows=[]
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ROOT="$CACHE_DIR" VAULT_ROOT="$vault_root" FORMAT="$FORMAT" py <<'CACHEPY'
+root = Path(os.environ["CACHE_ROOT"]); vault = Path(os.environ["VAULT_ROOT"]); rows=[]; cached=set()
+def version(v):
+    try: return tuple(int(x) for x in v.split("."))
+    except (ValueError, AttributeError): return None
 if root.is_dir():
   for path in sorted(root.glob("*.json")):
+    fp = "sha256:" + path.stem
     try:
-      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data); state="compatible" if path.stem == fp.split(":",1)[1] else "incompatible"
-    except SystemExit: raise
-    except Exception: state="incompatible"; fp=None
-    rows.append({"fingerprint":fp or "sha256:"+path.stem, "state":state, "path":str(path)})
+      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data); cached.add(fp)
+      versions=[version(data[k]) for k in ("schema_version","map_contract_version","producer_version")]
+      if any(v is None or v[0] > 1 for v in versions): state="incompatible"
+      elif any(v != (1,) for v in versions): state="older-compatible"
+      else:
+        paths=data["source"].get("known_paths", []); existing=[p for p in paths if (vault / p).is_file()]
+        state="compatible" if existing and any(file_fingerprint(vault / p) == fp for p in existing) else ("unresolved-source" if paths else "orphaned")
+    except SystemExit:
+      state="incompatible"
+    except Exception:
+      state="incompatible"
+    rows.append({"fingerprint":fp, "state":state, "path":str(path)})
+# Missing is reported for frozen Resources without a cache entry.
+for base in (vault / "resources",):
+  if base.is_dir():
+    for resource in sorted(p for p in base.rglob("*") if p.is_file()):
+      fp=file_fingerprint(resource)
+      if fp not in cached: rows.append({"fingerprint":fp, "state":"missing", "path":str(resource)})
 emit_rows(rows, os.environ.get("FORMAT", "json"))
 CACHEPY
 }
