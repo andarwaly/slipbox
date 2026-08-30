@@ -23,6 +23,7 @@ slipbox work list    [--status STATUS] [--format table]
 slipbox work inspect WORK_ID [--format table]
 slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY]
 slipbox work resume  WORK_ID
+slipbox work finalize WORK_ID
 slipbox work discard WORK_ID [--yes] [--no-input]
 slipbox cache status [--format table]
 slipbox cache inspect SHA256_OR_RESOURCE_PATH [--format table]
@@ -87,12 +88,22 @@ The manifest is inspectable with `work inspect` and enumerable with `work list`;
 default to JSON, while `--format table` is an explicit opt-in.
 
 `work update` checkpoints status (`active`, `blocked`, `failed`, `ready-to-finalize`,
-`commit-failed`, or `repair-required`) and metadata. `work resume` compares the
+`published`, `commit-failed`, or `repair-required`) and metadata. `work resume` compares the
 recorded source and target fingerprints with their current files and returns a
 `resumable` state; a mismatch marks the work `blocked`. It does not resume a
 conversation. `work discard` deletes only the selected work directory and requires
 `--yes` for non-interactive callers (use `--no-input` to make that requirement
 explicit). Work is never deleted by age.
+
+`work finalize WORK_ID` publishes staged mutations from `manifest.json`'s
+`mutations` array (or `mutations.json` in the work directory). Each mutation names a
+vault-relative target, its expected SHA-256 fingerprint (`null` for a new file), and
+a replacement file relative to the work directory. All inputs and compare-and-swap
+checks run before sorted per-path locks are acquired. A collision or concurrent
+change therefore cannot silently overwrite a target. Partial publication is restored
+from byte backups and marked `failed`; compensation failure is marked
+`repair-required` with diagnostics. Link additions use append-only tombstones during
+compensation rather than rewriting ledger history.
 
 ## Atomicity
 

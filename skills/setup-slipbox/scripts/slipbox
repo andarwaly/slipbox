@@ -312,7 +312,7 @@ def walk_dotted(node, parts, dotted):
 
 
 WORK_KINDS = {"resource", "literature", "reference", "evergreen", "migration"}
-WORK_STATUSES = {"active", "blocked", "failed", "ready-to-finalize", "commit-failed", "repair-required"}
+WORK_STATUSES = {"active", "blocked", "failed", "ready-to-finalize", "published", "commit-failed", "repair-required"}
 _ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
 
@@ -360,6 +360,99 @@ def file_fingerprint(path: Path) -> str | None:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+def _safe_vault_path(vault_root: Path, value: str, label="path") -> Path:
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts or str(path) in {"", "."}:
+        fail(f"{label} must be a vault-relative path")
+    return vault_root / path
+
+
+def _mutation_fingerprint(path: Path):
+    return file_fingerprint(path)
+
+
+def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path) -> list[dict]:
+    """Validate staged mutations and capture exact bytes before acquiring locks."""
+    if not isinstance(mutations, list) or not mutations:
+        fail("finalize requires a non-empty mutations list")
+    backups = []
+    seen = set()
+    for index, mutation in enumerate(mutations):
+        if not isinstance(mutation, dict): fail(f"mutation {index} must be an object")
+        path_value = mutation.get("path")
+        if not isinstance(path_value, str) or not path_value:
+            fail(f"mutation {index}.path must be a non-empty string")
+        target = _safe_vault_path(vault_root, path_value, f"mutation {index}.path")
+        key = str(target)
+        if key in seen: fail(f"duplicate mutation path: {path_value}")
+        seen.add(key)
+        expected = mutation.get("expected_fingerprint")
+        if expected is None and path_value in {"", "."}: fail(f"mutation {index} has invalid expected fingerprint")
+        if expected is not None and (not isinstance(expected, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expected)):
+            fail(f"mutation {index}.expected_fingerprint must be null or sha256:<64 hex>")
+        actual = _mutation_fingerprint(target)
+        if actual != expected:
+            fail(f"target changed since preflight: {path_value}")
+        replacement = mutation.get("replacement_path")
+        if not isinstance(replacement, str) or not replacement:
+            fail(f"mutation {index}.replacement_path must be a non-empty path")
+        replacement_path = Path(replacement)
+        if replacement_path.is_absolute() or ".." in replacement_path.parts:
+            fail(f"mutation {index}.replacement_path must stay inside work directory")
+        replacement_file = work_dir / replacement_path
+        if not replacement_file.is_file(): fail(f"replacement file not found: {replacement}")
+        backups.append({"path": path_value, "existed": target.is_file(), "bytes": target.read_bytes() if target.is_file() else None, "fingerprint": actual})
+    return backups
+
+
+def _lock_paths(vault_root, mutations):
+    return sorted({_safe_vault_path(vault_root, m["path"]) for m in mutations}, key=lambda p: str(p))
+
+
+def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path, work_dir: Path) -> list[int]:
+    applied = []
+    fail_at = os.environ.get("SLIPBOX_TEST_FAIL_MUTATION")
+    for index, mutation in enumerate(mutations):
+        if fail_at and fail_at.isdigit() and int(fail_at) == index:
+            error = OSError("simulated mutation failure")
+            error.applied = applied
+            raise error
+        target = _safe_vault_path(vault_root, mutation["path"])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        replacement = work_dir / mutation["replacement_path"]
+        if mutation.get("kind") in {"ledger-add", "link-add"}:
+            with target.open("ab") as handle: handle.write(replacement.read_bytes())
+            replacement.unlink()
+        else:
+            os.replace(str(replacement), str(target))
+        applied.append(index)
+    return applied
+
+
+def compensate(mutations: list[dict], backups: list[dict], applied: list[int], vault_root: Path, work_dir: Path) -> list[str]:
+    errors = []
+    if os.environ.get("SLIPBOX_TEST_FAIL_COMPENSATION") == "1":
+        return ["simulated compensation failure"]
+    for index in reversed(applied):
+        mutation, backup = mutations[index], backups[index]
+        try:
+            target = _safe_vault_path(vault_root, mutation["path"])
+            if mutation.get("kind") in {"ledger-add", "link-add"} and mutation.get("source_slug"):
+                ledger = vault_root / "links.jsonl"
+                row = {"op": "remove", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}
+                with ledger.open("a", encoding="utf-8") as handle: handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+            elif backup["existed"]:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                fd, tmp = tempfile.mkstemp(prefix=".slipbox-rollback-", dir=str(target.parent))
+                with os.fdopen(fd, "wb") as handle: handle.write(backup["bytes"])
+                os.replace(tmp, target)
+            elif target.exists():
+                target.unlink()
+        except Exception as exc:
+            errors.append(f"{mutation['path']}: {exc}")
+    return errors
 
 
 CACHE_TOP_LEVEL = {"schema_version", "map_contract_version", "producer_version", "source", "contract", "posture", "source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates", "created_at", "updated_at"}
@@ -570,6 +663,7 @@ Usage:
   slipbox work inspect WORK_ID [--format table]
   slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY] [--source PATH] [--target PATH] [--affected-path PATH]...
   slipbox work resume  WORK_ID
+  slipbox work finalize WORK_ID
   slipbox work discard WORK_ID [--yes] [--no-input]
 EOF
 }
@@ -601,7 +695,7 @@ if not activity.strip():
     fail("--activity must not be empty", USAGE_EXIT)
 work_id = new_work_id()
 created = now_stamp()
-vault_root = Path(os.environ["WORK_ROOT"]).parent.parent
+vault_root = Path(os.environ["WORK_ROOT"]).parent
 source_fp = file_fingerprint(vault_root / source) if source else None
 target_fp = file_fingerprint(vault_root / target) if target else None
 affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
@@ -683,7 +777,7 @@ for field in ("source", "target"):
     value = os.environ.get(field.upper(), "")
     if value:
         manifest[field + "_identity"] = value
-        manifest[field + "_starting_fingerprint"] = file_fingerprint(Path(os.environ["WORK_ROOT"]).parent.parent / value)
+        manifest[field + "_starting_fingerprint"] = file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / value)
         manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
 paths = list(manifest.get("affected_paths", []))
 for path in os.environ.get("AFFECTED", "").splitlines():
@@ -704,13 +798,65 @@ cmd_work_resume() {
   WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
 work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
 def current(identity):
-    return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent.parent / identity) if identity else None
+    return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / identity) if identity else None
 source, target = manifest.get("source_identity"), manifest.get("target_identity")
 matches = current(source) == manifest.get("source_starting_fingerprint") and current(target) == manifest.get("target_starting_fingerprint")
 if not matches:
     manifest["status"] = "blocked"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest)
 state = dict(manifest); state["fingerprints_match"] = matches; state["resumable"] = matches
 print(json.dumps(state, indent=2))
+PYEOF
+}
+
+cmd_work_finalize() {
+  [ $# -ge 1 ] || usage_err "work finalize requires WORK_ID"
+  [ $# -le 1 ] || usage_err "work finalize takes exactly WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if manifest.get("status") != "ready-to-finalize":
+    fail("work finalize requires status ready-to-finalize")
+vault = root.parent
+staged = manifest.get("mutations")
+if staged is None:
+    staged_path = work_dir / "mutations.json"
+    if staged_path.is_file(): staged = load_json(str(staged_path), "staged mutations")
+if staged is None:
+    staged = manifest.get("staged_mutations")
+if staged is None: fail("work finalize requires staged mutations")
+if not isinstance(staged, list): fail("staged mutations must be an array")
+# All validation and compare-and-swap checks happen before any lock is taken.
+backups = preflight_mutations(staged, vault, work_dir)
+lock_root = root / ".locks"; lock_root.mkdir(parents=True, exist_ok=True)
+locks = []
+try:
+    for target in _lock_paths(vault, staged):
+        lock = lock_root / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock")
+        try: lock.mkdir()
+        except FileExistsError: fail(f"path is locked: {target}")
+        locks.append(lock)
+    for mutation, backup in zip(staged, backups):
+        if _mutation_fingerprint(_safe_vault_path(vault, mutation["path"])) != backup["fingerprint"]:
+            fail(f"target changed while waiting for lock: {mutation['path']}")
+    applied = []
+    try:
+        applied = apply_mutations(staged, backups, vault, work_dir)
+    except Exception as exc:
+        applied = getattr(exc, "applied", applied)
+        errors = compensate(staged, backups, applied, vault, work_dir)
+        manifest["updated_at"] = now_stamp()
+        manifest["status"] = "repair-required" if errors else "failed"
+        manifest["finalize_error"] = str(exc)
+        if errors: manifest["repair_errors"] = errors
+        save_work_manifest(work_dir, manifest)
+        fail("publication requires repair: " + "; ".join(errors) if errors else "publication failed and was rolled back")
+    manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); manifest["published_paths"] = [m["path"] for m in staged]
+    save_work_manifest(work_dir, manifest)
+    print(json.dumps(manifest, indent=2))
+finally:
+    for lock in reversed(locks):
+        try: lock.rmdir()
+        except OSError: pass
 PYEOF
 }
 
@@ -1576,7 +1722,7 @@ case "$1" in
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
   note) shift; dispatch note "validate" "$@" ;;
-  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume discard" "$@" ;;
+  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, finalize, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume finalize discard" "$@" ;;
   cache) shift; [ $# -ge 1 ] || usage_err "cache requires an action: status, inspect, store, remove"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_cache_help; exit 0; }; dispatch cache "status inspect store remove" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

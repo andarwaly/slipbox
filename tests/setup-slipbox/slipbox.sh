@@ -253,6 +253,36 @@ check "work discard accepts --yes" "$SLIPBOX" work discard "$work_id" --yes --no
 check_no_file "discard removes selected work only" "$SCRATCH/work/$work_id/manifest.json"
 check_exit "work discard does not age-delete anything" 0 "$SLIPBOX" work list
 
+echo "--- staged publication and compensation ---"
+printf 'before\n' > "$SCRATCH/publish-target.md"
+result=$("$SLIPBOX" work create --kind literature --activity publish --target publish-target.md)
+publish_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'after\n' > "$SCRATCH/work/$publish_id/replacement.md"
+python3 - "$SCRATCH/work/$publish_id/manifest.json" "$SCRATCH/work/$publish_id/mutations.json" <<'PY'
+import json, hashlib, sys
+manifest_path, mutations_path = sys.argv[1:]
+manifest = json.load(open(manifest_path))
+manifest["status"] = "ready-to-finalize"
+fp = manifest["target_starting_fingerprint"]
+manifest["mutations"] = [{"path":"publish-target.md", "expected_fingerprint":fp, "replacement_path":"replacement.md", "kind":"artifact"}]
+json.dump(manifest, open(manifest_path, "w")); json.dump(manifest["mutations"], open(mutations_path, "w"))
+PY
+check_json "work finalize atomically publishes replacement" 'assert data["status"] == "published"' <<<"$("$SLIPBOX" work finalize "$publish_id")"
+check_match "published replacement is present" '*after*' "$(<"$SCRATCH/publish-target.md")"
+
+result=$("$SLIPBOX" work create --kind literature --activity rollback --target publish-target.md)
+rollback_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'first\n' > "$SCRATCH/work/$rollback_id/first.md"
+printf 'second\n' > "$SCRATCH/work/$rollback_id/second.md"
+python3 - "$SCRATCH/work/$rollback_id/manifest.json" <<'PY'
+import json, sys
+p=sys.argv[1]; m=json.load(open(p)); m["status"]="ready-to-finalize"; fp=m["target_starting_fingerprint"]
+m["mutations"]=[{"path":"publish-target.md","expected_fingerprint":fp,"replacement_path":"first.md","kind":"artifact"},{"path":"publish-second.md","expected_fingerprint":None,"replacement_path":"second.md","kind":"artifact"}]; json.dump(m,open(p,"w"))
+PY
+check_exit "failed second mutation rolls back first" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$rollback_id"
+check_match "rollback restores first target" '*after*' "$(<"$SCRATCH/publish-target.md")"
+check_json "rollback records failed state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$rollback_id")"
+
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"
 check "config get" "$SLIPBOX" config get paths.literature
