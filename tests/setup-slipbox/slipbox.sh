@@ -709,6 +709,12 @@ check_eq "cache status reports one compatible entry" compatible "$($SLIPBOX cach
 check_exit "cache build is not a semantic command" 2 "$SLIPBOX" cache build
 check_exit "cache remove requires explicit confirmation" 2 "$SLIPBOX" cache remove "$RESOURCE_FP" --no-input
 check "cache remove accepts explicit confirmation" "$SLIPBOX" cache remove "$RESOURCE_FP" --yes
+mkdir -p "$SCRATCH/resources"
+printf 'uncached resource\n' > "$SCRATCH/resources/missing.md"
+check_json "cache status reports missing resources" 'assert any(row["state"] == "missing" for row in data)' <<<"$($SLIPBOX cache status)"
+printf '{"not":"a cache"}\n' > "$SCRATCH/cache/source-maps/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json"
+check_json "cache status classifies malformed entries as incompatible" 'assert any(row["state"] == "incompatible" and row["fingerprint"].endswith("a" * 64) for row in data)' <<<"$($SLIPBOX cache status)"
+check_exit "cache store rejects absolute source paths" 2 "$SLIPBOX" cache store --source /etc/passwd --file "$SCRATCH/map.json"
 
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"

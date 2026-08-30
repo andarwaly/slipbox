@@ -365,6 +365,10 @@ def validate_cache_map(data, label="source-map cache"):
     paths = source.get("known_paths", [])
     if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths):
         fail(f"{label}.source.known_paths must be an array of strings")
+    for path in paths:
+        path_obj = Path(path)
+        if path_obj.is_absolute() or ".." in path_obj.parts:
+            fail(f"{label}.source.known_paths must contain vault-relative paths")
     for key in ("contract", "posture"):
         if not isinstance(data[key], dict): fail(f"{label}.{key} must be an object")
     for key in ("source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates"):
@@ -502,11 +506,16 @@ def version(v):
 if root.is_dir():
   for path in sorted(root.glob("*.json")):
     fp = "sha256:" + path.stem
+    if re.fullmatch(r"[0-9a-f]{64}", path.stem): cached.add("sha256:" + path.stem)
     try:
-      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data); cached.add(fp)
+      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data)
+      if path.stem != fp.split(":", 1)[1]:
+          raise ValueError("cache filename does not match embedded source fingerprint")
+      cached.add(fp)
       versions=[version(data[k]) for k in ("schema_version","map_contract_version","producer_version")]
-      if any(v is None or v[0] > 1 for v in versions): state="incompatible"
-      elif any(v != (1,) for v in versions): state="older-compatible"
+      current = [version(CACHE_SCHEMA_VERSION), version(CACHE_MAP_CONTRACT_VERSION), version(CACHE_PRODUCER_VERSION)]
+      if any(v is None or v[0] != c[0] or v > c for v, c in zip(versions, current)): state="incompatible"
+      elif any(v < c for v, c in zip(versions, current)): state="older-compatible"
       else:
         paths=data["source"].get("known_paths", []); existing=[p for p in paths if (vault / p).is_file()]
         state="compatible" if existing and any(file_fingerprint(vault / p) == fp for p in existing) else ("unresolved-source" if paths else "orphaned")
