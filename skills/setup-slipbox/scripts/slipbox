@@ -143,8 +143,9 @@ reject_unknown_flags() {
 # py — runs a Python body (on stdin) with the shared prelude prepended.
 py_prelude() {
   cat <<'EOF'
-import glob, json, os, re, sys, tempfile
+import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time
 from datetime import datetime, timezone
+from pathlib import Path
 
 USAGE_EXIT = 2
 RUNTIME_EXIT = 1
@@ -281,6 +282,57 @@ def walk_dotted(node, parts, dotted):
             fail(f"unknown path: {dotted}", USAGE_EXIT)
         node = node[part]
     return node
+
+
+WORK_KINDS = {"resource", "literature", "reference", "evergreen", "migration"}
+WORK_STATUSES = {"active", "blocked", "failed", "ready-to-finalize", "commit-failed", "repair-required"}
+_ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+
+def new_work_id(now_ms=None, random_bytes=None) -> str:
+    """Return a sortable, 26-character Crockford-Base32 work identifier."""
+    if now_ms is None:
+        now_ms = int(time.time() * 1000)
+    if not isinstance(now_ms, int) or now_ms < 0 or now_ms >= (1 << 48):
+        raise ValueError("now_ms must be a non-negative 48-bit integer")
+    if random_bytes is None:
+        random_bytes = secrets.token_bytes(10)
+    if not isinstance(random_bytes, (bytes, bytearray)) or len(random_bytes) != 10:
+        raise ValueError("random_bytes must contain exactly 10 bytes")
+    value = (now_ms << 80) | int.from_bytes(random_bytes, "big")
+    chars = []
+    for shift in range(125, -1, -5):
+        chars.append(_ULID_ALPHABET[(value >> shift) & 31])
+    return "".join(chars)
+
+
+def load_work(work_root: Path, work_id: str) -> tuple[Path, dict]:
+    if not re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", work_id):
+        fail(f"invalid work id: {work_id}", USAGE_EXIT)
+    work_dir = work_root / work_id
+    manifest_path = work_dir / "manifest.json"
+    if not manifest_path.is_file():
+        fail(f"work not found: {work_id}")
+    manifest = load_json(str(manifest_path), "work manifest")
+    if not isinstance(manifest, dict):
+        fail(f"work manifest at {manifest_path} must be a JSON object")
+    return work_dir, manifest
+
+
+def save_work_manifest(work_dir: Path, manifest: dict) -> None:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    save_path = work_dir / "manifest.json"
+    atomic_write(str(save_path), json.dumps(manifest, indent=2) + "\n", "work manifest")
+
+
+def file_fingerprint(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 EOF
 }
 py() { { py_prelude; cat; } | python3 -; }
@@ -300,12 +352,181 @@ Usage:
   slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
   slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
   slipbox humanize check   <file> [--language LANG]
+  slipbox work create|list|inspect|update|resume|discard [options]
   slipbox --help | --version
 
 Output is JSON by default (--format table optional on find/get commands).
 Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
 {"error": "..."} object on stderr.
 EOF
+}
+
+print_work_help() {
+  cat <<'EOF'
+Usage:
+  slipbox work create  --kind KIND --activity ACTIVITY [--source PATH] [--target PATH] [--affected-path PATH]...
+  slipbox work list    [--status STATUS] [--format table]
+  slipbox work inspect WORK_ID [--format table]
+  slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY] [--source PATH] [--target PATH] [--affected-path PATH]...
+  slipbox work resume  WORK_ID
+  slipbox work discard WORK_ID [--yes] [--no-input]
+EOF
+}
+
+# ---- recoverable work lifecycle ----
+work_path() { printf '%s/work' "$SELF_DIR"; }
+cmd_work_create() {
+  local kind="" activity="" source="" target="" affected=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --kind) [ $# -ge 2 ] || usage_err "flag --kind needs a value"; kind="$2"; shift 2 ;;
+      --activity) [ $# -ge 2 ] || usage_err "flag --activity needs a value"; activity="$2"; shift 2 ;;
+      --source) [ $# -ge 2 ] || usage_err "flag --source needs a value"; source="$2"; shift 2 ;;
+      --target) [ $# -ge 2 ] || usage_err "flag --target needs a value"; target="$2"; shift 2 ;;
+      --affected-path) [ $# -ge 2 ] || usage_err "flag --affected-path needs a value"; affected="${affected}${affected:+$'\n'}$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work create argument: $1" ;;
+    esac
+  done
+  [ -n "$kind" ] || usage_err "work create requires --kind"
+  [ -n "$activity" ] || usage_err "work create requires --activity"
+  WORK_ROOT="$(work_path)" KIND="$kind" ACTIVITY="$activity" SOURCE="$source" TARGET="$target" AFFECTED="$affected" py <<'PYEOF'
+work_root = Path(os.environ["WORK_ROOT"])
+kind, activity = os.environ["KIND"], os.environ["ACTIVITY"]
+if kind not in WORK_KINDS:
+    fail("--kind must be one of resource, literature, reference, evergreen, migration", USAGE_EXIT)
+source, target = os.environ.get("SOURCE", ""), os.environ.get("TARGET", "")
+if not activity.strip():
+    fail("--activity must not be empty", USAGE_EXIT)
+work_id = new_work_id()
+created = now_stamp()
+vault_root = Path(os.environ["WORK_ROOT"]).parent.parent
+source_fp = file_fingerprint(vault_root / source) if source else None
+target_fp = file_fingerprint(vault_root / target) if target else None
+affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
+for path in (source, target):
+    if path and path not in affected: affected.append(path)
+manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}}
+save_work_manifest(work_root / work_id, manifest)
+print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_list() {
+  local status="" format="json"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --status) [ $# -ge 2 ] || usage_err "flag --status needs a value"; status="$2"; shift 2 ;;
+      --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work list argument: $1" ;;
+    esac
+  done
+  resolve_format --format "$format"
+  WORK_ROOT="$(work_path)" STATUS_FILTER="$status" FORMAT="$FORMAT" py <<'PYEOF'
+status_filter = os.environ.get("STATUS_FILTER", "")
+if status_filter and status_filter not in WORK_STATUSES:
+    fail("--status must be one of active, blocked, failed, ready-to-finalize, commit-failed, repair-required", USAGE_EXIT)
+rows = []
+root = Path(os.environ["WORK_ROOT"])
+if root.is_dir():
+    for manifest_path in sorted(root.glob("*/manifest.json")):
+        manifest = load_json(str(manifest_path), "work manifest")
+        if not status_filter or manifest.get("status") == status_filter: rows.append(manifest)
+emit_rows(rows, os.environ.get("FORMAT", "json"))
+PYEOF
+}
+
+cmd_work_inspect() {
+  [ $# -ge 1 ] || usage_err "work inspect requires WORK_ID"
+  local work_id="$1"; shift; local format="json"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work inspect argument: $1" ;;
+    esac
+  done
+  resolve_format --format "$format"
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" FORMAT="$FORMAT" py <<'PYEOF'
+_, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+if os.environ.get("FORMAT", "json") == "table": emit_rows([manifest], "table")
+else: print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_update() {
+  [ $# -ge 1 ] || usage_err "work update requires WORK_ID"
+  local work_id="$1"; shift; local status="" activity="" source="" target="" affected="" has=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --status) [ $# -ge 2 ] || usage_err "flag --status needs a value"; status="$2"; has=1; shift 2 ;;
+      --activity) [ $# -ge 2 ] || usage_err "flag --activity needs a value"; activity="$2"; has=1; shift 2 ;;
+      --source) [ $# -ge 2 ] || usage_err "flag --source needs a value"; source="$2"; has=1; shift 2 ;;
+      --target) [ $# -ge 2 ] || usage_err "flag --target needs a value"; target="$2"; has=1; shift 2 ;;
+      --affected-path) [ $# -ge 2 ] || usage_err "flag --affected-path needs a value"; affected="${affected}${affected:+$'\n'}$2"; has=1; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work update argument: $1" ;;
+    esac
+  done
+  [ "$has" = 1 ] || usage_err "work update requires at least one field"
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" STATUS="$status" ACTIVITY="$activity" SOURCE="$source" TARGET="$target" AFFECTED="$affected" py <<'PYEOF'
+work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+status = os.environ.get("STATUS", "")
+if status and status not in WORK_STATUSES: fail("--status must be one of active, blocked, failed, ready-to-finalize, commit-failed, repair-required", USAGE_EXIT)
+if status: manifest["status"] = status
+if os.environ.get("ACTIVITY", ""): manifest["activity"] = os.environ["ACTIVITY"]
+for field in ("source", "target"):
+    value = os.environ.get(field.upper(), "")
+    if value:
+        manifest[field + "_identity"] = value
+        manifest[field + "_starting_fingerprint"] = file_fingerprint(Path(os.environ["WORK_ROOT"]).parent.parent / value)
+        manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
+paths = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
+if paths: manifest["affected_paths"] = paths
+manifest["updated_at"] = now_stamp()
+save_work_manifest(work_dir, manifest)
+print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_resume() {
+  [ $# -ge 1 ] || usage_err "work resume requires WORK_ID"
+  [ $# -le 1 ] || usage_err "work resume takes exactly WORK_ID"
+  WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
+work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+def current(identity):
+    return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent.parent / identity) if identity else None
+source, target = manifest.get("source_identity"), manifest.get("target_identity")
+matches = current(source) == manifest.get("source_starting_fingerprint") and current(target) == manifest.get("target_starting_fingerprint")
+if not matches:
+    manifest["status"] = "blocked"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest)
+state = dict(manifest); state["fingerprints_match"] = matches; state["resumable"] = matches
+print(json.dumps(state, indent=2))
+PYEOF
+}
+
+cmd_work_discard() {
+  [ $# -ge 1 ] || usage_err "work discard requires WORK_ID"
+  local work_id="$1"; shift; local yes=0 no_input=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --yes) yes=1; shift ;;
+      --no-input) no_input=1; shift ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work discard argument: $1" ;;
+    esac
+  done
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" NO_INPUT="$no_input" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"])
+work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if os.environ.get("YES") != "1":
+    if os.environ.get("NO_INPUT") == "1" or not sys.stdin.isatty(): fail("work discard requires --yes in non-interactive mode", USAGE_EXIT)
+    answer = input("Discard this work? [y/N] ")
+    if answer.strip().lower() not in {"y", "yes"}: print(json.dumps({"work_id": manifest["work_id"], "discarded": False})); sys.exit(0)
+shutil.rmtree(work_dir)
+print(json.dumps({"work_id": manifest["work_id"], "discarded": True}, indent=2))
+PYEOF
 }
 
 # ---- note (whole-artifact validation) ----
@@ -1094,5 +1315,6 @@ case "$1" in
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
   note) shift; dispatch note "validate" "$@" ;;
+  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume discard" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

@@ -214,6 +214,26 @@ echo "--- usage errors ---"
 check_exit "unknown command exits 2" 2 "$SLIPBOX" bogus
 check_exit "evergreen add missing --reason exits 2" 2 "$SLIPBOX" evergreen add --slug x
 
+echo "--- recoverable work lifecycle ---"
+result=$("$SLIPBOX" work create --kind literature --activity create --source resources/a.md --target literature/a.md)
+check_json "work create returns a ULID-shaped id" 'import re; assert re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", data["work_id"])' <<<"$result"
+work_id=$(printf '%s' "$result" | json_at '["work_id"]')
+check_file "work create creates one work directory" "$SCRATCH/work/$work_id/manifest.json"
+check_json "work create records UTC timestamps and identity" 'assert data["created_at"].endswith("Z") and data["updated_at"].endswith("Z"); assert data["source_identity"] == "resources/a.md"; assert data["target_identity"] == "literature/a.md"' <<<"$result"
+check_json "work list defaults to JSON" 'assert isinstance(data, list) and any(row["work_id"] == "'"$work_id"'" for row in data)' <<<"$("$SLIPBOX" work list)"
+check_match "work list table has a header" '*work_id*' "$("$SLIPBOX" work list --format table | head -1)"
+check_eq "work inspect defaults to JSON" "$work_id" "$("$SLIPBOX" work inspect "$work_id" | json_at '["work_id"]')"
+check_match "work inspect table has a header" '*work_id*' "$("$SLIPBOX" work inspect "$work_id" --format table | head -1)"
+check_exit "work rejects unknown status" 2 "$SLIPBOX" work update "$work_id" --status nope
+check_exit "work rejects unknown flag" 2 "$SLIPBOX" work list --bogus
+check_exit "work discard requires explicit confirmation" 2 "$SLIPBOX" work discard "$work_id" --no-input
+check_file "work remains after unconfirmed discard" "$SCRATCH/work/$work_id/manifest.json"
+check "work update changes status" "$SLIPBOX" work update "$work_id" --status blocked
+check_json "work resume returns state" 'assert data["work_id"] == "'"$work_id"'" and data["status"] == "blocked"' <<<"$("$SLIPBOX" work resume "$work_id")"
+check "work discard accepts --yes" "$SLIPBOX" work discard "$work_id" --yes --no-input
+check_no_file "discard removes selected work only" "$SCRATCH/work/$work_id/manifest.json"
+check_exit "work discard does not age-delete anything" 0 "$SLIPBOX" work list
+
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"
 check "config get" "$SLIPBOX" config get paths.literature

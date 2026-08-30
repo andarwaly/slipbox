@@ -17,6 +17,12 @@ slipbox config set       <dotted.path> <value>
 slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
 slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
 slipbox humanize check   <file> [--language LANG]
+slipbox work create  --kind KIND --activity ACTIVITY [--source PATH] [--target PATH]
+slipbox work list    [--status STATUS] [--format table]
+slipbox work inspect WORK_ID [--format table]
+slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY]
+slipbox work resume  WORK_ID
+slipbox work discard WORK_ID [--yes] [--no-input]
 slipbox --help | --version
 ```
 
@@ -59,6 +65,23 @@ Every failure prints one JSON object on stderr — `{"error": "..."}`, message-e
 A survivable problem — one that doesn't invalidate the result — prints `{"warning": "..."}` on stderr and still exits `0`. Two cases exist: `evergreen find` skipping a file whose frontmatter won't parse, and `humanize check` meeting a signal type it doesn't implement (that signal is reported as `"skipped": "unsupported_type"` in the result, never counted as zero hits). A corrupt `links.jsonl`, by contrast, fails outright — a silently filtered edge would leave the caller a plausible-looking but incomplete result set with no way to notice.
 
 An unrecognized flag, a misspelled one, a stray positional argument, a flag given without a value, a non-integer `--iteration`, and a `--format` other than `json`/`table` are all usage errors. None of them is ignored: `evergreen find --stat to-discuss` exits `2` rather than quietly dropping the filter and returning every row.
+
+## `work`
+
+Recoverable work is isolated in `.slipbox/work/<work_id>/manifest.json`. `work create`
+records the kind (`resource`, `literature`, `reference`, `evergreen`, or `migration`),
+activity, UTC timestamps, source/target identities and SHA-256 starting fingerprints,
+and affected paths. Work IDs are sortable 26-character Crockford-Base32 identifiers.
+The manifest is inspectable with `work inspect` and enumerable with `work list`; both
+default to JSON, while `--format table` is an explicit opt-in.
+
+`work update` checkpoints status (`active`, `blocked`, `failed`, `ready-to-finalize`,
+`commit-failed`, or `repair-required`) and metadata. `work resume` compares the
+recorded source and target fingerprints with their current files and returns a
+`resumable` state; a mismatch marks the work `blocked`. It does not resume a
+conversation. `work discard` deletes only the selected work directory and requires
+`--yes` for non-interactive callers (use `--no-input` to make that requirement
+explicit). Work is never deleted by age.
 
 ## Atomicity
 
