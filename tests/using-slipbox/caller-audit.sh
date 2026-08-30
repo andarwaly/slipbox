@@ -15,4 +15,14 @@ if python3 "$checker" "$fixture" >/dev/null 2>&1; then
   echo "checker failed to reject an operative forbidden caller form" >&2
   exit 1
 fi
+malformed="$(mktemp -d)"
+mkdir -p "$malformed/skills/using-slipbox"
+cp "$root/skills/using-slipbox/SKILL.md" "$malformed/skills/using-slipbox/SKILL.md"
+sed -i.bak 's/through `\/using-slipbox`/via `\/using-slipbox`/' "$malformed/skills/using-slipbox/SKILL.md"
+rm -f "$malformed/skills/using-slipbox/SKILL.md.bak"
+if python3 "$checker" "$malformed" >/dev/null 2>&1; then
+  echo "checker failed open on a malformed normative quotation" >&2
+  exit 1
+fi
+rm -rf "$malformed"
 echo "operative caller audit: PASS"
