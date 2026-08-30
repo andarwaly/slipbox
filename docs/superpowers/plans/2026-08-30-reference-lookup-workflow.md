@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Execute after runtime and Literature plans.
-- Controller Terra-medium; implementers/reviewers Luna-medium; final branch reviewer Sol-low; every dispatch tracked in Beads under the never-closed Slipbox epic.
+- Controller Terra-medium; implementers/reviewers Luna-medium. Final review is a separate Sol-low task/thread after implementation and may dispatch tracked Luna-low/medium fix subagents; every dispatch is tracked in Beads under the never-closed Slipbox epic.
 - Reference H1 is clean; filename/link target uses configured prefix; displayed link label is clean.
 - Original Resources—not Literature notes—populate configured `sources` frontmatter.
 - Reference body is bounded lookup, not a generative model, source dossier, or Evergreen Take.
@@ -259,4 +259,4 @@ git commit -m "test(reference): verify bounded lookup workflow end to end"
 
 ## Execution handoff
 
-Execute from a fresh Terra-medium controller after runtime and Literature. Each Task implementer and reviewer is Luna-medium with Beads tracking. Keep Slipbox epic in progress. Final Sol-low branch review waits until all plans finish.
+Execute from a fresh Terra-medium controller after runtime and Literature. Each Task implementer and reviewer is Luna-medium with Beads tracking. Keep Slipbox epic in progress. After all plans finish, stop the Terra controller and create a separate Sol-low review task/thread; it may delegate tracked fixes to Luna-low/medium.

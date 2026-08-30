@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Execute after the runtime plan; coordinate final title/prefix rules with Literature and Reference plans.
-- Controller Terra-medium; implementers/reviewers Luna-medium; final whole-branch reviewer Sol-low; all dispatches tracked in Beads under the never-closed Slipbox epic.
+- Controller Terra-medium; implementers/reviewers Luna-medium. Final whole-branch review is a separate Sol-low task/thread after implementation and may dispatch tracked Luna-low/medium fix subagents; all dispatches remain under the never-closed Slipbox epic.
 - Do not reopen Evergreen Compass/Take/sign-off semantics.
 - One URL = one Resource work ID; one Evergreen operation = one Evergreen work ID.
 - Work directories never enter Git; exact side effects stay within the owning work transaction.
@@ -252,4 +252,4 @@ git commit -m "test(slipbox): verify runtime redesign across the family"
 
 ## Execution handoff
 
-Execute after runtime and coordinate with Literature/Reference plans in a fresh Terra-medium controller. Each Task implementer and reviewer is Luna-medium with Beads tracking. Do not close the Slipbox epic. After this final integration task, dispatch the separately tracked Sol-low whole-branch reviewer.
+Execute after runtime and coordinate with Literature/Reference plans in a fresh Terra-medium controller. Each Task implementer and reviewer is Luna-medium with Beads tracking. Do not close the Slipbox epic. After this final integration task, stop the Terra controller and report readiness for a separate Sol-low review task/thread, which may delegate tracked fixes to Luna-low/medium.

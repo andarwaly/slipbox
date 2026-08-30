@@ -14,7 +14,7 @@
 
 - Execution controller: fresh `gpt-5.6-terra` session at medium reasoning.
 - Every implementation and task-review dispatch: `gpt-5.6-luna` at medium reasoning, tracked by a Beads task/subtask under the long-running Slipbox epic.
-- Final whole-branch review after all plans: one `gpt-5.6-sol` subagent at low reasoning, tracked in Beads.
+- After all plans, stop the Terra controller. Final whole-branch review runs in a separate new `gpt-5.6-sol` task/thread at low reasoning, tracked in Beads; that review task may dispatch tracked Luna-low or Luna-medium fix subagents and re-review their changes.
 - Never close the Slipbox epic when this plan or all current children complete.
 - Keep `skills/setup-slipbox/scripts/slipbox` as the bundled executable source and `.slipbox/bin/slipbox` as the installed path.
 - JSON remains CLI default; tables require `--format table`; errors remain JSON on stderr with exit 2 for usage and exit 1 for runtime failure.
@@ -488,4 +488,4 @@ git commit -m "docs(runtime): publish shared slipbox transaction contract"
 
 ## Execution handoff
 
-Execute in a fresh Terra-medium controller session with `superpowers:subagent-driven-development`. Dispatch each Task implementation and task review on Luna-medium, with corresponding Beads task/subtask records. Do not close the Slipbox epic. After all four plans complete, dispatch the final whole-branch review on Sol-low.
+Execute in a fresh Terra-medium controller session with `superpowers:subagent-driven-development`. Dispatch each Task implementation and task review on Luna-medium, with corresponding Beads task/subtask records. Do not close the Slipbox epic. After all four plans complete, stop and report the branch ready. Create the final Sol-low whole-branch review as a separate task/thread; it may dispatch tracked Luna-low or Luna-medium fix subagents and perform scoped re-review.

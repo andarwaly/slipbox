@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Execute after `2026-08-30-slipbox-runtime-engine.md`.
-- Controller Terra-medium; every implementer/task reviewer Luna-medium; final whole-branch reviewer Sol-low; every dispatch tracked under the Slipbox Beads epic.
+- Controller Terra-medium; every implementer/task reviewer Luna-medium. Final whole-branch review is a separate Sol-low task/thread after implementation, allowed to dispatch tracked Luna-low/medium fix subagents; every dispatch is tracked under the Slipbox Beads epic.
 - Never close the Slipbox epic.
 - Literature note stays one source, clean H1, bare Core Idea, `## Source Points`, no user stance.
 - Source verification is agent-owned; user agreement never verifies source truth.
@@ -348,4 +348,4 @@ git commit -m "test(literature): verify source-shaped workflow end to end"
 
 ## Execution handoff
 
-Run from a fresh Terra-medium controller after the runtime plan. Each Task implementation and review is a Luna-medium subagent with Beads tracking. Do not close the Slipbox epic. Final Sol-low review waits until all plans complete.
+Run from a fresh Terra-medium controller after the runtime plan. Each Task implementation and review is a Luna-medium subagent with Beads tracking. Do not close the Slipbox epic. The Terra controller stops after all plans; final review starts later in a separate Sol-low task/thread, which may delegate tracked fixes to Luna-low/medium.
