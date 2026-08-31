@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Source Points — the sour
   source.
 license: MIT
 metadata:
-  version: "1.17.0"
+  version: "1.18.0"
 ---
 
 # Make-literature-note
@@ -199,8 +199,10 @@ later in a subsequent session.
 Once the conversation's natural energy winds down, `Done` is a fixed closeout
 gate. Run every stage below in order; never declare completion between stages.
 Every final Source Point receives a source audit before it is retained. A
-user-declined valid finding makes the note deliberately partial; report that
-status and discard the inquiry map unless the user explicitly asks to retain it.
+user-declined finding that is required for the user's inquiry, the Core Idea, or
+non-distortion makes the note deliberately partial. A declined optional
+discovery is clean. In either case, discard the inquiry map unless the user
+explicitly asks to retain it.
 
 ### Checking coverage — the backlog, then the source itself
 
@@ -237,18 +239,24 @@ states: Drafted but unconfirmed and Untouched.
 The nudge is a single offer, never an insistence.
 
 Then run a focused integrity sweep over the staged source map and draft. Check
-each retained point for source fidelity, posture, attribution, scope, certainty,
-and unresolved ambiguity. Use source-unit coverage and integrity flags to guide
-any next question; do not run an exhaustive universal source-to-note audit.
+each retained point for source fidelity, attribution, certainty, scope,
+chronology, causality, reported-versus-verified status, speaker,
+analysis-versus-observation, dispute, and unresolved ambiguity. This targeted
+audit catches distortion and qualification drift without treating every
+uncaptured proposition as a failure. Use source-unit coverage and integrity
+flags to guide any next question; do not run an exhaustive universal
+source-to-note audit.
 
 > "Re-reading the source, these look like things it argues that we never
 > captured: [list, each with a one-line note on what the source says].
 > Want to ground all of them, some, or none?"
 
 Whatever the user picks is routed through the Adaptive Split Gate, not a blanket
-per-point Gate. A declined valid finding is reported as partial. Zero findings
-is clean. After a material change, re-audit the affected Source Points before
-the next stage.
+per-point Gate. This is one bounded optional discovery batch: the user may choose
+all, some, or none. Declining an optional finding is clean; only declining a
+finding needed for the inquiry, Core Idea, or non-distortion is reported as
+partial. Zero findings is clean. After a material change, re-audit the affected
+Source Points before the next stage.
 
 ### Checking the shape — density, then the Core Idea
 
@@ -296,22 +304,26 @@ leave it as it stands.
 
 Both sections accumulate during claim writes. After claims, density, and Core
 Idea stabilize, re-read the source and note once in a mandatory batch. Surface
-load-bearing candidates together, with a guessed section, and obtain the
-user's confirmation before appending. `Key Concepts` holds abstract concepts,
-methods, and frameworks. `Mentioned` holds concrete named referents: people,
-places, organizations, books/creative works, named tools, and events. Downstream
+load-bearing candidates together, with a guessed section, and obtain the user's
+confirmation before appending. The candidate set is the union of support needed
+by retained points, concepts/referents relevant to the source-present inquiry,
+and explicit user additions. Do not scan unrelated source-map candidates.
+`Key Concepts` holds abstract concepts, methods, and frameworks. `Mentioned`
+holds concrete named referents: people, places, organizations, books/creative
+works, named tools, and events. Downstream
 `find-connections --references` classification first checks people, places, and
 organizations as surfacing-only entities; non-entities then take the reusability
 test and may become Reference candidates.
 
 ### Closing with the user's own reaction
 
-Last, once the note itself is settled, ask what the user actually thinks:
+Last, once the note itself is settled, ask what the user actually thinks only
+when the session is interpretive or reflective:
 
 > "what do you think of this article?"
 
-Skip this only when a real opinion already surfaced during a `/grounding`
-session and got routed there — `/grounding`'s persistent-opinion case, where a
+Skip this for a factual session, and also when a real opinion already surfaced
+during a `/grounding` session and got routed there — `/grounding`'s persistent-opinion case, where a
 restated opinion is already offered to the evergreen backlog. Asking
 again after that just re-collects something already handled.
 
@@ -334,6 +346,15 @@ Only on a yes:
 
 A shrug, a "nothing really," or a decline is a complete, valid end to the
 session.
+
+When an Evergreen handoff is warranted and approved, keep it reader-owned and
+preserve provenance:
+
+> Record an Evergreen candidate with the proposition, reason, and origin paths
+> `/using-slipbox`.
+
+The proposition and reason remain the user's own words; include the source and
+literature-note paths as origin paths. There is no mandatory reaction prompt.
 
 ## Out-of-band fidelity correction
 
@@ -375,13 +396,22 @@ post-publication check on
 is a handoff, not permission to silently rewrite a claim; any material claim
 change re-audits the affected points before publication through `/using-slipbox`.
 
+### Compact closeout
+
+After publication, give a compact structural closeout rather than reproducing
+the full note: show the Core Idea, every retained `### Source Point` heading,
+any `## Open Questions`, unresolved discussed items (including
+Drafted-but-unconfirmed items), and the saved path. Show the full note only on
+request or when the user asks for structural review. This is a handoff, not a
+second audit or another discovery batch.
+
 ## Done
 
 `Done` fires only after this checklist is true: every final Source Point has
-passed source audit (or the user explicitly declined a valid finding and the
+passed source audit (or the user explicitly declined a required finding and the
 note is reported partial); density merge was offered and, if accepted, re-audited; final Core
 Idea is confirmed; final Key Concepts/Mentioned batch is complete; reaction
-and optional Evergreen routing are complete; artifact validation passes and
+and optional Evergreen routing are complete when applicable; artifact validation passes and
 the staged draft is published transactionally. The note includes any user-flagged
 Open Questions and nested bullets, and flagged tensions are logged in the
 evergreen backlog. Then tell the user the file path and partial status when

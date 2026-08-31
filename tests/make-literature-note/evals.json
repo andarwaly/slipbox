@@ -230,6 +230,63 @@
         {"type": "contains", "text": "one nudge"},
         {"type": "not_contains", "text": "for both states"}
       ]
+    },
+    {
+      "prompt": "The source-shaped closeout finds an optional related idea, but the user declines it and asks to finish.",
+      "expected_output": "Treats the optional discovery as a clean boundary, not a partial note; discards the session inquiry assessment and completes the retained note.",
+      "assertions": [
+        {"type": "contains", "text": "optional"},
+        {"type": "contains", "text": "clean"},
+        {"type": "not_contains", "text": "partial"}
+      ]
+    },
+    {
+      "prompt": "At closeout, a retained Source Point upgrades a hedge and reverses chronology, while another source proposition was never captured.",
+      "expected_output": "Runs a targeted audit for attribution, certainty, scope, chronology, causality, reported-versus-verified status, speaker, analysis-versus-observation, and dispute. Flags the distortion and qualification drift, but does not require an exhaustive universal source-to-note audit of every uncaptured proposition.",
+      "assertions": [
+        {"type": "contains", "text": "chronology"},
+        {"type": "contains", "text": "reported-versus-verified"},
+        {"type": "contains", "text": "analysis-versus-observation"},
+        {"type": "contains", "text": "targeted"},
+        {"type": "not_contains", "text": "exhaustive universal"}
+      ]
+    },
+    {
+      "prompt": "The final Core Idea was drafted silently at the first claim; at closeout the user reconstructs the source's throughline, then responds to the current Core Idea wording.",
+      "expected_output": "Uses the user's reconstruction as the active-learning moment, then verifies the current Core Idea through an open confirmation question and rewrites it only if the reconstruction differs.",
+      "assertions": [
+        {"type": "contains", "text": "what do you think is the main idea"},
+        {"type": "contains", "text": "how would you put it now"},
+        {"type": "not_contains", "text": "can you confirm"}
+      ]
+    },
+    {
+      "prompt": "A literature note closes with Core Idea, three retained Source Points, one Open Question, and one discussed claim parked for later.",
+      "expected_output": "Gives a compact structural closeout listing the Core Idea, all three retained Source Point headings, the Open Question, the unresolved parked item, and the saved path; shows the full note only on request.",
+      "assertions": [
+        {"type": "contains", "text": "compact structural closeout"},
+        {"type": "contains", "text": "every retained"},
+        {"type": "contains", "text": "saved path"},
+        {"type": "not_contains", "text": "full note"}
+      ]
+    },
+    {
+      "prompt": "A factual source-grounding session reaches closeout with no user reflection or opinion.",
+      "expected_output": "Omits the reaction prompt for the factual session and proceeds to final validation without asking what the user thinks of the article.",
+      "assertions": [
+        {"type": "contains", "text": "factual session"},
+        {"type": "contains", "text": "omits"},
+        {"type": "not_contains", "text": "what do you think of this article"}
+      ]
+    },
+    {
+      "prompt": "During the final concepts batch, the user adds a relevant named tool that was not surfaced in the retained-point support.",
+      "expected_output": "Accepts the explicit user addition into Mentioned, while keeping the candidate union bounded to retained-point support, source-present inquiry relevance, and explicit additions; it does not scan unrelated source-map candidates.",
+      "assertions": [
+        {"type": "contains", "text": "explicit user additions"},
+        {"type": "contains", "text": "Mentioned"},
+        {"type": "contains", "text": "does not scan unrelated"}
+      ]
     }
   ]
 }

@@ -128,6 +128,10 @@ which is `/write-checks`'s job, run separately.
 - Does attribution remain explicit when the source is reporting someone else's claim,
   and does certainty match the source's wording? Never turn a report into the source's
   endorsement, or a hedge into a fact.
+- Does the point preserve chronology and causality, distinguish reported from
+  independently verified material, identify the correct speaker, and keep analysis
+  separate from observation? Preserve an explicitly disputed claim as disputed;
+  do not silently resolve the source's disagreement.
 - Warrant self-check (per `qew-theory.md`): can the "why" be stated in one sentence from
   the Evidence? If Conclusion and that one sentence would say the same thing, the
   Conclusion is still restating, not concluding — go back and sharpen it.
@@ -216,8 +220,11 @@ the subject of the sentence, not a clause nested inside a description of the ent
 
 Both sections are load-bearing and incremental — update the applicable section
 for every confirmed claim before continuing. A mandatory final batch pass runs
-after claims, density, and Core Idea stabilize; it catches load-bearing entries
-that were not surfaced during individual writes. `find-connections` scans `## Key Concepts` **and**
+after claims, density, and Core Idea stabilize; its candidates are the union of
+retained-point support, source-present inquiry relevance, and explicit user
+additions. It catches load-bearing entries that were not surfaced during
+individual writes; do not scan unrelated source-map candidates.
+`find-connections` scans `## Key Concepts` **and**
 `## Mentioned` for recurrence detection, so everything the claim actually leans on must
 appear in one or the other.
 
