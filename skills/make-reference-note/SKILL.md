@@ -238,3 +238,44 @@ write — no field resolution needed here.
   publication blocks concurrent target edits.
 - Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.
+
+## Migrate a legacy Reference safely
+
+When setup or the user identifies an existing legacy Reference/Term note, run the
+mechanical audit before any semantic rewrite. Read the configured Reference zone and
+field map, plus legacy `paths.term`/`filenames.term` values when present. Check the H1,
+legacy type and provenance field names, aliases, configured zone/type, duplicate
+provenance, and every related `links.jsonl` row.
+
+- Normalize only mechanically resolvable state: clean a prefixed H1, preserve the
+  configured display prefix in the basename/link target, map legacy term/reference
+  fields to the configured Reference fields, and deduplicate aliases and `sources`
+  by canonical identity.
+- Resolve every Literature provenance link to its original Resource before writing
+  `sources`. If the Resource is missing, ambiguous, or the Literature note's source
+  does not match it, skip that value and report it; do not substitute the Literature
+  path or invent a Resource.
+- If both a Literature link and its Resource are present, retain one Resource value.
+  For an existing Literature→Reference ledger edge, stage an append-only tombstone
+  for the obsolete edge and the corrected Resource→Reference edge in the same
+  `mutations.json`; never edit or delete a historical ledger row.
+- Validate the configured Reference folder, type, and field mappings before changing a
+  note. Skip incompatible or unusual structures and report their exact path/reason.
+
+Offer `all`, `selected`, `lazy`, or `defer` scope. `selected` accepts only explicit
+vault-relative paths. `lazy` records authorization and waits until first access;
+`defer` leaves the note untouched. A mechanical migration never changes body meaning.
+
+For selected notes whose body is not already a bounded lookup, start a `migration`
+Reference work through `/using-slipbox`, re-verify the original Literature notes,
+Resources, and source-map fingerprints, and checkpoint before editing the draft. Classify
+each removed or displaced passage as `already preserved source detail`, `reader-owned
+Evergreen candidate`, `unsupported`, or `unresolved`. Preserve each classification in
+the migration synthesis map and surface it to the user. Only the user may approve a
+semantic reclassification; never silently delete material, turn a Person/Location/
+Organization into a Reference, or publish an incomplete draft.
+
+If interrupted, resume the same `work_id` from `manifest.json`, `synthesis-map.json`,
+and `draft.md`. Recompute fingerprints for the Reference target, every Resource and
+Literature input, source-map entries, and `links.jsonl` before finalization. A changed
+input blocks publication and preserves the recoverable work for repair.

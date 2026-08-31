@@ -270,6 +270,57 @@
         {"type": "contains", "text": "resumable"},
         {"type": "contains", "text": "expected_fingerprint"}
       ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note whose sources contains both [[Literature/foo]] and [[Resource/foo]], whose H1 is prefixed, and whose links ledger has a Literature→Reference edge.",
+      "expected_output": "Audits first, then mechanically cleans the H1, deduplicates provenance to the original Resource, appends a tombstone for the obsolete Literature→Reference edge, and records the corrected Resource→Reference edge transactionally. It preserves the configured prefixed basename/link target and does not rewrite body meaning.",
+      "assertions": [
+        {"type": "contains", "text": "deduplicates"},
+        {"type": "contains", "text": "original Resource"},
+        {"type": "contains", "text": "tombstone"},
+        {"type": "contains", "text": "transactionally"},
+        {"type": "not_contains", "text": "Literature/foo"}
+      ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note whose Literature source resolves to no Resource.",
+      "expected_output": "Skips that provenance value, reports the unresolved Resource, leaves the note and ledger unchanged for repair, and does not substitute the Literature path or invent a Resource.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "leaves the note"},
+        {"type": "not_contains", "text": "invent a Resource"}
+      ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note with a detailed generative essay and a source-by-source dossier, selecting only this note.",
+      "expected_output": "Starts scoped migration work, re-verifies original Literature and Resource inputs, and classifies every removed passage as already preserved source detail, reader-owned Evergreen candidate, unsupported, or unresolved. It surfaces classifications for user approval and never silently deletes or reclassifies material.",
+      "assertions": [
+        {"type": "contains", "text": "already preserved source detail"},
+        {"type": "contains", "text": "reader-owned Evergreen candidate"},
+        {"type": "contains", "text": "unsupported"},
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "user approval"},
+        {"type": "contains", "text": "never silently"}
+      ]
+    },
+    {
+      "prompt": "A legacy note selected for semantic Reference migration is actually a Person note.",
+      "expected_output": "Excludes it from Reference migration as a surfacing-only Mentioned referent and leaves it unchanged.",
+      "assertions": [
+        {"type": "contains", "text": "Person"},
+        {"type": "contains", "text": "Mentioned"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
+      "prompt": "Semantic Reference migration was interrupted after its synthesis checkpoint.",
+      "expected_output": "Resumes the same migration work_id from manifest.json, synthesis-map.json, and draft.md, recomputes fingerprints for every Literature, Resource, source-map, target, and links.jsonl input, and blocks publication on any changed input while preserving recoverable work.",
+      "assertions": [
+        {"type": "contains", "text": "same migration work_id"},
+        {"type": "contains", "text": "recomputes fingerprints"},
+        {"type": "contains", "text": "blocks publication"},
+        {"type": "contains", "text": "recoverable work"}
+      ]
     }
   ]
 }

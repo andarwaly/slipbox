@@ -146,6 +146,21 @@
         {"type": "contains", "text": "untracked"},
         {"type": "contains", "text": "tracked"}
       ]
+    },
+    {
+      "prompt": "Re-run setup in a vault with legacy Reference notes: one has a prefixed H1 and Literature plus Resource in sources, one has an unresolved Literature source, and the ledger contains a Literature→Reference edge.",
+      "expected_output": "Runs a read-only mechanical audit reporting prefixed H1, legacy fields, duplicates, unresolved provenance, configured zone/type drift, and the wrong ledger edge. Offers Reference migration all/selected/lazy/defer independently; repairs only resolvable notes with clean H1, deduplicated original Resource provenance, append-only tombstones, and corrected Resource→Reference edges, while skipping unresolved structures.",
+      "assertions": [
+        {"type": "contains", "text": "mechanical audit"},
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "all"},
+        {"type": "contains", "text": "selected"},
+        {"type": "contains", "text": "lazy"},
+        {"type": "contains", "text": "defer"},
+        {"type": "contains", "text": "tombstone"},
+        {"type": "contains", "text": "Resource→Reference"},
+        {"type": "not_contains", "text": "silently"}
+      ]
     }
   ]
 }

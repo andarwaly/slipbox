@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Setup Slipbox
@@ -176,6 +176,21 @@ On first run and re-run, inspect existing cache/source-map metadata and report c
 For each existing Literature note, reconcile its `## Core Idea`, `## Source Points` (and legacy `## Key Claims`), `## Key Concepts`, `## Mentioned`, and `## Open Questions` against source units. Record the reconciliation privately with one status per mapped item: `matched`, `matched-with-qualification-risk`, `matched-to-multiple-units`, `unmatched`, or `source-support-unclear`. A missing or unresolved Resource blocks reconciliation for that note and is reported for repair. Reconciliation is source-first and diagnostic: it must not rewrite note semantics automatically.
 
 Offer these independent choices for cache work: build missing + incompatible (recommended), build a chosen scope, refresh all, or defer. Then, separately, offer legacy note-format migration choices: rename the exact `## Key Claims` heading to `## Source Points` where the structure is compatible, migrate selected notes, migrate all compatible notes, migrate lazily/on first access, or defer. **Lazy/on-first-access** records authorization without changing notes during setup; the exact heading rename happens only when a compatible note is subsequently opened by a slipbox workflow. **Defer** records no authorization and leaves the migration for a later explicit setup run. Do not rename headings inside unusual or incompatible structures; skip them and report the reason. Cache authorization, heading migration authorization, and any later Reference migration authorization are separate questions; agreeing to one never implies another. A deferred migration leaves existing notes and caches untouched.
+
+### Reference migration inventory and authorization
+
+Reference migration is a third, independent decision after cache and Literature-heading migration. Never infer authorization from either of those choices. First run a read-only mechanical audit of every configured Reference zone (and any legacy `paths.term` zone when present), reporting counts and paths for:
+
+- prefixed or otherwise non-clean H1 headings;
+- legacy `term`/`reference` type or field names, including `term`, `source`, `literature`, and `references` provenance fields;
+- duplicate aliases, duplicate provenance values, and notes that list both a Literature note and its original Resource;
+- Literature links in `sources`, unresolved source links, and Literature→Reference ledger edges;
+- notes whose configured type, folder, or field map is missing or incompatible; and
+- ledger entries that need a tombstone before a corrected Resource→Reference edge can be recorded.
+
+For resolvable records, the mechanical repair normalizes the H1 to the clean concept name, converts legacy provenance to the configured `sources` field containing deduplicated original Resource links, removes case-insensitive alias duplicates, and appends link tombstones plus corrected Resource→Reference events in one recoverable migration operation. It must not guess through an unresolved source, change a body, or delete a ledger row; unresolved structures are skipped and reported for repair.
+
+Offer `all`, `selected`, `lazy`, or `defer` for Reference migration. `selected` requires explicit vault-relative note paths. `lazy` records authorization and performs the same audit/repair only when that Reference is first opened by a slipbox workflow; `defer` records no authorization. Keep these choices independent from cache and Literature-heading migration, and never silently migrate a Person, Location, or Organization note into Reference.
 
 ### 07 - Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
 
