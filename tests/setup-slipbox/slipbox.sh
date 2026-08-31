@@ -128,16 +128,24 @@ else:
         if not (set(cache) == {"source_maps"} and set(cache["source_maps"]) == {"persistence"} and cache["source_maps"]["persistence"] in {"local","tracked"}): return False
         migrations = candidate.get("migrations", {})
         if not isinstance(migrations, dict): return False
+        if set(migrations) - {"reference", "literature_headings", "evergreen_headings"}: return False
         reference = migrations.get("reference")
         literature_headings = migrations.get("literature_headings")
         evergreen_headings = migrations.get("evergreen_headings")
-        for policy in (literature_headings, evergreen_headings):
-            if policy is not None and (not isinstance(policy, dict) or set(policy) - {"mode", "selected"} or policy.get("mode") not in {"all-valid", "all-compatible", "selected", "lazy", "defer"}): return False
-            if policy and policy["mode"] == "selected" and (not isinstance(policy.get("selected"), list) or not policy["selected"]): return False
-            if policy and policy.get("selected") and policy["mode"] != "selected": return False
+        def valid_policy(policy, modes):
+            if policy is None: return True
+            if not isinstance(policy, dict) or set(policy) - {"mode", "selected"} or policy.get("mode") not in modes: return False
+            selected = policy.get("selected")
+            if policy["mode"] == "selected" and (not isinstance(selected, list) or not selected): return False
+            if policy["mode"] != "selected" and "selected" in policy: return False
+            if selected is not None and any(not isinstance(path, str) or not path or path.startswith("/") or any(part in {".", ".."} for part in path.split("/")) for path in selected): return False
+            return True
+        if not valid_policy(literature_headings, {"all-valid", "all-compatible", "selected", "lazy", "defer"}): return False
+        if not valid_policy(evergreen_headings, {"all-valid", "selected", "lazy", "defer"}): return False
         if reference is not None and not isinstance(reference, dict): return False
         if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","all-valid","selected","lazy","defer"}): return False
         if reference and reference["mode"] == "selected" and (not isinstance(reference.get("selected"), list) or not reference["selected"]): return False
+        if reference and reference["mode"] != "selected" and "selected" in reference: return False
         if reference and reference.get("selected"):
             import re
             if any(not isinstance(path, str) or not path or path.startswith("/") or any(part in {".", ".."} for part in path.split("/")) for path in reference["selected"]): return False
@@ -157,6 +165,18 @@ reference_migration["migrations"]["reference"] = "selected"
 assert valid(reference_migration) is False
 reference_migration["migrations"]["reference"] = []
 assert valid(reference_migration) is False
+evergreen_migration = copy.deepcopy(base)
+evergreen_migration["migrations"] = {"evergreen_headings": {"mode":"all-compatible"}}
+assert valid(evergreen_migration) is False
+unknown_migration = copy.deepcopy(base)
+unknown_migration["migrations"] = {"unknown": {"mode":"defer"}}
+assert valid(unknown_migration) is False
+bad_path_migration = copy.deepcopy(base)
+bad_path_migration["migrations"] = {"evergreen_headings": {"mode":"selected", "selected":["../note.md"]}}
+assert valid(bad_path_migration) is False
+empty_selected = copy.deepcopy(base)
+empty_selected["migrations"] = {"evergreen_headings": {"mode":"lazy", "selected":[]}}
+assert valid(empty_selected) is False
 PY
 pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
 
@@ -180,6 +200,9 @@ assert_contains "setup detects legacy prefixed H1s across note types" "prefixed 
 assert_contains "setup offers all-valid migration" "all-valid" "$SETUP_SKILL"
 assert_contains "setup skips unusual note structures" "unusual or incompatible structures" "$SETUP_SKILL"
 assert_contains "runtime asset keeps H1s clean" "H1 headings remain clean/unprefixed" "$REPO_ROOT/skills/setup-slipbox/assets/AGENTS.md"
+assert_contains "fallback rejects unknown migration keys" "set(migrations) - {\"reference\", \"literature_headings\", \"evergreen_headings\"}" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
+assert_contains "fallback validates policy-specific modes" "valid_policy" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
+assert_contains "fallback rejects traversal in every selected policy" "path.split(\"/\")" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
