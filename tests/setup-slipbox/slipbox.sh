@@ -112,7 +112,7 @@ else:
     # equivalent for every contract constraint exercised here.
     def valid(candidate):
         required = {"paths","filenames","frontmatter","links","templates","transcript_languages","prefixes","git","cache"}
-        if not isinstance(candidate, dict) or set(candidate) != required: return False
+        if not isinstance(candidate, dict) or not required.issubset(candidate) or set(candidate) - required - {"migrations"}: return False
         if set(candidate["paths"]) != {"resources","literature","evergreen","reference"} or not all(isinstance(v,str) for v in candidate["paths"].values()): return False
         casing = {"kebab-case","Title Case","snake_case","Sentence case","verbatim","other"}
         if set(candidate["filenames"]) != {"literature","reference","evergreen"} or not all(v in casing for v in candidate["filenames"].values()): return False
@@ -125,12 +125,24 @@ else:
         git = candidate["git"]
         if set(git) != {"mode","commit_style","activity_trailers"} or git["mode"] not in {"off","ask","auto"} or set(git["commit_style"]) != {"mode"} or git["commit_style"]["mode"] not in {"detected","fallback"} or not isinstance(git["activity_trailers"],bool): return False
         cache = candidate["cache"]
-        return set(cache) == {"source_maps"} and set(cache["source_maps"]) == {"persistence"} and cache["source_maps"]["persistence"] in {"local","tracked"}
+        if not (set(cache) == {"source_maps"} and set(cache["source_maps"]) == {"persistence"} and cache["source_maps"]["persistence"] in {"local","tracked"}): return False
+        migrations = candidate.get("migrations", {})
+        if not isinstance(migrations, dict): return False
+        reference = migrations.get("reference")
+        if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","selected","lazy","defer"}): return False
+        if reference and reference["mode"] == "selected" and not isinstance(reference.get("selected"), list): return False
+        if reference and reference["mode"] != "selected" and "selected" in reference: return False
+        return True
 assert valid({**base, "git": {**base["git"], "mode":"never"}}) is False
 assert valid({**base, "cache": {"source_maps":{}}}) is False
 tracked_work = copy.deepcopy(base)
 tracked_work["cache"]["work"] = {"persistence":"tracked"}
 assert valid(tracked_work) is False
+reference_migration = copy.deepcopy(base)
+reference_migration["migrations"] = {"reference": {"mode":"selected", "selected":["reference/legacy-note.md"]}}
+assert valid(reference_migration) is True
+reference_migration["migrations"]["reference"] = {"mode":"selected"}
+assert valid(reference_migration) is False
 PY
 pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
 
@@ -149,6 +161,7 @@ done
 assert_contains "cache and note-format authorization stay separate" "separate" "$SETUP_SKILL"
 assert_contains "local cache ignore is conditional" 'when cache persistence is `local`' "$SETUP_SKILL"
 assert_contains "tracked source-map cache omits ignore" "Never add an ignore rule for tracked source maps" "$SETUP_SKILL"
+assert_contains "reference migration authorization is schema-backed" 'reference: {mode: all|selected|lazy|defer' "$SETUP_SKILL"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
@@ -354,6 +367,19 @@ PY
 check_exit "failed ledger compensation requires repair" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 SLIPBOX_TEST_FAIL_COMPENSATION=1 "$SLIPBOX" work finalize "$repair_id"
 check_json "compensation failure records repair-required diagnostics" 'assert data["status"] == "repair-required" and data["repair_errors"]' <<<"$("$SLIPBOX" work inspect "$repair_id")"
 check_json "uncompensated ledger addition remains visible" 'assert len(data) == 1 and data[0]["source_slug"] == "repair-source"' <<<"$("$SLIPBOX" links find --source repair-source --target repair-target --rel extends)"
+printf '%s\n' '{"op":"add","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"}' >> "$SCRATCH/links.jsonl"
+result=$("$SLIPBOX" work create --kind migration --activity reference-ledger-normalize)
+normalize_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"remove","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"}' '{"op":"add","source_slug":"resource-source","target_slug":"reference-target","rel_type":"extends"}' > "$SCRATCH/work/$normalize_id/events.jsonl"
+python3 - "$SCRATCH/work/$normalize_id/manifest.json" "$SCRATCH/links.jsonl" <<'PY'
+import hashlib, json, sys
+p, links = sys.argv[1:]
+m = json.load(open(p)); m["status"] = "ready-to-finalize"
+m["mutations"] = [{"path":"links.jsonl", "expected_fingerprint":"sha256:" + hashlib.sha256(open(links, "rb").read()).hexdigest(), "replacement_path":"events.jsonl", "kind":"ledger-events", "events":[{"op":"remove","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"},{"op":"add","source_slug":"resource-source","target_slug":"reference-target","rel_type":"extends"}]}]
+json.dump(m, open(p, "w"))
+PY
+check "ledger migration events finalize transactionally" "$SLIPBOX" work finalize "$normalize_id"
+check_json "ledger migration tombstone and replacement fold in order" 'assert len(data) == 1 and data[0]["source_slug"] == "resource-source"' <<<"$("$SLIPBOX" links find --target reference-target --rel extends)"
 cp "$SCRATCH/links-before-publication-tests.jsonl" "$SCRATCH/links.jsonl"
 
 result=$("$SLIPBOX" work create --kind literature --activity lock-contention)

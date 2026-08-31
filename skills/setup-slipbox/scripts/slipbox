@@ -404,21 +404,22 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
         replacement_file = work_dir / replacement_path
         if not replacement_file.is_file(): fail(f"replacement file not found: {replacement}")
         kind = mutation.get("kind", "artifact")
-        if kind in {"ledger-add", "link-add"}:
+        if kind in {"ledger-add", "link-add", "ledger-events"}:
             if path_value != "links.jsonl": fail("ledger mutations must target links.jsonl")
-            for key in ("source_slug", "target_slug", "rel_type"):
-                if not isinstance(mutation.get(key), str) or not mutation[key].strip(): fail(f"ledger mutation requires {key}")
-            if mutation["rel_type"] not in {"cites", "extends"}: fail("ledger mutation rel_type must be cites or extends")
             try:
                 ledger_lines = replacement_file.read_text(encoding="utf-8").splitlines()
-                if len(ledger_lines) != 1 or not ledger_lines[0].strip(): raise ValueError("exactly one event is required")
+                if not ledger_lines or any(not line.strip() for line in ledger_lines): raise ValueError("at least one event is required")
+                if kind != "ledger-events":
+                    for key in ("source_slug", "target_slug", "rel_type"):
+                        if not isinstance(mutation.get(key), str) or not mutation[key].strip(): raise ValueError(f"ledger mutation requires {key}")
+                    if mutation["rel_type"] not in {"cites", "extends"}: raise ValueError("ledger mutation rel_type must be cites or extends")
                 for line in ledger_lines:
                     row = json.loads(line)
                     if not isinstance(row, dict): raise ValueError("event must be an object")
                     if set(row) != {"op", "source_slug", "target_slug", "rel_type"}: raise ValueError("event has unknown or missing fields")
                     canonical = normalize_link_event(row)
-                    if canonical["op"] != "add": raise ValueError("ledger replacement events must be adds")
-                    if canonical["source_slug"] != mutation["source_slug"] or canonical["target_slug"] != mutation["target_slug"] or canonical["rel_type"] != mutation["rel_type"]:
+                    if kind != "ledger-events" and canonical["op"] != "add": raise ValueError("ledger replacement events must be adds")
+                    if kind != "ledger-events" and (canonical["source_slug"] != mutation["source_slug"] or canonical["target_slug"] != mutation["target_slug"] or canonical["rel_type"] != mutation["rel_type"]):
                         raise ValueError("ledger event does not match mutation identity")
             except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
                 fail(f"invalid ledger replacement: {exc}")
@@ -443,7 +444,7 @@ def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path
         target.parent.mkdir(parents=True, exist_ok=True)
         replacement = work_dir / mutation["replacement_path"]
         replacement_bytes = backups[index]["replacement_bytes"]
-        if mutation.get("kind") in {"ledger-add", "link-add"}:
+        if mutation.get("kind") in {"ledger-add", "link-add", "ledger-events"}:
             with target.open("ab") as handle: handle.write(replacement_bytes)
             applied.append(index)
             try: replacement.unlink()
@@ -467,10 +468,13 @@ def compensate(mutations: list[dict], backups: list[dict], applied: list[int], v
         mutation, backup = mutations[index], backups[index]
         try:
             target = _safe_vault_path(vault_root, mutation["path"])
-            if mutation.get("kind") in {"ledger-add", "link-add"}:
+            if mutation.get("kind") in {"ledger-add", "link-add", "ledger-events"}:
                 ledger = vault_root / "links.jsonl"
-                row = {"op": "remove", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}
-                with ledger.open("a", encoding="utf-8") as handle: handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+                events = mutation.get("events") or [{"op": "add", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}]
+                with ledger.open("a", encoding="utf-8") as handle:
+                    for event in reversed(events):
+                        inverse = {"op": "remove" if event["op"] == "add" else "add", "source_slug": event["source_slug"], "target_slug": event["target_slug"], "rel_type": event["rel_type"]}
+                        handle.write(json.dumps(inverse, separators=(",", ":")) + "\n")
             elif backup["existed"]:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 fd, tmp = tempfile.mkstemp(prefix=".slipbox-rollback-", dir=str(target.parent))

@@ -258,13 +258,19 @@ provenance, and every related `links.jsonl` row.
 - If both a Literature link and its Resource are present, retain one Resource value.
   For an existing Literature→Reference ledger edge, stage an append-only tombstone
   for the obsolete edge and the corrected Resource→Reference edge in the same
-  `mutations.json`; never edit or delete a historical ledger row.
+  `mutations.json` as one `ledger-events` mutation whose replacement JSONL preserves
+  that event order. Never stage duplicate `links.jsonl` paths or edit/delete a
+  historical ledger row.
 - Validate the configured Reference folder, type, and field mappings before changing a
   note. Skip incompatible or unusual structures and report their exact path/reason.
 
 Offer `all`, `selected`, `lazy`, or `defer` scope. `selected` accepts only explicit
 vault-relative paths. `lazy` records authorization and waits until first access;
 `defer` leaves the note untouched. A mechanical migration never changes body meaning.
+Mixed provenance is allowed: publish resolvable Resource values while showing unresolved
+values and retaining them in the migration map as blocked repairs. Unresolved values do
+not block unrelated resolvable values unless they make the candidate's identity or
+definition ambiguous.
 
 For selected notes whose body is not already a bounded lookup, start a `migration`
 Reference work through `/using-slipbox`, re-verify the original Literature notes,
