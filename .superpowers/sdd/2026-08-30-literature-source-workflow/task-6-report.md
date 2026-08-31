@@ -37,3 +37,26 @@ migration-mode coverage: PASS (selected, all, lazy, defer)
 ```
 
 Additional verification: both eval files parse as JSON and `git diff --check` passes.
+
+## Round 2
+
+- Made lazy/on-first-access a real setup choice: authorization is recorded without immediate edits, and exact compatible heading migration occurs when a note is first opened by a slipbox workflow. Defer remains a separate no-authorization option.
+
+Verification:
+
+```bash
+rg -n "lazy/on first access|Lazy/on-first-access|first access" skills/setup-slipbox/SKILL.md docs/setup-slipbox.md tests/setup-slipbox/evals.json
+python3 -m json.tool tests/setup-slipbox/evals.json >/dev/null
+python3 -m json.tool tests/make-literature-note/evals.json >/dev/null
+git diff --check
+```
+
+Output:
+
+```text
+skills/setup-slipbox/SKILL.md:177:Offer these independent choices ... migrate lazily/on first access ... Lazy/on-first-access ... subsequently opened ...
+docs/setup-slipbox.md:28:Setup reports cache inventory counts ... lazy/on first access ... subsequently opened ...
+tests/setup-slipbox/evals.json:58: The user chooses lazy migration ... migrate on first access rather than immediately.
+```
+
+All commands exited successfully.
