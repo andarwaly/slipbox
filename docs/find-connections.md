@@ -50,9 +50,10 @@ connections relating to just those notes, instead of a whole-vault scan.
    cross the threshold together, with the variant labels themselves carried forward as
    `alt_names` candidates on write.
 3. **Classify each cluster crossing threshold** — entity-check first (is this a person,
-   place, or organization, real or fictional?), then the reusability test (deletion test
-   + declarative-title test) for anything that isn't an entity, including named books/
-   creative works, tools, and events.
+   place, or organization, real or fictional?), then the remaining admission sequence
+   (stable lookup identity, source independence, boundedness, adaptive evidence
+   sufficiency, and natural-unit scope) for anything that isn't an entity, including
+   named books/creative works, tools, and events.
 4. **Present as a batch** — every candidate crossing threshold (Reference and concrete
    Mentioned candidates alike) shown together, never auto-written. For an approved
    Reference candidate, the user invokes `/make-reference-note` themselves — this skill never

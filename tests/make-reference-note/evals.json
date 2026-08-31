@@ -75,6 +75,54 @@
         {"type": "contains", "text": "aliases: [\"Zettelkasten\"]"},
         {"type": "contains", "text": "extends"}
       ]
+    },
+    {
+      "prompt": "make-reference-note for an authoritative one-source standard with a stable lookup label",
+      "expected_output": "Admits the bounded Reference because entity exclusion, stable lookup identity, source independence, boundedness, adaptive evidence sufficiency, and natural-unit scope pass in that order; one authoritative source is sufficient for this settled standard.",
+      "assertions": [
+        {"type": "contains", "text": "one authoritative source"},
+        {"type": "contains", "text": "stable lookup identity"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a source-specific coined term with no independent support",
+      "expected_output": "Leaves the candidate unresolved rather than admitting it as a Reference note; source independence is not established.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "independent support"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a contested definition supported by only one source",
+      "expected_output": "Leaves the candidate unresolved until independent support is available; adaptive evidence sufficiency scales with contestability.",
+      "assertions": [
+        {"type": "contains", "text": "independent support"},
+        {"type": "contains", "text": "contested"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a person, location, or organization",
+      "expected_output": "Excludes the entity from Reference admission and keeps it as a surfacing-only Mentioned referent.",
+      "assertions": [
+        {"type": "contains", "text": "surfacing-only"},
+        {"type": "contains", "text": "Mentioned"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a named framework whose functionally dependent substeps appear in the source",
+      "expected_output": "Admits one Reference note for the framework and keeps its substeps inside that natural unit, without separate promoted notes.",
+      "assertions": [
+        {"type": "contains", "text": "one Reference note"},
+        {"type": "contains", "text": "substeps inside"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a candidate that has not passed the lookup admission sequence",
+      "expected_output": "Does not invoke a title-shape heuristic; it reports the failed admission check and stops unresolved.",
+      "assertions": [
+        {"type": "not_contains", "text": "declarative-title"},
+        {"type": "contains", "text": "unresolved"}
+      ]
     }
   ]
 }

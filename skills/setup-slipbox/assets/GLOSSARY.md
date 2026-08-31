@@ -2,8 +2,8 @@
 
 Every jargon term used across the slipbox skill family, flat and alphabetical. Each entry states what the term IS, not how to use it.
 
-**Admission test**
-The reusability check a candidate concept must pass to qualify for a Reference note: does the note survive if its source disappears (deletion test), and can it compress into a declarative, subject-plus-verb title (declarative-title test). Also called the reusability test. The same string can resolve to different types depending on how a given claim uses it — e.g. "Ship30" as a writing method passes this test and becomes a Reference note, while "Ship30" as the brand/organization running that method is surfacing-only, decided by the entity-check that runs first, not by the string alone.
+**Admission sequence**
+The ordered Reference-note lookup gate: entity exclusion; stable lookup identity; source independence; boundedness; adaptive evidence sufficiency; and natural-unit scope. A one-source authoritative standard may pass, while a source-specific term without independent support remains unresolved. No title-shape check is invoked.
 _Avoid_: Origin test (the retired, superseded predecessor that gated on who coined the concept first; see its own entry, not this one).
 
 **Assumption** (the Open Question kind)
@@ -55,14 +55,6 @@ The user's inquiry and the source passage or surrounding material that determine
 
 **Reader-owned proposition**
 The user's interpretation, evaluation, synthesis, or personal stance. It does not belong in a Literature note and routes to an Evergreen note when appropriate.
-
-**Declarative-title test**
-Half of the Admission test: can the candidate concept compress into a subject-plus-verb claim with no "According to X..." framing.
-_Avoid_: Deletion test (the Admission test's other half, checking survival independent of the source rather than title shape).
-
-**Deletion test**
-Half of the Admission test: does the candidate concept survive as meaningful if the source that mentions it disappears.
-_Avoid_: Declarative-title test (the Admission test's other half, checking title shape rather than source-independence).
 
 **Discovery walk**
 The grounding technique for a blank answer with a source present, chosen by the user over trying to explain first: reveal one passage at a time, asking a prediction question before each next passage rather than after.
@@ -179,7 +171,7 @@ A named concept, method, tool, framework, or stable fact with a reusable label, 
 _Avoid_: Reference note (the file the Reference's definition accumulates into, not the concept itself).
 
 **Reference note**
-The cumulative file a Reference's definition lives in: evergreen-shaped but holding a stable, reusable fact rather than personal synthesis, extended across however many sources touch it, appending or extending but never overwriting what's already there.
+The cumulative file a Reference's bounded, reusable definition lives in, extended across however many sources touch it without wholesale replacement.
 _Avoid_: Literature note (per-source, one-shot, holds Source Points rather than a definition); Evergreen note (can be wholesale rewritten; a Reference note only ever appends).
 
 **Resource**

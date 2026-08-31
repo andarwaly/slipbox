@@ -55,6 +55,23 @@
         {"type": "not_contains", "text": "Reference candidate"},
         {"type": "not_contains", "text": "make-reference-note"}
       ]
+    },
+    {
+      "prompt": "find-connections --references where a candidate appears in a source-map cache but was not retained in any final Literature note",
+      "expected_output": "Does not surface the cached candidate. Caches may verify a selected candidate only; discovery reads final Literature Key Concepts, Mentioned, and relevant retained prose.",
+      "assertions": [
+        {"type": "contains", "text": "not surface"},
+        {"type": "contains", "text": "final Literature"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where two variant labels recur but one source-specific label lacks independent support",
+      "expected_output": "Clusters labels before counting, then applies the ordered admission sequence. The unresolved candidate is reported without invoking a title-shape test.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "admission sequence"},
+        {"type": "not_contains", "text": "declarative-title"}
+      ]
     }
   ]
 }

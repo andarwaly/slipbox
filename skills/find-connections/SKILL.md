@@ -39,9 +39,10 @@ narrow scope to connections relating to just those notes, instead of a whole-vau
 
 ### Scan
 
-Scan literature notes' `## Key Concepts` **and** `## Mentioned` sections **and** other
-mentions of the same or similar things elsewhere in notes' bodies — not just formally
-wikilinked Key Concepts/Mentioned entries. This scan does not extend to `##
+Read the final Literature notes' `## Key Concepts` **and** `## Mentioned` sections,
+plus relevant retained prose — not just one source's cache or an unretained candidate.
+Source-map caches may verify a selected candidate, but never surface a candidate that
+was not retained in a Literature note. This scan does not extend to `##
 Open Questions`: no cross-note tracking or indexing exists for open questions, deferred
 by design — that section is read back directly by the user, not surfaced through this
 skill. The same underlying idea can surface under different labels in
@@ -76,11 +77,10 @@ in this order — entity-check first, then the reusability test:
      Report it the same way as a Reference candidate (recurrence threshold,
      batch-presented), just without ever attempting a write.
    - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
-2. **Reusability test** (only if not an entity; see `GLOSSARY.md` for deletion test and declarative-title test definitions).
-   - Passes both: Reference-note candidate.
-   - Fails either, or the check is never reached (cluster never crosses threshold):
-     stays an unresolved broken wikilink indefinitely. This is a legitimate resting
-     state, not a defect to resolve.
+2. **Remaining admission sequence** (only if not an entity; see `CONTEXT.md` and
+   `GLOSSARY.md`): stable lookup identity, source independence, boundedness, adaptive
+   evidence sufficiency, and natural-unit scope. A candidate that fails any check, or
+   never reaches threshold, stays an unresolved broken wikilink indefinitely.
 
 Non-entity books/creative works, named tools, and events continue to the reusability
 test. If they pass, report them as Reference-note candidates; if they fail, leave them
