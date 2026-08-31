@@ -258,6 +258,11 @@ check_no_tmp_files "no leftover .tmp files after writes" "$SCRATCH/evergreen"
 
 echo "--- links ---"
 check "links add" "$SLIPBOX" links add --source "final-test-1" --target "some-term" --rel cites
+for event in '{"op":"add","source_slug":0,"target_slug":"some-term","rel_type":"cites"}' '{"op":"add","source_slug":"","target_slug":"some-term","rel_type":"cites"}' '{"op":"add","source_slug":"final-test-1","target_slug":"","rel_type":"cites"}'; do
+  printf '%s\n' "$event" >> "$SCRATCH/links.jsonl"
+  check_exit "links reject invalid source/target slug" 1 "$SLIPBOX" links find
+  sed -i '' '$d' "$SCRATCH/links.jsonl"
+done
 check_exit "links add rejects invalid --rel" 2 "$SLIPBOX" links add --source a --target b --rel bogus
 check "links find with no filters returns everything" "$SLIPBOX" links find
 check_eq "links find returns the inserted edge" 1 "$("$SLIPBOX" links find | json_len)"
@@ -321,6 +326,33 @@ check_json "work resume returns state" 'assert data["work_id"] == "'"$work_id"'"
 check "work discard accepts --yes" "$SLIPBOX" work discard "$work_id" --yes --no-input
 check_no_file "discard removes selected work only" "$SCRATCH/work/$work_id/manifest.json"
 check_exit "work discard does not age-delete anything" 0 "$SLIPBOX" work list
+printf 'baseline\n' > "$SCRATCH/baseline.md"
+printf 'new\n' > "$SCRATCH/new-affected.md"
+NEW_AFFECTED_FP="sha256:$(shasum -a 256 "$SCRATCH/new-affected.md" | cut -d' ' -f1)"
+BASELINE_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity baseline --affected-path baseline.md)" | json_at '["work_id"]')
+printf 'drifted\n' > "$SCRATCH/baseline.md"
+check_json "work update records new affected baseline" 'assert data["affected_starting_fingerprints"]["new-affected.md"] == "'"$NEW_AFFECTED_FP"'"' <<<"$($SLIPBOX work update "$BASELINE_ID" --affected-path new-affected.md)"
+check_json "work resume blocks drift on unchanged affected path" 'assert data["status"] == "blocked" and not data["resumable"]' <<<"$($SLIPBOX work resume "$BASELINE_ID")"
+check "$SLIPBOX work discard --yes --no-input" "$SLIPBOX" work discard "$BASELINE_ID" --yes --no-input
+check_exit "work create rejects absolute source" 1 "$SLIPBOX" work create --kind literature --activity bad --source /etc/passwd
+check_exit "work create rejects traversal target" 1 "$SLIPBOX" work create --kind literature --activity bad --target ../escape.md
+OUTSIDE_WORK=$(mktemp -d)
+ln -s "$OUTSIDE_WORK" "$SCRATCH/escape-link"
+check_exit "work create rejects symlink escape affected path" 1 "$SLIPBOX" work create --kind literature --activity bad --affected-path escape-link/out.md
+SECURITY_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity security --source safe-source.md --target safe-target.md --affected-path safe-affected.md)" | json_at '["work_id"]')
+check_exit "work update rejects absolute source" 1 "$SLIPBOX" work update "$SECURITY_ID" --source /etc/passwd
+check_exit "work update rejects traversal target" 1 "$SLIPBOX" work update "$SECURITY_ID" --target ../escape.md
+check_exit "work update rejects symlink escape source" 1 "$SLIPBOX" work update "$SECURITY_ID" --source escape-link/in.md
+check_exit "work update rejects symlink escape affected path" 1 "$SLIPBOX" work update "$SECURITY_ID" --affected-path escape-link/in.md
+printf 'changed source\n' > "$SCRATCH/changed-source.md"
+printf 'changed target\n' > "$SCRATCH/changed-target.md"
+SOURCE_FP="sha256:$(shasum -a 256 "$SCRATCH/changed-source.md" | cut -d' ' -f1)"
+TARGET_FP="sha256:$(shasum -a 256 "$SCRATCH/changed-target.md" | cut -d' ' -f1)"
+check_json "work update refreshes changed source and target baselines" 'assert data["source_starting_fingerprint"] == "'"$SOURCE_FP"'" and data["target_starting_fingerprint"] == "'"$TARGET_FP"'"' <<<"$($SLIPBOX work update "$SECURITY_ID" --source changed-source.md --target changed-target.md)"
+printf 'drifted affected\n' > "$SCRATCH/safe-affected.md"
+check_json "work update does not refresh re-supplied existing affected baseline" 'assert data["affected_starting_fingerprints"]["safe-affected.md"] != "sha256:" + __import__("hashlib").sha256(b"drifted affected\\n").hexdigest()' <<<"$($SLIPBOX work update "$SECURITY_ID" --affected-path safe-affected.md)"
+check_json "work resume blocks after re-supplied affected drift" 'assert data["status"] == "blocked" and not data["resumable"]' <<<"$($SLIPBOX work resume "$SECURITY_ID")"
+rm -rf "$OUTSIDE_WORK" "$SCRATCH/escape-link"
 
 echo "--- staged publication and compensation ---"
 printf 'before\n' > "$SCRATCH/publish-target.md"
@@ -981,6 +1013,13 @@ check "cache remove accepts explicit confirmation" "$SLIPBOX" cache remove "$RES
 mkdir -p "$SCRATCH/resources"
 printf 'uncached resource\n' > "$SCRATCH/resources/missing.md"
 check_json "cache status reports missing resources" 'assert any(row["state"] == "missing" for row in data)' <<<"$($SLIPBOX cache status)"
+mkdir -p "$SCRATCH/custom-resources"
+printf 'custom frozen resource\n' > "$SCRATCH/custom-resources/custom.md"
+python3 - "$SCRATCH/config.json" <<'PY'
+import json,sys
+p=sys.argv[1]; data=json.load(open(p)); data["paths"]["resources"]="custom-resources"; json.dump(data,open(p,"w"))
+PY
+check_json "cache status scans configured Resource path" 'assert any(row["path"].endswith("custom-resources/custom.md") and row["state"] == "missing" for row in data)' <<<"$($SLIPBOX cache status)"
 printf '{"not":"a cache"}\n' > "$SCRATCH/cache/source-maps/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json"
 check_json "cache status classifies malformed entries as incompatible" 'assert any(row["state"] == "incompatible" and row["fingerprint"].endswith("a" * 64) for row in data)' <<<"$($SLIPBOX cache status)"
 check_exit "cache store rejects absolute source paths" 2 "$SLIPBOX" cache store --source /etc/passwd --file "$SCRATCH/map.json"
@@ -1012,6 +1051,19 @@ check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox
 check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
 check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
 check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
+printf 'old backlog\n' > "$GIT_SCRATCH/.slipbox/old-backlog.md"
+git -C "$GIT_SCRATCH" add . && git -C "$GIT_SCRATCH" commit -qm backlog-base
+RENAME_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind migration --activity backlog-rename --affected-path old-backlog.md)" | json_at '["work_id"]')
+printf 'new backlog\n' > "$GIT_SCRATCH/.slipbox/work/$RENAME_ID/replacement.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$RENAME_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1]; m=json.load(open(p)); m.update(status="ready-to-finalize", mutations=[{"path":"old-backlog.md","new_path":"new-backlog.md","expected_fingerprint":m["affected_starting_fingerprints"]["old-backlog.md"],"replacement_path":"replacement.md","kind":"backlog-events","operation":"rename"}]); json.dump(m,open(p,"w"))
+PY
+check "backlog rename finalizes" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work finalize '$RENAME_ID'"
+check_json "backlog rename publishes both paths" 'assert data["published_paths"] == ["old-backlog.md", "new-backlog.md"]' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$RENAME_ID")"
+check "backlog rename Git commit stages deletion and destination" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$RENAME_ID' --yes"
+check_no_file "backlog old path removed" "$GIT_SCRATCH/.slipbox/old-backlog.md"
+check_file "backlog new path committed" "$GIT_SCRATCH/.slipbox/new-backlog.md"
 printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
 AUTO_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity auto --affected-path auto.md)" | json_at '["work_id"]')
 printf 'auto\n' > "$GIT_SCRATCH/.slipbox/auto.md"

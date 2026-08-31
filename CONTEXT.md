@@ -23,8 +23,10 @@ Source-oriented. Answers what the source chiefly communicates, whether through a
 broadened; see [[reference-note-admission-contract]]):
 Bounded, concept-centered, and lookup-oriented: it holds a stable fact or an
 established/reusable framework rather than personal synthesis, and answers “what is
-X?” It accumulates across resources, extending on repeat runs without wholesale
-replacement. Tools, events, named creative works, and other reusable non-entity
+X?” It accumulates across resources. Warrant-only extensions preserve the existing
+bounded body while adding deduplicated provenance; when a new grounded source changes
+the definition boundary or an essential characteristic, bounded fields may be
+recomposed transactionally. Tools, events, named creative works, and other reusable non-entity
 referents belong here; people, locations, and organizations remain Mentioned and
 surfacing-only.
 

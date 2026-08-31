@@ -2,11 +2,11 @@
 name: make-reference-note
 description: Synthesize an already-grounded Reference note from the literature
   notes that wikilink to it — pulls in each note's grounded characterization,
-  reconciles them into one definition, presents for confirmation, writes.
+  reconciles them into one definition and writes the completed result.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.10.0"
+  version: "1.11.0"
 ---
 
 # Make-reference-note
@@ -53,7 +53,7 @@ manifest's `kind` is `reference`, and its `activity` is one of `create`,
 - `draft.md` — the complete bounded Reference draft, including frontmatter.
 
 Checkpoint work with the reconciled synthesis and bounded draft `/using-slipbox` after
-the source-resolution/admission boundary and again after user confirmation.
+the source-resolution/admission boundary and again after any ambiguity is resolved.
 There is no permanent synthesis cache: `synthesis-map.json` is transient work
 state and is discarded with the work item after publication.
 
@@ -105,7 +105,7 @@ support, leave the candidate's wikilink untouched, and do not create a `work_id`
 artifact operation has actually begun. A direct user invocation does not waive these gates.
 Recurrence count is discovery evidence only; it is never itself a warrant for admission.
 
-## Synthesize and confirm
+## Synthesize and resolve ambiguity
 
 Reconcile the gathered characterizations into one bounded lookup entry. Follow
 `references/bounded-lookup.md`: clean H1, one concise definition, essential
@@ -133,10 +133,10 @@ trail for the current work, not a second note and not a source-by-source body.
   semantics and lifecycle. Record an Evergreen candidate with the proposition,
   reason, and origin paths `/using-slipbox`.
 
-- Present the bounded synthesized definition and resolved Resource provenance to the
-  user for confirmation before writing
-  anything to disk. If extending an existing note, the user's confirmation must keep
-  the result consistent with what's already recorded — not silently contradict it.
+- The user's explicit invocation confirms selection of the named candidate. Do not add
+  a ceremonial confirmation step before writing. Consult the user only when a genuine
+  ambiguity, conflict, naming issue, or scope decision prevents a safe synthesis; once
+  resolved, proceed and report the completed result and path.
 
 ## Write — new reference
 
@@ -185,14 +185,14 @@ Use the shared actions below for every admitted operation:
   extension, include the Resource→Reference link mutation in that same list,
   targeting `links.jsonl` with its own expected fingerprint and one `extends`
   event replacement.
-- Checkpoint work with the confirmed draft `/using-slipbox`, set the manifest to
+- Checkpoint work with the completed draft `/using-slipbox`, set the manifest to
   `ready-to-finalize`, then publish an artifact `/using-slipbox` once. Publication is
   the single compare-and-swap transaction for the note and link mutations;
   never publish the note first and add the link afterward.
 - If validation, preflight, or finalization fails, preserve the work and its
   diagnostics, inspect/resume it only after rechecking fingerprints, and report
   failure or repair-required status. Do not claim publication or discard work
-  without the user's explicit confirmation.
+  without adding any confirmation ritual.
 
 ## Write — extending an existing reference
 
@@ -228,7 +228,7 @@ write — no field resolution needed here.
 
 ## Done
 
-- New reference: the file on disk reflects the confirmed, synthesized definition.
+- New reference: the file on disk reflects the synthesized definition selected by the explicit invocation.
 - Extension: the file on disk reflects every source that has ever fed it, old and new;
   a `links` row (`rel_type: 'extends'`) connects the new resource to the reference
   note.

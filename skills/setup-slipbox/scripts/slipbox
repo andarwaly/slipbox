@@ -181,7 +181,7 @@ def normalize_link_event(row):
     op = row.get("op", "add")
     if op not in ("add", "remove"):
         raise ValueError("op must be add or remove")
-    if not source or not target or not rel:
+    if not isinstance(source, str) or source == "" or not isinstance(target, str) or target == "" or not isinstance(rel, str) or rel == "":
         raise KeyError("source_slug, target_slug, and rel_type")
     if rel not in ("cites", "extends"):
         raise ValueError("rel_type must be cites or extends")
@@ -363,10 +363,18 @@ def file_fingerprint(path: Path) -> str | None:
 
 
 def _safe_vault_path(vault_root: Path, value: str, label="path") -> Path:
+    if not isinstance(value, str):
+        fail(f"{label} must be a vault-relative path")
     path = Path(value)
     if path.is_absolute() or ".." in path.parts or str(path) in {"", "."}:
         fail(f"{label} must be a vault-relative path")
-    return vault_root / path
+    root = vault_root.resolve()
+    candidate = (root / path).resolve(strict=False)
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        fail(f"{label} must stay inside the vault")
+    return candidate
 
 
 def _mutation_fingerprint(path: Path):
@@ -450,9 +458,11 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
 def _lock_paths(vault_root, mutations):
     paths = set()
     for mutation in mutations:
-        paths.add(_safe_vault_path(vault_root, mutation["path"]))
+        _safe_vault_path(vault_root, mutation["path"])
+        paths.add(vault_root / mutation["path"])
         if mutation.get("kind") == "backlog-events":
-            paths.add(_safe_vault_path(vault_root, mutation["new_path"]))
+            _safe_vault_path(vault_root, mutation["new_path"])
+            paths.add(vault_root / mutation["new_path"])
     return sorted(paths, key=lambda p: str(p))
 
 
@@ -718,7 +728,14 @@ if root.is_dir():
       state="incompatible"
     rows.append({"fingerprint":fp, "state":state, "path":str(path)})
 # Missing is reported for frozen Resources without a cache entry.
-for base in (vault / "resources",):
+config_path = vault / "config.json"
+try:
+    config = load_json(str(config_path), "config")
+    resource_dir = config.get("paths", {}).get("resources", "resources")
+except SystemExit:
+    resource_dir = "resources"
+base = _safe_vault_path(vault, resource_dir, "configured Resource path")
+for base in (base,):
   if base.is_dir():
     for resource in sorted(p for p in base.rglob("*") if p.is_file()):
       fp=file_fingerprint(resource)
@@ -769,9 +786,13 @@ if not activity.strip():
 work_id = new_work_id()
 created = now_stamp()
 vault_root = Path(os.environ["WORK_ROOT"]).parent
-source_fp = file_fingerprint(vault_root / source) if source else None
-target_fp = file_fingerprint(vault_root / target) if target else None
 affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
+for label, path in (("--source", source), ("--target", target)):
+    if path: _safe_vault_path(vault_root, path, label)
+for path in affected:
+    _safe_vault_path(vault_root, path, "--affected-path")
+source_fp = file_fingerprint(_safe_vault_path(vault_root, source, "--source")) if source else None
+target_fp = file_fingerprint(_safe_vault_path(vault_root, target, "--target")) if target else None
 for path in (source, target):
     if path and path not in affected: affected.append(path)
 def git_root_and_baselines(paths):
@@ -789,7 +810,7 @@ def git_root_and_baselines(paths):
     return root, baselines
 git_root, git_baselines = git_root_and_baselines(affected)
 manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}, "git_baselines": git_baselines}
-manifest["affected_starting_fingerprints"] = {path: file_fingerprint(vault_root / path) for path in affected}
+manifest["affected_starting_fingerprints"] = {path: file_fingerprint(_safe_vault_path(vault_root, path)) for path in affected}
 save_work_manifest(work_root / work_id, manifest)
 print(json.dumps(manifest, indent=2))
 PYEOF
@@ -864,14 +885,27 @@ if os.environ.get("ACTIVITY", ""): manifest["activity"] = os.environ["ACTIVITY"]
 for field in ("source", "target"):
     value = os.environ.get(field.upper(), "")
     if value:
+        _safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}")
         manifest[field + "_identity"] = value
-        manifest[field + "_starting_fingerprint"] = file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / value)
+        manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}"))
         manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
 paths = list(manifest.get("affected_paths", []))
+vault_root = Path(os.environ["WORK_ROOT"]).parent
 for path in os.environ.get("AFFECTED", "").splitlines():
-    if path and path not in paths: paths.append(path)
+    if path:
+        _safe_vault_path(vault_root, path, "--affected-path")
+        if path not in paths: paths.append(path)
 for identity in (manifest.get("source_identity"), manifest.get("target_identity")):
-    if identity and identity not in paths: paths.append(identity)
+    if identity:
+        _safe_vault_path(vault_root, identity)
+        if identity not in paths: paths.append(identity)
+fingerprints = dict(manifest.get("affected_starting_fingerprints", {}))
+explicit_identities = {value for value in (os.environ.get("SOURCE", ""), os.environ.get("TARGET", "")) if value}
+for path in paths:
+    _safe_vault_path(vault_root, path)
+    if path not in fingerprints or path in explicit_identities:
+        fingerprints[path] = file_fingerprint(_safe_vault_path(vault_root, path))
+manifest["affected_starting_fingerprints"] = fingerprints
 manifest["affected_paths"] = paths
 manifest["updated_at"] = now_stamp()
 save_work_manifest(work_dir, manifest)
@@ -954,7 +988,12 @@ try:
         if errors: manifest["repair_errors"] = errors
         save_work_manifest(work_dir, manifest)
         fail("publication requires repair: " + "; ".join(errors) if errors else "publication failed and was rolled back")
-    manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); manifest["published_paths"] = [m["path"] for m in staged]
+    published_paths = []
+    for mutation in staged:
+        for path_value in (mutation.get("path"), mutation.get("new_path") if mutation.get("kind") == "backlog-events" else None):
+            if isinstance(path_value, str) and path_value not in published_paths:
+                published_paths.append(path_value)
+    manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); manifest["published_paths"] = published_paths
     try:
         if os.environ.get("SLIPBOX_TEST_FAIL_MANIFEST_SAVE") == "1":
             os.environ["SLIPBOX_TEST_FAIL_MANIFEST_SAVE"] = "0"

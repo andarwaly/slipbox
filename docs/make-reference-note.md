@@ -6,7 +6,7 @@ citation-discipline work already happened upstream, at the claim level, inside
 whichever literature notes' `## Key Concepts` section wikilinks to this
 reference (`make-literature-note`'s job). `make-reference-note` pulls those
 already-grounded characterizations back out, reconciles them into one
-definition, presents for confirmation, and writes.
+definition and writes the completed result.
 
 The resulting body is a bounded lookup entry: a clean H1, one concise definition,
 essential characteristics/components, and optional disambiguation only where a common
@@ -43,10 +43,11 @@ queue this skill owns.
   `make-literature-note` yet is stopped here and the user is told it needs to go
   through `make-literature-note` first — synthesis continues from whatever
   already-grounded sources exist rather than blocking the whole write on one.
-- **Synthesize and confirm** — reconcile agreeing, complementary, or
-  conflicting characterizations into one coherent definition; surface
-  conflicts rather than silently picking one; present for confirmation before
-  writing anything to disk.
+- **Synthesize and resolve ambiguity** — reconcile agreeing or complementary
+  characterizations into one coherent definition. Surface genuine conflicts,
+  naming issues, or scope ambiguity for resolution; the user's explicit invocation
+  already confirms selection, so do not ask for a ceremonial second confirmation.
+  Report the completed result and path after writing.
 - **Write — new reference** — running `/write-checks` with `artifact-kind: note` and
   `note-type: reference` for full field
   resolution, then writing the fresh note. A configured Reference title prefix also

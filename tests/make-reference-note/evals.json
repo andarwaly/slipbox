@@ -254,11 +254,12 @@
       ]
     },
     {
-      "prompt": "make-reference-note after the user has confirmed the synthesized definition",
-      "expected_output": "Publishes the already confirmed bounded draft through the transactional work lifecycle; it does not ask for a ceremonial second confirmation or a binary approval ritual.",
+      "prompt": "make-reference-note invoked directly for a synthesized definition",
+      "expected_output": "Publishes the bounded draft selected by the explicit invocation through the transactional work lifecycle; it does not ask for a ceremonial second confirmation or a binary approval ritual.",
       "assertions": [
-        {"type": "contains", "text": "already confirmed"},
-        {"type": "contains", "text": "does not ask for a ceremonial second confirmation"}
+        {"type": "contains", "text": "explicit invocation"},
+        {"type": "contains", "text": "does not ask for a ceremonial second confirmation"},
+        {"type": "not_contains", "text": "confirmation ritual"}
       ]
     },
     {

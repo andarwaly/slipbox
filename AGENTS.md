@@ -14,7 +14,7 @@ Domain vocabulary (Resource, Literature note, Reference note, Person/Location/Or
 slipbox/                    ← repo root, this file's location
 ├── AGENTS.md                ← this file
 ├── CLAUDE.md                 ← symlink to AGENTS.md
-├── CONTEXT.md                ← domain glossary — the note/resource types, Claim vs. Take
+├── CONTEXT.md                ← domain glossary — the note/resource types, Source Point/Core Idea/Take
 ├── .agents/
 │   ├── dox-framework.md     ← doc-maintenance rules (read first)
 │   └── index.md              ← index of every AGENTS.md in this repo
