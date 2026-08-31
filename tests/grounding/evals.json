@@ -90,6 +90,7 @@
     },
     {
       "prompt": "End-to-end Literature fixture: the user is partway through an explanatory lecture, answers confidently about the mechanism, then hesitates on a caveat and asks to continue together.",
+      "files": ["../make-literature-note/fixtures/explanatory-lecture.md"],
       "expected_output": "Keeps the source as the fidelity boundary, verifies the confident mechanism, switches to a calibrated Feynman-style explanation for the hesitation, and asks one substantive question at a time without supplying the caveat or forcing a prediction.",
       "assertions": [
         {"type": "contains", "text": "source"},

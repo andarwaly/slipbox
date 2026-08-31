@@ -323,41 +323,49 @@
     },
     {
       "prompt": "End-to-end fixture: a short essay with one clear thesis and two supporting reasons is passed to /make-literature-note.",
+      "files": ["fixtures/short-essay.md"],
       "expected_output": "Reads the complete Resource, asks the user to reconstruct the thesis and its relation to the reasons, records the confirmed thesis as the Core Idea and the supported reasons as Source Points, then stages and validates the Literature note before publication.",
       "assertions": [{"type":"contains","text":"complete Resource"},{"type":"contains","text":"Core Idea"},{"type":"contains","text":"Source Points"},{"type":"contains","text":"validates"}]
     },
     {
       "prompt": "End-to-end fixture: a Wikipedia-like explanation defines a concept, gives historical context, and notes a limitation; ground it with /make-literature-note.",
+      "files": ["fixtures/wikipedia-like-explanation.md"],
       "expected_output": "Separates definition, context, and limitation into source units, preserves explanatory scope and qualification, and uses the Adaptive Split Gate so inquiry-central work is reconstructed by the user while context is source-verified.",
       "assertions": [{"type":"contains","text":"source units"},{"type":"contains","text":"limitation"},{"type":"contains","text":"qualification"},{"type":"contains","text":"Adaptive Split Gate"}]
     },
     {
       "prompt": "End-to-end fixture: breaking news reports an allegation attributed to a named official, includes a denial, and leaves verification pending.",
+      "files": ["fixtures/breaking-news-allegation.md"],
       "expected_output": "Preserves attribution, denial, uncertainty, chronology, and reported-versus-verified status, and never rewrites the allegation as an established fact.",
       "assertions": [{"type":"contains","text":"attribution"},{"type":"contains","text":"denial"},{"type":"contains","text":"uncertainty"},{"type":"contains","text":"reported-versus-verified"}]
     },
     {
       "prompt": "End-to-end fixture: an explanatory lecture walks through a mechanism, then gives a practical example and a caveat; the user chooses collaborative reading.",
+      "files": ["fixtures/explanatory-lecture.md"],
       "expected_output": "Dispatches guided reading only after the collaborative choice, asks one substantive question at a time, and consolidates the mechanism, example, and caveat through one open Gate before staging Source Points.",
       "assertions": [{"type":"contains","text":"guided reading"},{"type":"contains","text":"one substantive question"},{"type":"contains","text":"one open Gate"},{"type":"contains","text":"Source Points"}]
     },
     {
       "prompt": "End-to-end fixture: a mixed investigation combines direct observations, a quoted expert interpretation, competing hypotheses, and unresolved evidence.",
+      "files": ["fixtures/mixed-investigation.md"],
       "expected_output": "Maps observations, attributed interpretation, hypotheses, and unresolved evidence separately; preserves speaker, analysis-versus-observation, dispute, and certainty; and records unresolved gaps as Open Questions.",
       "assertions": [{"type":"contains","text":"direct observations"},{"type":"contains","text":"analysis-versus-observation"},{"type":"contains","text":"Open Questions"},{"type":"contains","text":"dispute"}]
     },
     {
       "prompt": "End-to-end fixture: resume a partially read source after an interrupted Literature session with a checkpointed inquiry map and staged Source Point.",
+      "files": ["fixtures/partial-reading-resume.md", "fixtures/partial-reading-checkpoint.json"],
       "expected_output": "Uses /using-slipbox to verify fingerprints, reuses prior comprehension evidence and the staged draft, skips resolved obligations, and resumes at the next unresolved thinking obligation without repeating the interview.",
       "assertions": [{"type":"contains","text":"/using-slipbox"},{"type":"contains","text":"verify fingerprints"},{"type":"contains","text":"reuses prior comprehension evidence"},{"type":"not_contains","text":"repeating the interview"}]
     },
     {
       "prompt": "End-to-end fixture: resume an existing legacy Literature note with ## Key Claims and no source cache, while the Resource is available and migration policy is defer.",
+      "files": ["fixtures/legacy-literature-resource.md", "fixtures/legacy-literature-note.md"],
       "expected_output": "Reads the complete Resource first, builds source-owned analysis, reconciles legacy content privately, leaves the final note unchanged under defer, and reports source-support-unclear items without rewriting semantics automatically.",
       "assertions": [{"type":"contains","text":"complete Resource first"},{"type":"contains","text":"source-owned analysis"},{"type":"contains","text":"unchanged"},{"type":"contains","text":"source-support-unclear"}]
     },
     {
       "prompt": "End-to-end fixture: close a grounded Literature note whose confirmed Source Point introduces a relevant named framework that the user wants to develop immediately as a Reference note.",
+      "files": ["fixtures/immediate-reference-handoff.md"],
       "expected_output": "Completes Literature closeout first, adds the framework to Key Concepts, offers the context-aware Reference handoff only after the Literature artifact is validated and saved, and passes grounded source identity forward without rerunning Literature work.",
       "assertions": [{"type":"contains","text":"Literature closeout first"},{"type":"contains","text":"Key Concepts"},{"type":"contains","text":"Reference handoff"},{"type":"contains","text":"validated and saved"}]
     }
