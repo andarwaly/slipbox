@@ -33,6 +33,49 @@
       ]
     },
     {
+      "prompt": "The cache inventory has compatible, older-compatible, and incompatible entries. Choose to build only a selected scope of notes.",
+      "expected_output": "Reports the three cache compatibility states separately, then keeps the selected cache-build scope distinct from heading migration authorization.",
+      "assertions": [
+        {"type": "contains", "text": "compatible"},
+        {"type": "contains", "text": "older-compatible"},
+        {"type": "contains", "text": "incompatible"},
+        {"type": "contains", "text": "selected scope"},
+        {"type": "contains", "text": "heading migration"}
+      ]
+    },
+    {
+      "prompt": "The vault has missing and incompatible source maps. The user chooses all compatible legacy Literature notes for exact-heading migration.",
+      "expected_output": "Offers build missing + incompatible as the recommended cache scope, then separately migrates all compatible notes by renaming exact ## Key Claims to ## Source Points; no unrelated headings are changed.",
+      "assertions": [
+        {"type": "contains", "text": "build missing + incompatible"},
+        {"type": "contains", "text": "all compatible"},
+        {"type": "contains", "text": "## Key Claims"},
+        {"type": "contains", "text": "## Source Points"},
+        {"type": "not_contains", "text": "rename every heading"}
+      ]
+    },
+    {
+      "prompt": "The user chooses lazy migration for legacy Literature notes, meaning migrate on first access rather than immediately.",
+      "expected_output": "Records literal lazy migration as a deferred, on-first-access choice, leaves existing notes unchanged now, and keeps cache building and later Reference migration separately authorized.",
+      "assertions": [
+        {"type": "contains", "text": "lazy"},
+        {"type": "contains", "text": "first access"},
+        {"type": "contains", "text": "unchanged"},
+        {"type": "contains", "text": "separately"},
+        {"type": "contains", "text": "Reference"}
+      ]
+    },
+    {
+      "prompt": "The user defers both cache construction and legacy heading migration, and does not authorize a Reference migration.",
+      "expected_output": "Leaves existing caches and notes untouched, records defer for cache and note-format migration independently, and does not perform any later Reference migration.",
+      "assertions": [
+        {"type": "contains", "text": "defer"},
+        {"type": "contains", "text": "untouched"},
+        {"type": "contains", "text": "independently"},
+        {"type": "not_contains", "text": "migrate Reference"}
+      ]
+    },
+    {
       "prompt": "Set up slipbox in a repository and keep source maps local.",
       "expected_output": "Asks separately for Git mode (off, ask recommended, or auto) and cache persistence (local by default), creates .slipbox/work/ and .slipbox/cache/source-maps/, and keeps H1 headings clean when filename/link-target prefixes are enabled.",
       "assertions": [
