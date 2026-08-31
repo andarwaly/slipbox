@@ -29,3 +29,8 @@ git diff --check: PASS
 - Replaced the final active `reusability test` wording in `make-literature-note` and
   the lower-case `remaining admission gates` wording in `find-connections` with the
   current Admission sequence terminology.
+
+## Round 4
+
+- Replaced the final active `reusability test` phrase in
+  `tests/find-connections/evals.json` with explicit Admission sequence terminology.
