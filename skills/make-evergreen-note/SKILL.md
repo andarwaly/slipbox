@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.9.0"
+  version: "1.10.0"
 ---
 
 # Make-evergreen-note
@@ -82,8 +82,9 @@ states something none of the individual notes said on their own.
 - Run `/write-checks` with `artifact-kind: note`, `note-type: evergreen`, and
   fields `type`, `created`, `derived-from`, and `updated-at`. `updated-at` uses
   `created` on a first write and the current time on a revision.
-- Resolve the configured Evergreen path, filename casing, exact prefixed basename,
-  and clean H1. Re-read and fingerprint the target immediately before assembling
+- Resolve the configured Evergreen path, filename casing, exact prefixed basename and
+  link target, and clean/unprefixed H1. A display alias after `|` is clean when used.
+  Re-read and fingerprint the target immediately before assembling
   the complete draft. Write that draft only to the work directory as `draft.md`,
   including a full replacement on `revise`.
 - Validate the complete `draft.md` with `/write-checks`, then run the configured

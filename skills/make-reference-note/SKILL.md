@@ -167,8 +167,9 @@ For a new candidate, use activity `create` and write fresh:
   check blocks success.
 - Filename collision → stop and ask, never auto-disambiguate.
 
-The generated basename and link target use the exact configured Reference prefix;
-the H1 remains the clean, unprefixed concept name. A per-link display alias is a
+The generated basename and every link target use the exact configured Reference
+prefix (`※ Reference.md` and `[[※ Reference|Reference]]` in the default example);
+the H1 remains clean and unprefixed (`# Reference`). A per-link display alias is a
 separate concern and must not be used as the frontmatter alias value.
 
 ## Stage and publish Reference work

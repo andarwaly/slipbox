@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Write-checks
@@ -114,15 +114,25 @@ timestamp, written bare/unquoted — never `"YYYY-MM-DD"` — consistent across 
 of that type), and wrap in wikilink or markdown-link syntax per
 `.slipbox/bin/slipbox config get links.style` when `wikilink: true`.
 
-## Note-type prefix
+## Filename and link-target prefix
 
-Check `.slipbox/bin/slipbox config get prefixes.<type>` for this note type. If it's a string,
-retain it in the complete filename and any note link target. For `literature`, keep the
-H1/title exactly equal to the Resource/source title: the prefix is never added to that H1,
-even when `prefixes.literature` is configured. For other prefixed note types, preserve
-their existing title behavior (for example, `§ Design Tokens`, not `Design Tokens`). If
-it's `false`, the title and filename stay unprefixed. Never touch `resources/` — no prefix
-key exists for that type.
+Check `.slipbox/bin/slipbox config get prefixes.<type>` for this note type. If it is a
+string, retain that exact prefix in the complete filename and every note link target;
+the display alias after `|` stays clean and unprefixed when one is useful. If it is
+`false`, the filename and link target stay unprefixed. Resources never get a prefix.
+
+The H1 is always clean and unprefixed for Literature, Reference, and Evergreen notes.
+The contract is universal:
+
+```text
+File: § Literature.md   Link: [[§ Literature|Literature]]   H1: # Literature
+File: ※ Reference.md    Link: [[※ Reference|Reference]]     H1: # Reference
+File: ✱ Evergreen.md     Link: [[✱ Evergreen|Evergreen]]     H1: # Evergreen
+```
+
+Reject unprefixed targets for prefixed files and reject prefix in any H1. A per-link
+display alias is distinct from Reference frontmatter aliases and must not be copied
+into that field.
 
 ## Zone placement
 

@@ -32,8 +32,9 @@ Socratic side of the work. There is no reason to invoke it standalone.
    this note type for the first time goes through the same interactive resolution
    `setup-slipbox` itself uses, and the result gets written back so every later write of
    that type finds it already resolved.
-6. **Note-type prefix** — resolves whether this note type's title gets a configured
-   prefix character or stays unprefixed.
+6. **Filename/link-target prefix** — resolves the exact configured prefix for the
+   filename and link target while keeping the display alias and every Literature,
+   Reference, and Evergreen H1 clean/unprefixed. Resource files have no prefix.
 7. **Zone placement** — a newly-created field lands at the top or bottom of the
    frontmatter block, per its configured zone; a field mapped onto something that
    already exists stays where it already is.
@@ -55,7 +56,7 @@ See the [skill source](../skills/write-checks/) for the full agent-facing instru
 
 The complete assembled temporary draft and complete basename are validated before
 writing, then the saved path is re-read and validated again. Checks cover mapped fields,
-YAML serialization, field zones, Markdown structure, block spacing, prefix position, and
+YAML serialization, field zones, Markdown structure, block spacing, exact filename/link-target prefix position, clean H1s, and
 exactly one terminal newline. Only unambiguous mechanical defects may be repaired;
 collisions, uncertain titles, uncertain protected names, and semantic conflicts stop for
 the user's decision. When `formatting.blank_lines_between_blocks` is `false`, notes use

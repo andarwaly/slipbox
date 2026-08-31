@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Source Points — the sour
   source.
 license: MIT
 metadata:
-  version: "1.19.0"
+  version: "1.20.0"
 ---
 
 # Make-literature-note
@@ -173,8 +173,9 @@ unresolved inquiry obligation:
   `/using-slipbox`.
 - Derive the intended target in the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
   `.slipbox/bin/slipbox config get filenames.literature` casing convention. The Literature H1
-  preserves the Resource's source title exactly; it is never replaced with an agent-authored
-  topic label. Construct the complete basename through `.slipbox/bin/slipbox filename format
+  preserves the Resource's source title exactly and is always clean/unprefixed; it is never
+  replaced with an agent-authored topic label. Links use the exact configured prefix with a
+  clean display alias. Construct the complete basename through `.slipbox/bin/slipbox filename format
   --type literature --title "<exact source title>"`, passing each confidently identified
   proper-name span as `--preserve`. The command applies protected names, configured casing,
   filename sanitization, then the configured prefix, and returns the complete basename. If

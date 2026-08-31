@@ -26,6 +26,7 @@ A vault typically moves through these skills in this order, though any skill can
 ## `.slipbox/` folder structure
 
 - `config.json` — vault conventions: paths, filename/link-target casing and prefixes, frontmatter field mappings, clip settings, template paths, Git policy, and source-map cache persistence. `git.mode` is `off`, `ask`, or `auto`; `git.commit_style.mode` is `detected` or `fallback`; no Git-detection boolean is stored. Work manifests capture per-path Git baselines, and `work commit` uses an isolated index with exact published-path allowlisting. `cache.source_maps.persistence` is `local` or `tracked`. Every other skill reads this before writing anything.
+- Note filenames and link targets use the exact configured per-type prefix; Literature, Reference, and Evergreen H1 headings remain clean/unprefixed, and any `|` display alias is clean. Resources have no prefix.
 - `bin/slipbox` — the CLI binary. Always invoked by its full path, `.slipbox/bin/slipbox`, never bare `slipbox`.
 - `evergreen/` — the persistent backlog of pending evergreen candidates, read and written through `slipbox evergreen add/find/update`.
 - `links.jsonl` — the append-only mechanical link event ledger between notes, read and written through `slipbox links add/remove/find`. Legacy rows without `op` are treated as adds; removals are tombstones.

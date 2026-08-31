@@ -169,7 +169,11 @@ done
 assert_contains "cache and note-format authorization stay separate" "separate" "$SETUP_SKILL"
 assert_contains "local cache ignore is conditional" 'when cache persistence is `local`' "$SETUP_SKILL"
 assert_contains "tracked source-map cache omits ignore" "Never add an ignore rule for tracked source maps" "$SETUP_SKILL"
-assert_contains "reference migration authorization is schema-backed" 'reference: {mode: all|selected|lazy|defer' "$SETUP_SKILL"
+assert_contains "reference migration authorization is schema-backed" 'reference: {mode: all|all-valid|selected|lazy|defer' "$SETUP_SKILL"
+assert_contains "setup detects legacy prefixed H1s across note types" "prefixed H1s in Reference and Evergreen" "$SETUP_SKILL"
+assert_contains "setup offers all-valid migration" "all-valid" "$SETUP_SKILL"
+assert_contains "setup skips unusual note structures" "unusual or incompatible structures" "$SETUP_SKILL"
+assert_contains "runtime asset keeps H1s clean" "H1 headings remain clean/unprefixed" "$REPO_ROOT/skills/setup-slipbox/assets/AGENTS.md"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
@@ -490,6 +494,19 @@ check_eq "Sentence case preserves proper name and prefixes after casing" "§ Sof
   "$("$SLIPBOX" filename format --type literature --title 'Software Fundamentals Matter More Than Ever: Matt Pocock' --preserve 'Matt Pocock')"
 check_eq "Sentence case preserves acronyms" "§ API design for NASA teams" \
   "$("$SLIPBOX" filename format --type literature --title 'API Design for NASA Teams')"
+
+echo "--- universal note prefix/link/H1 contract ---"
+for contract in \
+  'File: § Literature.md   Link: [[§ Literature|Literature]]   H1: # Literature' \
+  'File: ※ Reference.md    Link: [[※ Reference|Reference]]     H1: # Reference' \
+  'File: ✱ Evergreen.md     Link: [[✱ Evergreen|Evergreen]]     H1: # Evergreen'; do
+  assert_contains "cross-type prefix contract is documented: $contract" "$contract" \
+    "$REPO_ROOT/skills/write-checks/SKILL.md"
+done
+assert_contains "validator rejects an unprefixed target for prefixed notes" "Reject unprefixed targets for prefixed files" \
+  "$REPO_ROOT/skills/write-checks/SKILL.md"
+assert_contains "validator rejects prefixes in note H1 headings" "reject prefix in any H1" \
+  "$REPO_ROOT/skills/write-checks/SKILL.md"
 
 echo "--- whole-artifact validation ---"
 cat > "$SCRATCH/config.json" <<'EOF'
