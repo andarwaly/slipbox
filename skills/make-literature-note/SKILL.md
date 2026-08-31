@@ -48,8 +48,15 @@ points at this resource.
 
 Use `/using-slipbox` to inspect the Resource's source cache. Load a compatible source map;
 otherwise build one from the whole frozen Resource using `references/source-architecture.md`
-and `references/qew-theory.md`, then store it as source-owned analysis. The cache contains
-source units, posture, relations, and Core Idea candidates; it never contains the user's
+and `references/qew-theory.md`, then store it as source-owned analysis. For an existing
+vault with no cache, source-first construction is mandatory: read the complete Resource
+before consulting the Literature note. Never reconstruct a source map from selective
+Literature content. Reconcile the existing note's Core Idea, points/legacy claims,
+concepts, referents, and Open Questions to source units with private statuses
+`matched|matched-with-qualification-risk|matched-to-multiple-units|unmatched|source-support-unclear`.
+Missing or unresolved Resources block reconciliation and require repair; reconciliation
+never rewrites note semantics automatically. The cache contains source units, posture,
+relations, and Core Idea candidates; it never contains the user's
 inquiry, reading state, transcript, or a prescriptive queue.
 
 Create a separate session-scoped inquiry map referencing source-unit IDs. Record purpose,

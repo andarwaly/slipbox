@@ -1,6 +1,26 @@
 {
   "test_cases": [
     {
+      "prompt": "Resume make-literature-note in an existing vault with a Resource and a Literature note but no cache; the note has legacy Key Claims and selective concepts.",
+      "expected_output": "Builds the source map from the complete Resource first, never from selective Literature content, reconciles Core Idea, Key Claims/Source Points, Key Concepts, Mentioned, and Open Questions to source units with matched, matched-with-qualification-risk, matched-to-multiple-units, unmatched, or source-support-unclear statuses, and does not rewrite semantics automatically.",
+      "assertions": [
+        {"type": "contains", "text": "complete Resource"},
+        {"type": "not_contains", "text": "build the cache from the Literature note"},
+        {"type": "contains", "text": "source units"},
+        {"type": "contains", "text": "source-support-unclear"},
+        {"type": "contains", "text": "does not rewrite"}
+      ]
+    },
+    {
+      "prompt": "A Literature note's Resource is missing while resuming existing work.",
+      "expected_output": "Stops source-first reconciliation, reports the missing Resource as a blocker, and preserves the existing note unchanged.",
+      "assertions": [
+        {"type": "contains", "text": "missing Resource"},
+        {"type": "contains", "text": "blocker"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
       "prompt": "Start or resume Literature work for a Resource with explicit inquiry context, implied reflection, no stated purpose, and exploratory intent; the Resource is a news report containing an allegation attributed to a secondary source. The user may be Confident, Hesitant, Blank, or Confused, and may treat the Resource as primary or secondary regardless of its type.",
       "expected_output": "Uses /using-slipbox to start or resume recoverable work, loads or builds the source cache, creates a session-scoped inquiry map, and derives the grounding frontier at runtime. Follows one substantive question at a time and dispatches all four reading states (Confident, Hesitant, Blank, Confused) without a universal opener. Keeps primary/secondary posture independent of Resource type and preserves the news allegation's attribution and uncertainty.",
       "assertions": [

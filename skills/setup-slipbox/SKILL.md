@@ -170,7 +170,11 @@ Show the draft to the user, let them edit it, then validate the approved draft a
 
 ### Cache and migration inventory
 
-On first run and re-run, inspect existing cache/source-map metadata and report counts separately for compatible, missing, incompatible, older-compatible, unresolved-source, and orphaned entries. Offer these scopes: build missing + incompatible, build a chosen scope, refresh all, or defer. Cache authorization and note-format migration authorization are separate questions; agreeing to one never implies the other. A deferred migration leaves existing notes and caches untouched.
+On first run and re-run, inspect existing cache/source-map metadata and report counts separately for compatible, missing, incompatible, older-compatible, unresolved-source, and orphaned entries. An existing vault with Literature notes but no cache is a normal migration case: inventory the Resource files first, then build source-owned maps from each complete frozen Resource. Never build a cache from selective Literature-note content; a Literature note is a partial, inquiry-shaped view and cannot stand in for the source.
+
+For each existing Literature note, reconcile its `## Core Idea`, `## Source Points` (and legacy `## Key Claims`), `## Key Concepts`, `## Mentioned`, and `## Open Questions` against source units. Record the reconciliation privately with one status per mapped item: `matched`, `matched-with-qualification-risk`, `matched-to-multiple-units`, `unmatched`, or `source-support-unclear`. A missing or unresolved Resource blocks reconciliation for that note and is reported for repair. Reconciliation is source-first and diagnostic: it must not rewrite note semantics automatically.
+
+Offer these independent choices for cache work: build missing + incompatible (recommended), build a chosen scope, refresh all, or defer. Then, separately, offer legacy note-format migration choices: rename the exact `## Key Claims` heading to `## Source Points` where the structure is compatible, migrate selected notes, migrate all compatible notes, or defer. Do not rename headings inside unusual or incompatible structures; skip them and report the reason. Cache authorization, heading migration authorization, and any later Reference migration authorization are separate questions; agreeing to one never implies another. A deferred migration leaves existing notes and caches untouched.
 
 ### 07 - Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
 

@@ -1,6 +1,38 @@
 {
   "test_cases": [
     {
+      "prompt": "An existing vault has a Resource and a Literature note but no source-map cache. The note contains Core Idea, Source Points, Key Concepts, Mentioned, and Open Questions.",
+      "expected_output": "Reads the complete Resource first, builds a source-owned cache from it rather than from selective Literature content, then reconciles each existing section to source units with private statuses matched, matched-with-qualification-risk, matched-to-multiple-units, unmatched, or source-support-unclear. It does not rewrite note semantics.",
+      "assertions": [
+        {"type": "contains", "text": "complete Resource"},
+        {"type": "contains", "text": "source-owned"},
+        {"type": "contains", "text": "selective Literature"},
+        {"type": "contains", "text": "matched-with-qualification-risk"},
+        {"type": "contains", "text": "does not rewrite"}
+      ]
+    },
+    {
+      "prompt": "An existing Literature note points to a missing Resource.",
+      "expected_output": "Reports that the missing Resource blocks source-first cache construction and reconciliation, and leaves the note unchanged for repair.",
+      "assertions": [
+        {"type": "contains", "text": "blocks"},
+        {"type": "contains", "text": "missing Resource"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
+      "prompt": "Existing notes use the exact ## Key Claims heading in compatible structures, while another note has an unusual structure. Choose migration for selected notes only.",
+      "expected_output": "Separately asks for cache work and heading migration, offers selected/all/defer choices, renames only exact compatible Key Claims headings when selected, skips the unusual structure with a reason, and keeps later Reference migration independent.",
+      "assertions": [
+        {"type": "contains", "text": "Key Claims"},
+        {"type": "contains", "text": "Source Points"},
+        {"type": "contains", "text": "selected"},
+        {"type": "contains", "text": "unusual"},
+        {"type": "contains", "text": "separately"},
+        {"type": "contains", "text": "Reference"}
+      ]
+    },
+    {
       "prompt": "Set up slipbox in a repository and keep source maps local.",
       "expected_output": "Asks separately for Git mode (off, ask recommended, or auto) and cache persistence (local by default), creates .slipbox/work/ and .slipbox/cache/source-maps/, and keeps H1 headings clean when filename/link-target prefixes are enabled.",
       "assertions": [
