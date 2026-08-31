@@ -141,7 +141,8 @@
         {"type": "contains", "text": "extraction.json"},
         {"type": "contains", "text": "draft.md"},
         {"type": "contains", "text": "create-only"},
-        {"type": "contains", "text": "work finalize"}
+        {"type": "contains", "text": "Publish an artifact"},
+        {"type": "not_contains", "text": "work finalize"}
       ]
     },
     {
