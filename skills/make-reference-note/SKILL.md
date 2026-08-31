@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Make-reference-note
@@ -41,6 +41,20 @@ before writing. Apply the `.slipbox/bin/slipbox config get filenames.reference` 
   to.
 
 ## Gather the grounded characterizations
+
+Start or resume Reference work for the candidate `/using-slipbox`. The work
+manifest's `kind` is `reference`, and its `activity` is one of `create`,
+`recompose`, or `extend-provenance`. Keep the work local under
+`.slipbox/work/<work_id>/`; a Reference work directory contains:
+
+- `manifest.json` — target and contributing-source identities plus starting fingerprints;
+- `synthesis-map.json` — the reconciled evidence map (see `references/synthesis-map.md`); and
+- `draft.md` — the complete bounded Reference draft, including frontmatter.
+
+Checkpoint the reconciled synthesis and bounded draft `/using-slipbox` after
+the source-resolution/admission boundary and again after user confirmation.
+There is no permanent synthesis cache: `synthesis-map.json` is transient work
+state and is discarded with the work item after publication.
 
 Find every final Literature note whose `## Key Concepts` wikilinks to this candidate (this
 is what `find-connections --references` already surfaced recurrence over — re-derive
@@ -103,6 +117,11 @@ Provenance is frontmatter only. Populate only the configured Reference fields
 deduplicated original Resource links, never Literature-note links. Do not add body
 `Sources`, mechanism, application, implications, or `Open Questions` sections.
 
+Record every contributing Literature path, resolved Resource identity,
+source-map fingerprint (when available), admission evidence, agreements,
+conflicts, and proposed changes in `synthesis-map.json`. This map is the audit
+trail for the current work, not a second note and not a source-by-source body.
+
 - Where characterizations agree or add distinct facets, merge them into one coherent
   definition rather than listing each source's phrasing separately.
 - Where characterizations conflict, surface the conflict to the user rather than
@@ -123,7 +142,7 @@ deduplicated original Resource links, never Literature-note links. Do not add bo
 
 ## Write — new reference
 
-Write fresh:
+For a new candidate, use activity `create` and write fresh:
 
 - Run a `/write-checks` session with `artifact-kind: note` and `note-type: reference`, passing the Reference field list (`type`,
   `created`, `sources`, and `alt_names`) — it resolves each field's mapping, formatting,
@@ -156,20 +175,25 @@ separate concern and must not be used as the frontmatter alias value.
 
 **This is the collision-safe path. Follow it exactly.**
 
+Use activity `extend-provenance` when the new grounded source only strengthens
+the existing warrant. Use activity `recompose` when it changes the definition
+boundary or any essential characteristic.
+
 `sources` already has its resolved mapping and formatting from the reference's first
 write — no field resolution needed here.
 
 1. Run a `/write-checks` session with `artifact-kind: note` and `note-type: reference` in checks-only mode (no field list).
 2. Re-read the file from disk immediately before assembling the new draft (state can
    have changed since the read in "Take the candidate").
-3. Append the new resource(s) to the `sources` frontmatter array, formatted per the
+3. Re-read the existing note and staged synthesis map. If the new source only strengthens warrant, keep existing body bytes stable and append the new resource(s) to the `sources` frontmatter array, formatted per the
    note's existing recorded `type` (list) and `wikilink` flag, to assemble the complete
    temporary draft. Never overwrite the file wholesale.
-4. Validate the complete assembled draft with `/write-checks` before writing. This
+4. If the source materially changes the definition boundary or essential characteristics, preserve the prior synthesis in the map's `agreements`/`conflicts`, propose only required body changes, and stage a bounded replacement under activity `recompose`.
+5. Validate the complete assembled draft with `/write-checks` before writing. This
    pre-write validation is a hard gate: write only after it passes. Then re-read the
    saved path and re-validate it with `slipbox note validate`. Repair only mechanical
    defects; semantic conflicts remain stop-and-ask cases.
-5. Insert a `links` row recording the relationship — this reference's own note is the
+6. Insert a `links` row recording the relationship — this reference's own note is the
    target, the resource being folded in is the source:
 
    ```bash
@@ -182,5 +206,8 @@ write — no field resolution needed here.
 - Extension: the file on disk reflects every source that has ever fed it, old and new;
   a `links` row (`rel_type: 'extends'`) connects the new resource to the reference
   note.
+- Recomposition: only the bounded body fields required by the changed synthesis are
+  replaced; unchanged aliases and provenance are preserved, and compare-and-swap
+  publication blocks concurrent target edits.
 - Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.

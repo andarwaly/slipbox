@@ -193,6 +193,67 @@
         {"type": "contains", "text": "wikilink untouched"},
         {"type": "not_contains", "text": "work_id"}
       ]
+    },
+    {
+      "prompt": "make-reference-note for a newly admitted reference",
+      "expected_output": "Starts Reference work with activity=create, stages manifest.json, synthesis-map.json, and draft.md under .slipbox/work, checkpoints the reconciled synthesis, obtains genuine user confirmation, and publishes transactionally through /using-slipbox.",
+      "assertions": [
+        {"type": "contains", "text": "activity=create"},
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "contains", "text": "genuine user confirmation"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note when a new grounded source adds warrant only",
+      "expected_output": "Uses activity=extend-provenance, keeps the existing body bytes stable, appends only deduplicated Resource provenance, and records the Resource→Reference edge.",
+      "assertions": [
+        {"type": "contains", "text": "body bytes stable"},
+        {"type": "contains", "text": "extend-provenance"},
+        {"type": "contains", "text": "Resource→Reference"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note when a new source changes the definition boundary",
+      "expected_output": "Uses activity=recompose and replaces only the required bounded body fields while preserving unchanged aliases and provenance.",
+      "assertions": [
+        {"type": "contains", "text": "activity=recompose"},
+        {"type": "contains", "text": "only the required"},
+        {"type": "contains", "text": "aliases"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note where grounded sources have conflicting definitions",
+      "expected_output": "Preserves competing definitions in synthesis-map.json, surfaces the conflict, and waits for the user's resolution or explicit decision to flag it; it never silently selects a variant.",
+      "assertions": [
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "contains", "text": "never silently"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note interrupted after synthesis checkpoint",
+      "expected_output": "Resumes the same work_id after inspecting manifest.json, synthesis-map.json, and draft.md, verifies fingerprints, and continues from the last checkpoint without publishing incomplete content.",
+      "assertions": [
+        {"type": "contains", "text": "same work_id"},
+        {"type": "contains", "text": "verifies fingerprints"},
+        {"type": "not_contains", "text": "partial artifact"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note after the user has confirmed the synthesized definition",
+      "expected_output": "Publishes the already confirmed bounded draft through the transactional work lifecycle; it does not ask for a ceremonial second confirmation or a binary approval ritual.",
+      "assertions": [
+        {"type": "contains", "text": "already confirmed"},
+        {"type": "contains", "text": "does not ask for a ceremonial second confirmation"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note when the existing Reference target changes concurrently during recomposition",
+      "expected_output": "Compare-and-swap detects the changed target, blocks finalization, preserves the resumable work, and does not overwrite the concurrent target change.",
+      "assertions": [
+        {"type": "contains", "text": "blocks finalization"},
+        {"type": "contains", "text": "does not overwrite"},
+        {"type": "contains", "text": "resumable"}
+      ]
     }
   ]
 }
