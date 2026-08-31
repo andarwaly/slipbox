@@ -1,7 +1,7 @@
 # make-literature-note
 
 Ground a clipped source into one or more Claims — the source's own position, restated in
-your own words and checked against the source — writing each as a Key Claim in a shared
+your own words and checked against the source — writing each as a Source Point in a shared
 literature note for that source.
 
 ## When to use
@@ -43,7 +43,7 @@ prefix belongs in the generated filename and link target, not in that H1.
    it recorded, never into the literature note itself. "I think that's everything" always
    ends the sitting at any point.
 7. **Out-of-band fidelity correction** — at any time, in this session or a later one, the
-   user can point at an already-written Key Claim that misreads the source; a narrowly
+   user can point at an already-written Source Point that misreads the source; a narrowly
    scoped fix (moves the note closer to the source, nothing else) goes through the same
    Gate as any other claim, then edits that entry in place — the one case where a
    written entry is legitimately reopened.
@@ -52,7 +52,7 @@ prefix belongs in the generated filename and link target, not in that H1.
 
 The finished note, any logged tension, and the file path are reported once the session
 ends (partial coverage is a complete, valid outcome). Three reference files —
-`qew-theory.md`, `source-architecture.md`, `writing-a-claim.md` — cover the internal
+`qew-theory.md`, `source-architecture.md`, `writing-a-source-point.md` — cover the internal
 claim-worthiness reasoning, whole-source reading lenses, and note-writing mechanics
 respectively; see the skill's own `## References` table for exactly when each applies.
 

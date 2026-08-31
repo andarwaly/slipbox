@@ -1,8 +1,8 @@
-# Writing a claim
+# Writing a Source Point
 
 See `qew-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
 and which of them ever reach the page (only Evidence and Conclusion do). This file covers
-the note's structure, the Core Idea line, how to review a claim before committing it to
+the note's structure, the Core Idea line, how to review a Source Point before committing it to
 disk, and the formatting mechanics (quotes, Key Concepts wikilinks) that live inside a
 claim entry once it's written.
 
@@ -13,16 +13,16 @@ claim entry once it's written.
 
 [Core Idea — bare declarative sentence, no label]
 
-## Key Claims
+## Source Points
 
-### [Conclusion, stated declaratively — this is the claim, and the heading]
+### [Source Point, stated declaratively — this is the source-owned proposition and the heading]
 [Evidence, condensed — no separate "Evidence:" label, just the prose itself]
 
 ## Open Questions
 
 - [plain declarative question naming a gap in the source]
-  - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
+  - *Assumption*: [the user's own guess, marked, never a Source Point]
+  - *Answered*: [[§ Other Literature Note#the-source-point-that-answers-it|Other Literature Note]]
 ```
 
 The H1 preserves the Resource/source title exactly, including when
@@ -34,9 +34,9 @@ character.
 
 **Core Idea** — one sentence stating the source's central argument, everything else in
 the note in service of it. Positional, not labeled: it's always the line directly after
-the title and before `## Key Claims`, the same way a Resource's own `description` field
-sits bare under its title. Written once, when the note's first claim is written; never
-touched on a second or later claim for the same note.
+the title and before `## Source Points`, the same way a Resource's own `description` field
+sits bare under its title. Written once, when the note's first Source Point is written; never
+touched on a second or later Source Point for the same note.
 
 **The `###` heading is the Conclusion, verbatim.** No separate "Conclusion:" bullet
 follows it — that would just duplicate the heading. Evidence is the only other thing
@@ -84,16 +84,16 @@ Concepts wikilink pointing at a Reference-note candidate.
 
 ## Open Questions
 
-A top-level section, sibling to `## Key Claims` and `## Key Concepts`/`## Mentioned` —
-never nested inside a claim. One bullet per question, plain declarative form, naming
+A top-level section, sibling to `## Source Points` and `## Key Concepts`/`## Mentioned` —
+never nested inside a Source Point. One bullet per question, plain declarative form, naming
 something the source itself leaves unclear, ambiguous, or unanswered:
 
 ```markdown
 ## Open Questions
 
 - [plain declarative question naming a gap in the source]
-  - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
+  - *Assumption*: [the user's own guess, marked, never a Source Point]
+  - *Answered*: [[§ Other Literature Note#the-source-point-that-answers-it|Other Literature Note]]
 ```
 
 See `SKILL.md`'s "Ground the source" section for the policy this format serves — when
@@ -118,11 +118,15 @@ which is `/write-checks`'s job, run separately.
   things: it doesn't belong in this note, or the Core Idea was drawn too narrow — flag
   either read to the user rather than silently resolving it.
 
-**Conclusion** (the heading)
+**Source Point** (the heading)
 - Delete-test: with the Evidence line gone, does the Conclusion still stand alone as a
   complete statement of the source's position?
-- Is it the source's position — no drift into the user's own reaction or synthesis (per
-  `/grounding`'s "never your own opinion" and the literature note's purity rule)?
+- Is it source-owned — no drift into the user's own reaction, evaluation, or synthesis?
+- Is it independently interpretable without material distortion when detached from the
+  Evidence line? Preserve the source's reading context and source posture.
+- Does attribution remain explicit when the source is reporting someone else's claim,
+  and does certainty match the source's wording? Never turn a report into the source's
+  endorsement, or a hedge into a fact.
 - Warrant self-check (per `qew-theory.md`): can the "why" be stated in one sentence from
   the Evidence? If Conclusion and that one sentence would say the same thing, the
   Conclusion is still restating, not concluding — go back and sharpen it.
@@ -147,17 +151,17 @@ which is `/write-checks`'s job, run separately.
 - Traceable to the source, nothing added that isn't there?
 
 **The claim as a whole**
-- Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Key
-  Claim, is there exactly one clear thing being cited — not a bundle of several source
+- Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Source
+  Point, is there exactly one clear thing being cited — not a bundle of several source
   points under one heading? (The shared-Warrant merge test in `qew-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
 - List-as-one-claim rule: when several claims on the table trace back to one
   source-authored list (a bulleted or enumerated set the source itself presented as a
   unit), default to one claim citing the list as a whole rather than one claim per item
-  — the items fold into Evidence instead of each spawning its own Key Claim heading. A
+  — the items fold into Evidence instead of each spawning its own Source Point heading. A
   source's numbered list of five recommendations becomes one Conclusion ("the source
   recommends five practices for X") with the five items condensed into the Evidence
-  line beneath it, not five separate Key Claims.
+  line beneath it, not five separate Source Points.
 - Everything this claim leans on present in Key Concepts, each with a correctly
   resolved wikilink (see Key Concepts wikilinks below)?
 

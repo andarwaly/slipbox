@@ -11,7 +11,7 @@ A marked, nested bullet under an Open Question holding the user's own guess at a
 _Avoid_: `{"deferred": true}` (an unrelated, JSON-schema-level marker on a Field map entry recording that a field mapping hasn't been resolved yet — a config-resolution state, not a note-body content type; no collision despite the surface similarity).
 
 **Atomicity**
-The rule that a note expresses exactly one independently citable thing: for an evergreen note, the whole note; for a literature note, each Key Claim individually, since one source clip can support several.
+The rule that a note expresses exactly one independently citable thing: for an evergreen note, the whole note; for a literature note, each Source Point individually, since one source clip can support several.
 _Avoid_: One-topic rule (a coarser reading; atomicity is about one citable claim, not one broad subject).
 
 **Backlog**
@@ -25,10 +25,6 @@ _Avoid_: Backlog (the queue that holds Candidates, not a Candidate itself).
 **Challenge**
 The grounding technique that executes Compass's EAST direction: state the strongest form of an opposing case, then genuinely try to break the claim being synthesized, rather than listing minor downsides.
 _Avoid_: Elenchus (also adversarial, but cross-examines a stated claim's own internal logic, not a competing position).
-
-**Claim**
-The source's own position on one question it answers, restated in the user's own words and checked for fidelity, written as a declarative sentence. Lives only in a literature note, as an object of understanding rather than agreement.
-_Avoid_: Take (the user's own synthesized position, lives only in an evergreen note; the two never coexist in one note); Conclusion (the internal-reasoning term for the same content before it's written to disk, see its own entry).
 
 **Collector's Fallacy**
 Mistaking restatement of a source for actual comprehension of it: paraphrasing what a source said without ever stating what that means, which leaves nothing for a Conclusion to add.
@@ -51,8 +47,14 @@ The four kinds of source clip-resource fetches and classifies: Article, News, So
 _Avoid_: Resource type (no such field exists; the content type value fills `type` directly, and "resource" itself never appears as a value).
 
 **Core Idea**
-The source's central argument, one declarative sentence, every Claim in a literature note in service of it. Written once, on the note's first Claim.
-_Avoid_: Claim (one thing the source argues; the Core Idea is what the source is *for*, not one of the things it argues); Core Thesis (ground-me's own closing-card label for a confirmed take from a freeform interview — a different context, not a synonym for a source's central argument).
+What the source chiefly communicates through argument, explanation, reporting, or a mixture, stated as one declarative sentence. Every Source Point in a literature note serves it.
+_Avoid_: Source Point (one selected proposition serving the Core Idea); Core Thesis (ground-me's closing-card label for a confirmed take from a freeform interview).
+
+**Reading context**
+The user's inquiry and the source passage or surrounding material that determine why a proposition is selected and how its scope is understood.
+
+**Reader-owned proposition**
+The user's interpretation, evaluation, synthesis, or personal stance. It does not belong in a Literature note and routes to an Evergreen note when appropriate.
 
 **Declarative-title test**
 Half of the Admission test: can the candidate concept compress into a subject-plus-verb claim with no "According to X..." framing.
@@ -106,16 +108,22 @@ _Avoid_: Purity check (an evergreen-specific test run before writing, on top of 
 The one-question-at-a-time interview that holds a statement to whatever material is present until it's explicitly confirmed through a Gate. The shared engine every note-writing skill in this family runs internally, and is also directly invocable on its own.
 _Avoid_: Ground-me (a bare passthrough wrapper around a grounding session, not Grounding itself).
 
-**Key Claim**
-One `###`-headed entry inside a literature note's `## Key Claims` section: a Conclusion as its declarative heading, condensed Evidence beneath it, independently citable from every other Key Claim in the same note.
-_Avoid_: Core Idea (the note's single central argument, written once; a Key Claim is one of potentially several claims serving that Core Idea).
+**Source Point**
+An independently interpretable, source-owned proposition selected because it answers the user's inquiry, supports the Core Idea, prevents material distortion, or preserves a distinct source idea worth retaining. It keeps local posture, attribution, evidential status, scope, and qualifications.
+_Avoid_: Key Claim (the retired literature-output label); Take (a reader-owned proposition synthesized for an Evergreen note).
+
+**Source posture**
+The source's mode and degree of commitment — argument, explanation, reporting, uncertainty, attribution, comparison, or qualification — preserved in a Source Point rather than silently strengthened.
+
+**Source-owned proposition**
+A proposition attributable to the source and restated without material distortion; it may be selected as a Source Point.
 
 **Key Concepts**
-The literature-note section wikilinking anything a Key Claim's weight actually rests on that reads as an abstract concept, term, framework, or method — concrete named referents go to Mentioned instead. Accumulates during claim writes and receives a mandatory final batch pass; scanned by find-connections for recurrence detection.
+The literature-note section wikilinking anything a Source Point's weight actually rests on that reads as an abstract concept, term, framework, or method — concrete named referents go to Mentioned instead. Accumulates during Source Point writes and receives a mandatory final batch pass; scanned by find-connections for recurrence detection.
 _Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for concrete named referents).
 
 **Mentioned**
-The literature-note section wikilinking concrete named referents a Key Claim's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during claim writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the Admission test to non-entities.
+The literature-note section wikilinking concrete named referents a Source Point's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during Source Point writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the Admission test to non-entities.
 _Avoid_: Key Concepts (the sibling section for abstract concept/term/framework/method candidates, using the Reference-note prefixed format instead).
 
 **Ladder**
@@ -123,7 +131,7 @@ The generic ordered-fallback-check pattern: try one method, and only on its fail
 _Avoid_: Extraction ladder (the same pattern, scoped to one specific sequence; say Ladder for the general pattern).
 
 **Literature note**
-The file a source's confirmed Claims get written into: source-oriented, anchored to exactly one source clip, holding as many Key Claims as that source supports. Written incrementally and never revisited afterward except an out-of-band fidelity correction, an `## Open Questions` append, or the session-close density merge that folds two claims sharing a Warrant into one.
+The file a source's confirmed Source Points get written into: source-oriented, anchored to exactly one source clip, holding as many Source Points as that source supports. It preserves the source's reading context and posture, and is written incrementally with only the existing fidelity, Open Questions, and density-merge exemptions.
 _Avoid_: Reference note (concept-anchored, accumulates across many sources instead of one); Evergreen note (idea-oriented, freely revisited and rewritten).
 
 **Maieutic**
@@ -172,7 +180,7 @@ _Avoid_: Reference note (the file the Reference's definition accumulates into, n
 
 **Reference note**
 The cumulative file a Reference's definition lives in: evergreen-shaped but holding a stable, reusable fact rather than personal synthesis, extended across however many sources touch it, appending or extending but never overwriting what's already there.
-_Avoid_: Literature note (per-source, one-shot, holds Claims rather than a definition); Evergreen note (can be wholesale rewritten; a Reference note only ever appends).
+_Avoid_: Literature note (per-source, one-shot, holds Source Points rather than a definition); Evergreen note (can be wholesale rewritten; a Reference note only ever appends).
 
 **Resource**
 The frozen clip clip-resource writes: `type` frontmatter holds the content type directly, and once written, no skill in this family reopens it to edit, append, or correct it. A needed fix means writing a fresh clip, never patching the old one.

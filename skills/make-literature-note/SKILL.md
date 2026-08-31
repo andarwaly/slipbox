@@ -1,8 +1,8 @@
 ---
 name: make-literature-note
-description: Ground a clipped source into one or more Claims — the source's
+description: Ground a clipped source into one or more Source Points — the source's
   own position, restated in the user's own words and checked against the
-  source — writing each as a Key Claim in a shared literature note for that
+  source — writing each as a Source Point in a shared literature note for that
   source.
 license: MIT
 metadata:
@@ -115,7 +115,7 @@ nested `*Answered*` bullet as a wikilink to that claim's own heading
 only, never detected automatically; this family runs no cross-note scan for
 outstanding questions. An existing `*Assumption*` bullet stays in place
 once `*Answered*` is added alongside it. See
-`references/writing-a-claim.md`'s Open Questions section for the full
+`references/writing-a-source-point.md`'s Open Questions section for the full
 format.
 
 ## Write each claim, incrementally
@@ -137,12 +137,12 @@ toward the next one, if there is a next one:
   protected-name identification is uncertain, show the proposed basename and ask the user
   before writing. On this note's first
   claim, write the Core Idea line too, directly under the title (see
-  `references/writing-a-claim.md`); skip it on a second or later claim,
+  `references/writing-a-source-point.md`); skip it on a second or later Source Point,
   it's already there.
 - Re-read the target path from disk right before writing (the note may
   already hold earlier claims from this same session, or from a prior
   one).
-- Assemble and review the claim per `references/writing-a-claim.md` — the
+- Assemble and review the Source Point per `references/writing-a-source-point.md` — the
   declarative heading, condensed Evidence, the review checklist, quote
   formatting, and Key Concepts wikilink resolution.
 - Assemble the complete temporary draft, then run `/write-checks` artifact validation
@@ -232,7 +232,7 @@ whole audit; only a clean pass permits the next stage.
 
 ### Checking the shape — density, then the Core Idea
 
-With the claim set now final, read the note's `## Key Claims` as a whole
+With the Source Point set now final, read the note's `## Source Points` as a whole
 and apply the shared-Warrant merge test from `references/qew-theory.md`
 once more, this time across confirmed claims rather than Surface-pass
 candidates: two claims resting on the same inferential move are one claim
@@ -251,7 +251,7 @@ exemption to the literature note's frozen-once-written rule — distinct
 from the out-of-band fidelity correction (covered next) and from the
 `## Open Questions` append-only exemption above, and reaching no further
 than this one pass. If the
-user confirms the merge, the superseded claim's own `## Key Claims`
+user confirms the merge, the superseded Source Point's own `## Source Points`
 heading is removed and its content folded into the surviving merged
 claim, which then gets its own fresh Gate confirmation as the new
 statement it is.
@@ -348,7 +348,7 @@ Once the user has named the inaccuracy and what the corrected wording
 should say, run that corrected wording through `/grounding`'s Gate exactly
 as any other claim gets confirmed — a correction earns no shortcut past
 the discipline every other statement in the note holds to. Only once Gate
-confirms it, edit the existing `## Key Claims` entry in place: this is the
+confirms it, edit the existing `## Source Points` entry in place: this is the
 one case in the whole file where an already-written entry is legitimately
 reopened rather than superseded by a new heading.
 
@@ -380,4 +380,4 @@ applicable.
 |---|---|---|
 | `references/qew-theory.md` | Question/Evidence/Warrant/Conclusion — per-claim internal reasoning for deciding claim-worthiness and checking a Conclusion before it's finalized | Surface pass claim discovery; reviewing a claim before writing it |
 | `references/source-architecture.md` | Six optional whole-source lenses (Situation & Starting Point, Problem/Tension, Argument Movement, Support & Boundaries, Fidelity Signals, Resolution) feeding Core Idea formation | Reading the source's own architecture, before or alongside claim discovery |
-| `references/writing-a-claim.md` | Note structure, Core Idea line placement, the review checklist, quote formatting, and Key Concepts/Mentioned wikilink resolution | Assembling and writing a confirmed claim, or resolving any note-type wikilink |
+| `references/writing-a-source-point.md` | Note structure, Core Idea line placement, the review checklist, quote formatting, and Key Concepts/Mentioned wikilink resolution | Assembling and writing a confirmed Source Point, or resolving any note-type wikilink |

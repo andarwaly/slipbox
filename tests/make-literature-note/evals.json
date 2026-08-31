@@ -5,7 +5,10 @@
       "expected_output": "Reads the whole source silently and builds a private backlog of candidate claims plus the Core Idea - never presents this list to the user as a menu to pick from. Runs one continuous, natural conversation about the source, holding the user to it. Whenever the conversation organically produces something matching a backlog candidate (in whatever reshaped form), runs it through grounding's own Gate and writes it incrementally - declarative heading plus condensed Evidence, not batched at the end. Ends with a nudge for anything genuinely untouched in the backlog, then a batch pass finding terms/entities.",
       "assertions": [
         {"type": "not_contains", "text": "which do you want grounded"},
-        {"type": "not_contains", "text": "surface-ideas"}
+        {"type": "not_contains", "text": "surface-ideas"},
+        {"type": "contains", "text": "Source Points"},
+        {"type": "not_contains", "text": "Key Claims"},
+        {"type": "not_contains", "text": "what did this author argue?"}
       ]
     },
     {
@@ -45,7 +48,7 @@
     },
     {
       "prompt": "/make-literature-note on fixtures/sun-gating-and-morning-light.md, using fixtures/sun-gating-grounding-transcript.md as the session transcript, where the user notices mid-session that the source never actually settles whether indoor light exposure can substitute for outdoor light on a cloudy day",
-      "expected_output": "Captures the gap as a bullet in a top-level '## Open Questions' section, sibling to '## Key Claims', in plain declarative form naming what the source leaves unclear. Does not invent the open question itself or add one unprompted. If the user then offers their own guess at an answer, nests it as an '*Assumption*' bullet under that question, marked as the user's own guess, never written into a Key Claim.",
+      "expected_output": "Captures the gap as a bullet in a top-level '## Open Questions' section, sibling to '## Source Points', in plain declarative form naming what the source leaves unclear. Does not invent the open question itself or add one unprompted. If the user then offers their own guess at an answer, nests it as an '*Assumption*' bullet under that question, marked as the user's own guess, never written into a Source Point.",
       "assertions": [
         {"type": "contains", "text": "Open Questions"},
         {"type": "not_contains", "text": "Reaction"}
