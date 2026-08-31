@@ -79,12 +79,21 @@ in this order — entity exclusion first, followed by the remaining Admission se
    - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
 2. **Admission sequence** (only if not an entity; see `CONTEXT.md` and
    `GLOSSARY.md`): stable lookup identity, source independence, boundedness, adaptive
-   evidence sufficiency, and natural-unit scope. A candidate that fails any check, or
-   never reaches threshold, stays an unresolved broken wikilink indefinitely.
+   evidence sufficiency, and natural-unit scope. Apply evidence sufficiency after the
+   other checks, not as a reward for recurrence: one authoritative primary source can
+   support a settled standard, while otherwise two independently grounded sources are
+   required. Duplicated, syndicated, or otherwise non-independent sources count as one
+   support path. Materially contested variants remain unresolved until independent support
+   covers the competing definitions or the user resolves the conflict. A candidate that
+   fails any check, or never reaches threshold, stays an unresolved broken wikilink
+   indefinitely.
 
 Non-entity books/creative works, named tools, and events continue through the same
-Admission gates. If all applicable gates pass, report them as Reference-note candidates;
-if any gate fails, leave them as unresolved Mentioned links.
+Admission gates. If all applicable gates pass, report them as Reference-note candidates
+and state why the evidence is sufficient. If any gate fails, report the candidate as
+`unresolved`, name the missing support, and leave the wikilink untouched as an unresolved
+Mentioned link. Never equate a recurrence count with warrant, and never create a
+provisional Reference artifact or a `work_id` from this read-only scan.
 
 ### Present as a batch
 

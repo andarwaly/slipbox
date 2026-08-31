@@ -63,6 +63,31 @@ source here, do not synthesize from it, and tell the user it needs to go through
 do exist; don't block the whole write on one ungrounded source unless it's the only
 one.
 
+## Route the evidence
+
+Admission is a deterministic decision, separate from recurrence and from the user's
+request to write a note. Apply the checks in the order defined in `CONTEXT.md`:
+
+- Exclude people, locations, and organizations first; they remain surfacing-only
+  `Mentioned` referents.
+- Require a stable lookup identity, source independence, bounded scope, and a natural
+  unit. A coined label that is meaningful only inside one source has not passed source
+  independence.
+- Adapt the evidence threshold to the claim. One authoritative primary source may admit a
+  settled standard. Otherwise, require two independently grounded sources whose support
+  does not merely repeat one another. Duplicated, syndicated, or otherwise non-independent
+  sources count as one support path, not two.
+- Treat materially contested variants as unresolved until independent support covers the
+  competing definitions, or the user resolves the conflict explicitly. Never silently pick
+  the most convenient variant.
+
+The result is either `admitted`, with the grounded inputs and the reason the evidence is
+sufficient, or `unresolved`, naming the failed check and the support still needed. Never
+create a provisional Reference artifact. If the result is unresolved, report the missing
+support, leave the candidate's wikilink untouched, and do not create a `work_id` unless an
+artifact operation has actually begun. A direct user invocation does not waive these gates.
+Recurrence count is discovery evidence only; it is never itself a warrant for admission.
+
 ## Synthesize and confirm
 
 Reconcile the gathered characterizations into one bounded lookup entry. Follow

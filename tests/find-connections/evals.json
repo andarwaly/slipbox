@@ -72,6 +72,15 @@
         {"type": "contains", "text": "admission sequence"},
         {"type": "not_contains", "text": "declarative-title"}
       ]
+    },
+    {
+      "prompt": "find-connections --references where a candidate recurs in three Literature notes but all three notes trace to one duplicated source",
+      "expected_output": "Reports the recurrence cluster as unresolved because recurrence does not establish warrant and the duplicated notes provide only one independent support path; leaves every wikilink untouched and creates no provisional Reference artifact or work_id.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "recurrence does not establish warrant"},
+        {"type": "contains", "text": "no provisional Reference artifact"}
+      ]
     }
   ]
 }

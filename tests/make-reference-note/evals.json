@@ -146,6 +146,51 @@
         {"type": "not_contains", "text": "declarative-title"},
         {"type": "contains", "text": "unresolved"}
       ]
+    },
+    {
+      "prompt": "make-reference-note for a settled standard documented by one authoritative primary source",
+      "expected_output": "Returns admitted with the grounded source named as authoritative primary evidence; one source is sufficient for this settled standard and no second source is invented.",
+      "assertions": [
+        {"type": "contains", "text": "admitted"},
+        {"type": "contains", "text": "authoritative primary source"},
+        {"type": "not_contains", "text": "provisional"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a stable bounded concept supported by two independent grounded Literature notes",
+      "expected_output": "Returns admitted and names both independent grounded inputs as sufficient evidence, then proceeds to confirmation before writing.",
+      "assertions": [
+        {"type": "contains", "text": "admitted"},
+        {"type": "contains", "text": "independent"},
+        {"type": "contains", "text": "confirmation"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a bounded concept cited by two syndicated copies of the same source",
+      "expected_output": "Returns unresolved because the duplicated sources are not independent; reports that another independent support path is needed and writes no provisional Reference artifact.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "not independent"},
+        {"type": "not_contains", "text": "provisional Reference"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a concept whose grounded sources present materially contested definitions",
+      "expected_output": "Returns unresolved, surfaces the competing variants instead of silently selecting one, and identifies independent support or an explicit user resolution as the next requirement.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "contested"},
+        {"type": "contains", "text": "silently"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note \"Private Team Heuristic\" directly, with only one source-specific characterization and no independent support",
+      "expected_output": "Returns unresolved despite the direct user invocation, names source independence as the failed gate, reports the support needed, leaves the wikilink untouched, and creates no work_id or provisional artifact.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "direct user invocation"},
+        {"type": "contains", "text": "no work_id"}
+      ]
     }
   ]
 }
