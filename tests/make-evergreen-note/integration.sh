@@ -22,6 +22,7 @@ rg -q 'compensated' "$lifecycle"
 rg -q 'multi-citation|two citations' "$evals"
 rg -q 'mutations\.json|backlog update' "$evals"
 rg -qi 'compensat' "$evals"
+rg -q 'tensions.*pending' "$skill"
 
 # Execute the transactional CLI against a fresh fixture.
 scratch=$(mktemp -d)

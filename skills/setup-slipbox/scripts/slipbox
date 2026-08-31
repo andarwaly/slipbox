@@ -409,7 +409,7 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
             if not isinstance(new_path_value, str) or not new_path_value:
                 fail("backlog-events mutation requires new_path")
             new_target = _safe_vault_path(vault_root, new_path_value, "backlog mutation new_path")
-            if new_target.exists():
+            if new_path_value != path_value and new_target.exists():
                 fail(f"backlog mutation destination already exists: {new_path_value}")
             if not isinstance(mutation.get("operation"), str) or mutation["operation"] not in {"rename", "update"}:
                 fail("backlog-events mutation operation must be rename or update")
@@ -478,7 +478,8 @@ def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path
             destination = _safe_vault_path(vault_root, mutation["new_path"])
             destination.parent.mkdir(parents=True, exist_ok=True)
             os.replace(replacement, destination)
-            target.unlink()
+            if destination != target:
+                target.unlink()
             applied.append(index)
         else:
             fd, tmp = tempfile.mkstemp(prefix=".slipbox-publish-", dir=str(target.parent))
@@ -509,6 +510,11 @@ def compensate(mutations: list[dict], backups: list[dict], applied: list[int], v
                             raise ValueError(f"invalid compensation event: {exc}")
                         inverse = {"op": "remove" if canonical["op"] == "add" else "add", "source_slug": canonical["source_slug"], "target_slug": canonical["target_slug"], "rel_type": canonical["rel_type"]}
                         handle.write(json.dumps(inverse, separators=(",", ":")) + "\n")
+            elif mutation.get("kind") == "backlog-events":
+                destination = _safe_vault_path(vault_root, mutation["new_path"])
+                if destination != target and destination.exists(): destination.unlink()
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(backup["bytes"] or b"")
             elif backup["existed"]:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 fd, tmp = tempfile.mkstemp(prefix=".slipbox-rollback-", dir=str(target.parent))
@@ -934,6 +940,8 @@ try:
     for mutation, backup in zip(staged, backups):
         if _mutation_fingerprint(_safe_vault_path(vault, mutation["path"])) != backup["fingerprint"]:
             fail(f"target changed while waiting for lock: {mutation['path']}")
+        if mutation.get("kind") == "backlog-events" and mutation.get("new_path") != mutation.get("path") and _safe_vault_path(vault, mutation["new_path"]).exists():
+            fail(f"backlog mutation destination changed while waiting for lock: {mutation['new_path']}")
     applied = []
     try:
         applied = apply_mutations(staged, backups, vault, work_dir)
@@ -1234,11 +1242,6 @@ else:
                 continue
             if isinstance(entry, str):
                 name, kind, zone = entry, "text", "top"
-            elif mutation.get("kind") == "backlog-events":
-                destination = _safe_vault_path(vault_root, mutation["new_path"])
-                if destination.exists(): destination.unlink()
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(backup["bytes"] or b"")
             else:
                 name = entry.get("name", field)
                 kind = entry.get("type", "text")
