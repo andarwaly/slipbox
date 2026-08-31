@@ -1,6 +1,19 @@
 {
   "test_cases": [
     {
+      "prompt": "Build a source map and inquiry map for a conceptual source with several argument moves and uneven user relevance.",
+      "expected_output": "Keeps the reusable source map source-owned and separate from reader inquiry or transcript; references source-unit IDs from the inquiry map; derives a grounding frontier at runtime rather than storing an authoritative queue. Routes high-learning/low-risk work through a user semantic relation before the agent drafts, while low-learning/high-risk work is verified against the source without forcing paraphrase.",
+      "assertions": [
+        {"type": "contains", "text": "source map"},
+        {"type": "contains", "text": "inquiry map"},
+        {"type": "contains", "text": "unit IDs"},
+        {"type": "contains", "text": "transcript"},
+        {"type": "contains", "text": "derived grounding frontier"},
+        {"type": "contains", "text": "semantic relation"},
+        {"type": "contains", "text": "without forced paraphrase"}
+      ]
+    },
+    {
       "prompt": "/make-literature-note from resources/2026-08-08-design-tokens.md, a freshly clipped source with no literature note yet",
       "expected_output": "Reads the whole source silently and builds a private backlog of candidate claims plus the Core Idea - never presents this list to the user as a menu to pick from. Runs one continuous, natural conversation about the source, holding the user to it. Whenever the conversation organically produces something matching a backlog candidate (in whatever reshaped form), runs it through grounding's own Gate and writes it incrementally - declarative heading plus condensed Evidence, not batched at the end. Ends with a nudge for anything genuinely untouched in the backlog, then a batch pass finding terms/entities.",
       "assertions": [
