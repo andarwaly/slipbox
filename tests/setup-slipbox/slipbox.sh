@@ -129,6 +129,7 @@ else:
         migrations = candidate.get("migrations", {})
         if not isinstance(migrations, dict): return False
         reference = migrations.get("reference")
+        if reference is not None and not isinstance(reference, dict): return False
         if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","selected","lazy","defer"}): return False
         if reference and reference["mode"] == "selected" and (not isinstance(reference.get("selected"), list) or not reference["selected"]): return False
         if reference and reference.get("selected"):
@@ -145,6 +146,10 @@ reference_migration = copy.deepcopy(base)
 reference_migration["migrations"] = {"reference": {"mode":"selected", "selected":["reference/legacy-note.md"]}}
 assert valid(reference_migration) is True
 reference_migration["migrations"]["reference"] = {"mode":"selected"}
+assert valid(reference_migration) is False
+reference_migration["migrations"]["reference"] = "selected"
+assert valid(reference_migration) is False
+reference_migration["migrations"]["reference"] = []
 assert valid(reference_migration) is False
 PY
 pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
