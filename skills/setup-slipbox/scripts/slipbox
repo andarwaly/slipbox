@@ -1300,6 +1300,9 @@ else:
             error("markdown-structure", "note body must contain exactly one level-one heading")
         elif expected_title and h1[0] != expected_title:
             error("title", f"H1 does not match expected title {expected_title!r}")
+        configured_prefix = config.get("prefixes", {}).get(note_type)
+        if len(h1) == 1 and isinstance(configured_prefix, str) and configured_prefix and h1[0].startswith(configured_prefix + " "):
+            error("h1-prefix", f"H1 must be clean and must not begin with configured prefix {configured_prefix!r}")
         if body and not body.startswith("# "):
             error("markdown-structure", "the H1 must be the first Markdown block")
         formatting = style.get("formatting", {}) if isinstance(style, dict) else {}

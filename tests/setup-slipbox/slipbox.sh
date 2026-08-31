@@ -129,8 +129,14 @@ else:
         migrations = candidate.get("migrations", {})
         if not isinstance(migrations, dict): return False
         reference = migrations.get("reference")
+        literature_headings = migrations.get("literature_headings")
+        evergreen_headings = migrations.get("evergreen_headings")
+        for policy in (literature_headings, evergreen_headings):
+            if policy is not None and (not isinstance(policy, dict) or set(policy) - {"mode", "selected"} or policy.get("mode") not in {"all-valid", "all-compatible", "selected", "lazy", "defer"}): return False
+            if policy and policy["mode"] == "selected" and (not isinstance(policy.get("selected"), list) or not policy["selected"]): return False
+            if policy and policy.get("selected") and policy["mode"] != "selected": return False
         if reference is not None and not isinstance(reference, dict): return False
-        if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","selected","lazy","defer"}): return False
+        if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","all-valid","selected","lazy","defer"}): return False
         if reference and reference["mode"] == "selected" and (not isinstance(reference.get("selected"), list) or not reference["selected"]): return False
         if reference and reference.get("selected"):
             import re
@@ -505,8 +511,6 @@ for contract in \
 done
 assert_contains "validator rejects an unprefixed target for prefixed notes" "Reject unprefixed targets for prefixed files" \
   "$REPO_ROOT/skills/write-checks/SKILL.md"
-assert_contains "validator rejects prefixes in note H1 headings" "reject prefix in any H1" \
-  "$REPO_ROOT/skills/write-checks/SKILL.md"
 
 echo "--- whole-artifact validation ---"
 cat > "$SCRATCH/config.json" <<'EOF'
@@ -583,6 +587,8 @@ sources: ["[[A resource]]"]
 Definition.
 EOF
 check "note validate accepts a parsed list" "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Reference.md" --basename "※ Reference.md" --title "Reference"
+sed 's/# Reference/# ※ Reference/' "$SCRATCH/※ Reference.md" > "$SCRATCH/※ Prefixed H1.md"
+check_exit "note validate rejects a prefixed Reference H1 without --title" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Prefixed H1.md" --basename "※ Prefixed H1.md"
 cat > "$SCRATCH/※ block-list.md" <<'EOF'
 ---
 type: reference
