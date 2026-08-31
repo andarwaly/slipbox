@@ -1,6 +1,38 @@
 {
   "test_cases": [
     {
+      "prompt": "Start or resume Literature work for a Resource with explicit inquiry context, implied reflection, no stated purpose, and exploratory intent; the Resource is a news report containing an allegation attributed to a secondary source. The user may be Confident, Hesitant, Blank, or Confused, and may treat the Resource as primary or secondary regardless of its type.",
+      "expected_output": "Uses /using-slipbox to start or resume recoverable work, loads or builds the source cache, creates a session-scoped inquiry map, and derives the grounding frontier at runtime. Follows one substantive question at a time and dispatches all four reading states (Confident, Hesitant, Blank, Confused) without a universal opener. Keeps primary/secondary posture independent of Resource type and preserves the news allegation's attribution and uncertainty.",
+      "assertions": [
+        {"type": "contains", "text": "Start or resume Literature work"},
+        {"type": "contains", "text": "/using-slipbox"},
+        {"type": "contains", "text": "source cache"},
+        {"type": "contains", "text": "inquiry map"},
+        {"type": "contains", "text": "grounding frontier"},
+        {"type": "contains", "text": "Confident"},
+        {"type": "contains", "text": "Hesitant"},
+        {"type": "contains", "text": "Blank"},
+        {"type": "contains", "text": "Confused"},
+        {"type": "contains", "text": "primary/secondary"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "not_contains", "text": "what did this author argue?"}
+      ]
+    },
+    {
+      "prompt": "Ground one sharp inquiry-central Source Point and several supporting/contextual points, including a consequential ambiguous point, then pause and resume the Literature session.",
+      "expected_output": "Applies the Adaptive Split Gate: inquiry-central work asks the user for a semantic relation before drafting; supporting/contextual work may be agent-drafted; consequential or ambiguous work is verified against the source without forced paraphrase. Checkpoints the inquiry map and staged draft through /using-slipbox, never mutates the final literature path mid-session, and on resume reuses prior comprehension evidence to continue at the next unresolved obligation.",
+      "assertions": [
+        {"type": "contains", "text": "semantic relation"},
+        {"type": "contains", "text": "supporting/contextual"},
+        {"type": "contains", "text": "without forced paraphrase"},
+        {"type": "contains", "text": "checkpoint"},
+        {"type": "contains", "text": "staged draft"},
+        {"type": "contains", "text": "never mutates the final"},
+        {"type": "contains", "text": "reuses prior comprehension evidence"},
+        {"type": "not_contains", "text": "full /grounding Gate for every point"}
+      ]
+    },
+    {
       "prompt": "Build a source map and inquiry map for a conceptual source with several argument moves and uneven user relevance.",
       "expected_output": "Keeps the reusable source map source-owned and separate from reader inquiry or transcript; references source-unit IDs from the inquiry map; derives a grounding frontier at runtime rather than storing an authoritative queue. Routes high-learning/low-risk work through a user semantic relation before the agent drafts, while low-learning/high-risk work is verified against the source without forcing paraphrase.",
       "assertions": [

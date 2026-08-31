@@ -6,10 +6,9 @@ literature note for that source.
 
 ## When to use
 
-Run this directly on a clipped source: `/make-literature-note from this article` (or a
-URL, or a path). Invoked bare with no argument, it infers the source from context — a
-just-clipped resource, a pasted URL, an already-open file — and only asks if nothing's
-inferrable.
+Start or resume Literature work for the Resource `/using-slipbox`. The source may be
+explicit (`/make-literature-note from this article`) or inferred from a just-clipped
+Resource, pasted URL, or open file; ask only when nothing is inferrable.
 
 If the note already has Source Points from a prior session, it only offers what's left.
 
@@ -21,23 +20,23 @@ prefix belongs in the generated filename and link target, not in that H1.
 1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming `setup-slipbox`
    has run; every `slipbox` CLI call throughout this skill goes through
    `.slipbox/bin/slipbox`, never bare `slipbox`.
-2. **Take the source** — direct capture, checked against existing literature notes'
-   `source` field to see if this source has already been (partially) grounded.
-3. **Surface pass** — reads the source, using Question/Evidence/Warrant internally to
-   identify the Core Idea and a candidate backlog. This backlog is never shown as a
-   menu — it's the agent's own private steering tool for the conversation that follows.
-4. **One continuous conversation** — rather than looping a separate session per claim,
-   you have one natural conversation about the source. Whenever it organically produces
-   something matching a backlog candidate — in whatever reshaped form — it goes through
-   a full `/grounding` Gate exactly as always.
-5. **Write each Source Point, incrementally** — each confirmed Source Point lands on disk as a
-   declarative heading with condensed Evidence underneath, the moment it's confirmed.
+2. **Load or build source analysis** — `/using-slipbox` reads or creates a reusable source
+   map keyed by the Resource fingerprint; it stays source-owned and separate from inquiry.
+3. **Create inquiry context** — build a session-scoped inquiry map with purpose, reflection,
+   source-unit IDs, comprehension, relevance, risk, and draft state. Derive the grounding
+   frontier at runtime; never store an authoritative queue.
+4. **Follow the inquiry** — ask one substantive question at a time. The Adaptive Split Gate
+   requires semantic reconstruction for inquiry-central work, while supporting/contextual
+   work may be agent-drafted; consequential material is source-verified without forced
+   paraphrase. Confident, Hesitant, Blank, and Confused reading states dispatch normally.
+5. **Stage Source Points** — checkpoint the inquiry map and `draft.md` through
+   `/using-slipbox`; every final point receives a source audit. The final path is untouched
+   until closeout publication.
 6. **Knowing when the session is done** — coverage first, then shape, then the user's own
    reaction. Coverage means checking the backlog against three states (covered / drafted
    but unconfirmed / genuinely untouched, each nudged differently, at most once) and,
-   as a judgment call rather than a mandatory step, considering a fresh full re-read of
-   the source to catch what neither the Surface pass nor the conversation caught. Shape
-   means a density-merge pass across the confirmed claims and a re-confirmation of the
+   targeted integrity checks against source units. Shape means a density-merge pass across
+   the confirmed points and a re-confirmation of the
    Core Idea against the session as a whole. Last, the user is asked what they think of
    the source — routed to the evergreen backlog as a seed for a future Take if they want
    it recorded, never into the literature note itself. "I think that's everything" always

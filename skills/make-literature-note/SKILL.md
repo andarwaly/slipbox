@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Source Points — the sour
   source.
 license: MIT
 metadata:
-  version: "1.16.0"
+  version: "1.17.0"
 ---
 
 # Make-literature-note
@@ -21,12 +21,14 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Invocation
 
-Named directly — `/make-literature-note from this article` (or a URL, or
-a path) — grounds that specific source. A bare `/make-literature-note`
-with no argument falls back to inferring the source from context: a
-just-clipped Resource, a URL pasted earlier in the conversation, or an
-already-open file. Ask only if nothing's inferrable — never guess silently
-and never require the argument when the source is obvious from context.
+Start or resume Literature work for the Resource `/using-slipbox`.
+
+The caller may identify the Resource explicitly — `/make-literature-note from this
+article` (or a URL or path) — or leave it implicit when a just-clipped Resource, pasted
+URL, or open file makes the source unambiguous. Ask only when nothing is inferrable.
+Pass the source identity, inquiry context, and known paths to `/using-slipbox` before
+reading or writing. A returning invocation resumes the matching unfinished work item;
+it does not start a second interview.
 
 ## Take the source
 
@@ -37,16 +39,29 @@ whose resolved `source` field (per `.slipbox/bin/slipbox config get frontmatter.
 points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
-  to the Surface pass below with a fresh Private backlog.
+  to build the source and inquiry maps with a fresh session assessment.
 - **A note already exists** — read it in full. Its existing `## Source
   Points` `###` headings are Source Points already confirmed; the backlog below
   must not re-offer them.
 
-## Surface pass — builds a private backlog, never a shown menu
+## Build the source and inquiry maps
 
-Read the whole source yourself — this is your own judgment, not a
-`/grounding` call; `/grounding` was never built for open-ended "what does
-this cover" scanning, only for probing something already anchored. Before
+Use `/using-slipbox` to inspect the Resource's source cache. Load a compatible source map;
+otherwise build one from the whole frozen Resource using `references/source-architecture.md`
+and `references/qew-theory.md`, then store it as source-owned analysis. The cache contains
+source units, posture, relations, and Core Idea candidates; it never contains the user's
+inquiry, reading state, transcript, or a prescriptive queue.
+
+Create a separate session-scoped inquiry map referencing source-unit IDs. Record purpose,
+implied purpose, reflection, relevance, learning relevance, interpretive risk, comprehension,
+selection, disposition, and draft state. If purpose is absent, ask one natural purpose
+question; if the user is exploring, use that as context rather than forcing a fixed goal.
+Reassess the map as the conversation changes. Derive the grounding frontier at runtime;
+never persist it as an authoritative backlog. On recovery, compare Resource and note
+fingerprints through `/using-slipbox`, reuse prior comprehension evidence and staged points,
+and resume at the next unresolved thinking obligation rather than repeating settled questions.
+
+The source-architecture and Q/E/W reasoning below remain internal. Before
 or alongside claim discovery, read the source's architecture per
 `references/source-architecture.md` — its six optional lenses (Situation &
 Starting Point, Problem/Tension, Argument Movement, Support & Boundaries,
@@ -67,32 +82,33 @@ Apply the shared-Warrant merge test
 now, before proceeding: two candidates resting on the same inferential move
 are one claim, not two.
 
-This candidate list measures coverage, not required output — a literature
+These source-map candidates measure coverage, not required output — a literature
 note may legitimately stay partial (see Knowing when the session is done,
 below). It is **your own private backlog, not a menu presented to
 the user** — never surfaced as a checklist, never asked "which of these do
 you want grounded." It exists only to steer where the conversation still
 needs to go and to check coverage once the session winds down. It is
-session-scoped only — discarded once the session ends, regardless of how
-much of it got covered.
+session-scoped only — discard the inquiry assessment at session end; the grounding
+frontier is always derived again from current evidence, never persisted as a queue.
 
-## Ground the source — one continuous conversation, not one session per claim
+## Follow the inquiry — one substantive question at a time
 
-Run a single, continuous `/grounding` session on the source, holding the
-user to it (`/grounding`'s own default Fidelity direction for a
-source-present session — no parameter to supply here). Do not present the
-backlog. Do not ask the user to pick claims from a list. Let the
-conversation proceed naturally.
+Follow the derived grounding frontier in one continuous conversation. Do not present the
+candidate list or ask which point to ground. Apply `references/adaptive-split-gate.md`:
+inquiry-central routine units require the user's semantic relation before drafting;
+inquiry-central consequential or ambiguous units require reconstruction, ambiguity
+discussion, and source verification; supporting/contextual units may be agent-drafted and
+verified; supporting/contextual consequential units are source-verified without forced
+paraphrase. Ask exactly one substantive question at a time.
 
-Whenever the conversation organically produces something matching a
-backlog candidate — in whatever reshaped form the conversation actually
-produces, since a candidate can split, merge, or sharpen into something
-different from what the Surface pass first found — treat that as a real
-Claim: run it through `/grounding`'s own Gate exactly as always (one
-confirmed statement, no shortcut), then write it (see Write below) before
-continuing the conversation. The Gate itself never changes shape or
-relaxes; only how a claim gets *reached* is different from a fixed
-menu-then-loop.
+For any `/grounding` turn, dispatch Confident to verification, Hesitant to Feynman, Blank
+with a source to guided reading (without one to maieutic), and Confused to self-explanation.
+Primary/secondary posture comes from the material and attribution, independently of the
+Resource `type`; preserve news allegations as attributed reports with their uncertainty.
+
+When an inquiry-central unit is reconstructed, use `/grounding` for that semantic relation
+and its confirmation. Supporting/contextual points do not receive a full Gate by default;
+they receive source verification and a final source audit.
 
 If a tension comes back from a Gate pass, insert it into the evergreen
 backlog before continuing:
@@ -118,16 +134,23 @@ once `*Answered*` is added alongside it. See
 `references/writing-a-source-point.md`'s Open Questions section for the full
 format.
 
-## Write each claim, incrementally
+## Stage each Source Point
 
-As soon as one claim is confirmed — before continuing the conversation
-toward the next one, if there is a next one:
+As soon as one Source Point is semantically settled — before continuing toward the next
+unresolved inquiry obligation:
 
 - Run a `/write-checks` session with `artifact-kind: note` and `note-type: literature`, passing the literature field
   list (`type`, `created`, `source`) — it resolves each field's mapping,
   formatting, zone placement, and title prefix, and checks the draft's
   style and humanize signals.
-- Write into the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
+- Assemble and review the Source Point per `references/writing-a-source-point.md`. Preserve
+  local posture, scope, attribution, and certainty: a news allegation remains an attributed
+  report, never the source's own claim.
+- Use `/using-slipbox` to checkpoint the inquiry map and complete staged `draft.md`. Run
+  `/write-checks` against the staged artifact and repair only mechanical defects. Never
+  mutate the final literature path mid-session; publish once at closeout through
+  `/using-slipbox`.
+- Derive the intended target in the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
   `.slipbox/bin/slipbox config get filenames.literature` casing convention. The Literature H1
   preserves the Resource's source title exactly; it is never replaced with an agent-authored
   topic label. Construct the complete basename through `.slipbox/bin/slipbox filename format
@@ -139,24 +162,21 @@ toward the next one, if there is a next one:
   claim, write the Core Idea line too, directly under the title (see
   `references/writing-a-source-point.md`); skip it on a second or later Source Point,
   it's already there.
-- Re-read the target path from disk right before writing (the note may
-  already hold earlier claims from this same session, or from a prior
-  one).
-- Assemble and review the Source Point per `references/writing-a-source-point.md` — the
-  declarative heading, condensed Evidence, the review checklist, quote
-  formatting, and Key Concepts wikilink resolution.
-- Assemble the complete temporary draft, then run `/write-checks` artifact validation
-  with the complete basename and exact Resource title. Repair only mechanical defects;
-  stop and ask for semantic conflicts, collisions, uncertain titles, or uncertain
-  protected names.
-- Write the assembled draft, re-read the saved path, and run
+- Re-read the staged draft and inquiry map right before each checkpoint; do not read or
+  overwrite the final target as a session scratchpad.
+- Assemble the complete staged draft, then run `/write-checks` artifact validation with the
+  complete basename and exact Resource title. Repair only mechanical defects; stop and ask
+  for semantic conflicts, collisions, uncertain titles, or uncertain protected names.
+- Re-read staged state before each checkpoint. A failed post-write check blocks the next
+  frontier item and success acknowledgment. The final path is written only by the publish
+  action at closeout, then run
   `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
   --basename "<complete basename>.md" --title "<exact Resource title>"`. A failed
   post-write check blocks the next claim and the success acknowledgment.
 - Filename collision on the note's first claim → stop and ask, never
   auto-disambiguate. On a second or later claim for an existing note, the
   existing file is expected, not a collision.
-- Once written, tell the user in one short line that this claim landed —
+- Once staged, tell the user in one short line that this claim is retained —
   "that's your second claim confirmed" or equivalent — then move to the
   next question, if there is one, on its own line rather than fused into
   the same sentence (same split as `/grounding`'s SKILL.md
@@ -166,21 +186,17 @@ toward the next one, if there is a next one:
   session stands without every turn being labeled.
 
 An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
-bullet) writes to disk the same way, as soon as it's flagged — it isn't
-held back for the batch pass below, and unlike most other sections it can
-still be appended to later in a subsequent session, one of the note's
-three narrowly-scoped exemptions from the otherwise frozen-once-written
-rule (full list under Checking the shape, below).
+bullet) is staged through `/using-slipbox` as soon as it's flagged. It is not
+published mid-session; unlike most other sections it can still be appended to
+later in a subsequent session.
 
 ## Knowing when the session is done
 
 Once the conversation's natural energy winds down, `Done` is a fixed closeout
 gate. Run every stage below in order; never declare completion between stages.
-The source audit is convergent: any material claim-set change, including a
-density merge, returns to the complete audit and the loop continues until the
-audit is clean. A user-declined valid finding makes the note deliberately
-partial; report that status and discard the private backlog unless the user
-explicitly asks to retain it.
+Every final Source Point receives a source audit before it is retained. A
+user-declined valid finding makes the note deliberately partial; report that
+status and discard the inquiry map unless the user explicitly asks to retain it.
 
 ### Checking coverage — the backlog, then the source itself
 
@@ -216,19 +232,19 @@ regardless of what the backlog still shows uncovered — for both non-covered
 states: Drafted but unconfirmed and Untouched.
 The nudge is a single offer, never an insistence.
 
-Then **always** re-read the complete source and compare it against the
-finished note. The audit explicitly checks missing arguments, claims that
-became too narrow or too broad, overlapping claims, and qualifications or
-gray areas lost during compression. Present findings as one batch.
+Then run a focused integrity sweep over the staged source map and draft. Check
+each retained point for source fidelity, posture, attribution, scope, certainty,
+and unresolved ambiguity. Use source-unit coverage and integrity flags to guide
+any next question; do not run an exhaustive universal source-to-note audit.
 
 > "Re-reading the source, these look like things it argues that we never
 > captured: [list, each with a one-line note on what the source says].
 > Want to ground all of them, some, or none?"
 
-Whatever the user picks goes through `/grounding`'s Gate exactly as any other
-claim and gets written the same way. A declined valid finding is reported as
-partial. Zero findings is clean. After every material change, restart this
-whole audit; only a clean pass permits the next stage.
+Whatever the user picks is routed through the Adaptive Split Gate, not a blanket
+per-point Gate. A declined valid finding is reported as partial. Zero findings
+is clean. After a material change, re-audit the affected Source Points before
+the next stage.
 
 ### Checking the shape — density, then the Core Idea
 
@@ -244,17 +260,8 @@ this one pass's judgment, nothing more — not a hard gate, not a target to
 pad toward, and never a mid-conversation interrupt. A dense source can
 honestly support more; a short one can honestly support two. The number
 only prompts a harder look at overlap when the count runs well past it.
-Where the merge test does fire, offer the merge rather than performing
-it — the merged claim is a new statement, so it goes through Gate like
-any other. This session-close density merge is a third, narrowly-scoped
-exemption to the literature note's frozen-once-written rule — distinct
-from the out-of-band fidelity correction (covered next) and from the
-`## Open Questions` append-only exemption above, and reaching no further
-than this one pass. If the
-user confirms the merge, the superseded Source Point's own `## Source Points`
-heading is removed and its content folded into the surviving merged
-claim, which then gets its own fresh Gate confirmation as the new
-statement it is.
+Where the merge test does fire, offer the merge; if accepted, re-audit the
+affected point and stage the revised draft through `/using-slipbox`.
 
 Then confirm the Core Idea. It was written on the note's first claim,
 before most of the conversation existed, so it's the one line on the page
@@ -354,22 +361,22 @@ reopened rather than superseded by a new heading.
 
 ## Final validation handoff
 
-Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete artifact after the final batch. Check
+Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete staged artifact after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
 surfacing sections on the file already written. Then run
 `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
 --basename "<complete basename>.md" --title "<exact Resource title>"`. Validation
 is a handoff, not permission to silently rewrite a claim; any material claim
-change returns to the convergent source audit.
+change re-audits the affected points before publication through `/using-slipbox`.
 
 ## Done
 
-`Done` fires only after this checklist is true: the convergent source audit
-is clean (or the user explicitly declined findings and the note is reported
-partial); density merge was offered and, if accepted, re-audited; final Core
+`Done` fires only after this checklist is true: every final Source Point has
+passed source audit (or the user explicitly declined a valid finding and the
+note is reported partial); density merge was offered and, if accepted, re-audited; final Core
 Idea is confirmed; final Key Concepts/Mentioned batch is complete; reaction
-and optional Evergreen routing are complete; and artifact validation confirms
-the note already written incrementally. The note includes any user-flagged
+and optional Evergreen routing are complete; artifact validation passes and
+the staged draft is published transactionally. The note includes any user-flagged
 Open Questions and nested bullets, and flagged tensions are logged in the
 evergreen backlog. Then tell the user the file path and partial status when
 applicable.
