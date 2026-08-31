@@ -163,7 +163,7 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 - `transcript_languages` — ordered list from Section A's clip config.
 - `git` — `{mode: off|ask|auto, commit_style: {mode: detected|fallback}, activity_trailers: boolean}`. If no repository is detected, store `mode: "off"` and explain that Git can be enabled later. If a repository is detected, ask `off`, `ask` (recommended), or `auto`; `commit_style.mode` records whether the commit convention was detected or the fallback will be used. Do not persist a Git-detection boolean or repository-root state.
 - `cache` — `{source_maps: {persistence: local|tracked}}`; ask this independently, defaulting to `local`.
-- `migrations` — `{literature_headings: {mode: selected|all-compatible|lazy|defer, selected?: [note paths]}}`; persist the separately authorized legacy-heading policy. For `lazy`, write `mode: lazy` and do not modify notes during setup.
+- `migrations` — `{literature_headings: {mode: selected|all-compatible|lazy|defer, selected?: [vault-relative existing note paths]}}`; persist the separately authorized legacy-heading policy. `selected` requires at least one vault-relative path (no absolute paths or dot-segment traversal). For `lazy`, write `mode: lazy` and do not modify notes during setup. If this policy is absent, treat it as `defer` for backwards compatibility; never infer authorization from absence.
 
 Show the draft to the user, let them edit it, then validate the approved draft against `assets/config.schema.json` before writing. If validation fails, fix the draft and re-validate — never write a config that doesn't conform.
 

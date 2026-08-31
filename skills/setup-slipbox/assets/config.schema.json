@@ -128,8 +128,12 @@
           "additionalProperties": false,
           "properties": {
             "mode": { "type": "string", "enum": ["selected", "all-compatible", "lazy", "defer"] },
-            "selected": { "type": "array", "items": { "type": "string" } }
-          }
+            "selected": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^(?!/)(?!.*(^|/)\\.\\.?(/|$)).+" } }
+          },
+          "oneOf": [
+            { "properties": { "mode": { "const": "selected" } }, "required": ["selected"] },
+            { "properties": { "mode": { "enum": ["all-compatible", "lazy", "defer"] } }, "not": { "required": ["selected"] } }
+          ]
         }
       }
     }

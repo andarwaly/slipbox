@@ -84,3 +84,27 @@ literature eval JSON: valid
 lazy policy, first-access CAS migration, and byte-for-byte isolation: present
 git diff --check: clean
 ```
+
+## Round 4
+
+- Added an executable first-access test that creates isolated legacy and unrelated notes, invokes `work create`/`work finalize` with a heading-only mutation, and byte-compares the unrelated note.
+- Persisted the migration policy in the config schema. `selected` requires non-empty vault-relative paths without dot-segment traversal; non-selected modes reject `selected` paths. An absent policy is explicitly treated as `defer`.
+
+Verification:
+
+```bash
+tests/make-literature-note/lazy-migration.sh
+python3 - <<'PY'
+# Draft valid lazy/selected policies and invalid missing/absolute/mixed policies
+# through jsonschema Draft7Validator.
+PY
+git diff --check
+```
+
+Output:
+
+```text
+lazy migration behavioral test: PASS (first-access CAS changed only selected note)
+config migration policy validation: PASS
+git diff --check: clean
+```

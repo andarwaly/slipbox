@@ -44,7 +44,8 @@ points at this resource.
   Points` `###` headings are Source Points already confirmed; the backlog below
   must not re-offer them.
 - Before reading or staging any existing note, inspect
-  `.slipbox/config.json` at `migrations.literature_headings`. When its mode is
+  `.slipbox/config.json` at `migrations.literature_headings`; an absent policy
+  is treated as `defer` and never authorizes a rewrite. When its mode is
   `lazy`, and this note has the exact compatible `## Key Claims` heading, make
   first access itself a migration: copy the note into the current
   `/using-slipbox` staged draft, rename only that exact heading to `## Source
