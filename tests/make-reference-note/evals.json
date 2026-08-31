@@ -217,25 +217,24 @@
         {"type": "contains", "text": "expected_fingerprint"},
         {"type": "contains", "text": "links.jsonl"},
         {"type": "contains", "text": "one work finalize"},
-        {"type": "not_contains", "text": "directly write the target"},
-        {"type": "not_contains", "text": "links add"}
+        {"type": "not_contains", "text": "directly write the target"}
       ]
     },
     {
       "prompt": "make-reference-note extending an existing note when a new source changes the definition boundary",
-      "expected_output": "Uses activity=recompose, stages draft.md plus combined artifact and links.jsonl ledger mutations with expected_fingerprint values, and replaces only the required bounded body fields while preserving unchanged aliases and provenance through one work finalize.",
+      "expected_output": "Uses activity=recompose, stages draft.md and mutations.json with two distinct mutations—one Reference artifact and one links.jsonl ledger mutation—each carrying an expected_fingerprint, then finalizes them together with one work finalize while replacing only the required bounded body fields and preserving unchanged aliases and provenance.",
       "assertions": [
         {"type": "contains", "text": "activity=recompose"},
         {"type": "contains", "text": "only the required"},
         {"type": "contains", "text": "aliases"},
         {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "mutations.json"},
         {"type": "contains", "text": "links.jsonl"},
         {"type": "contains", "text": "expected_fingerprint"},
-        {"type": "contains", "text": "combined"},
-        {"type": "contains", "text": "work finalize"},
+        {"type": "contains", "text": "two distinct mutations"},
+        {"type": "contains", "text": "finalizes them together"},
         {"type": "contains", "text": "one work finalize"},
-        {"type": "not_contains", "text": "directly write the target"},
-        {"type": "not_contains", "text": "links add"}
+        {"type": "not_contains", "text": "directly write the target"}
       ]
     },
     {
