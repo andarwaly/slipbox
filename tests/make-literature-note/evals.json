@@ -146,8 +146,12 @@
       "assertions": [
         {"type": "contains", "text": "reports"},
         {"type": "contains", "text": "attribution"},
+        {"type": "contains", "text": "certainty"},
+        {"type": "contains", "text": "scope"},
+        {"type": "contains", "text": "explanatory or causal"},
         {"type": "not_contains", "text": "the source proves"},
-        {"type": "not_contains", "text": "the source recommends"}
+        {"type": "not_contains", "text": "the source recommends"},
+        {"type": "not_contains", "text": "causes"}
       ]
     },
     {

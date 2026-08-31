@@ -38,8 +38,8 @@ points at this resource.
 
 - **No note exists yet** — this source hasn't been grounded at all. Proceed
   to the Surface pass below with a fresh Private backlog.
-- **A note already exists** — read it in full. Its existing `## Key
-  Claims` `###` headings are claims already confirmed; the backlog below
+- **A note already exists** — read it in full. Its existing `## Source
+  Points` `###` headings are Source Points already confirmed; the backlog below
   must not re-offer them.
 
 ## Surface pass — builds a private backlog, never a shown menu
@@ -108,10 +108,10 @@ the user's own noticing. If the user wants a guess at an answer recorded
 too, append it as a nested `*Assumption*` bullet, clearly marked as the
 user's own guess — the one narrow exception to the note's purity rule,
 scoped to this one bullet type under this one section only. Never write an
-unmarked personal guess, and never let it read as a Claim. If the user
+unmarked personal guess, and never let it read as a Source Point. If the user
 names another literature note that already resolves the question, append a
-nested `*Answered*` bullet as a wikilink to that claim's own heading
-(`[[Other Literature Note#the-claim-that-answers-it]]`) — user-initiated
+nested `*Answered*` bullet as a wikilink to that Source Point's own heading
+(`[[Other Literature Note#the-source-point-that-answers-it]]`) — user-initiated
 only, never detected automatically; this family runs no cross-note scan for
 outstanding questions. An existing `*Assumption*` bullet stays in place
 once `*Answered*` is added alongside it. See
@@ -328,8 +328,8 @@ session.
 
 The third and last exemption to the note's frozen-once-written rule fires
 outside any of the flows above, on no fixed schedule — whenever the user,
-during this session or a later one, notices that an already-written Key
-Claim entry misreads, mistranscribes, or misrepresents the source. Like
+during this session or a later one, notices that an already-written Source
+Point entry misreads, mistranscribes, or misrepresents the source. Like
 the other two exemptions, it never fires on the agent's own initiative:
 the agent doesn't re-audit written claims against the source looking for
 drift, it only acts once the user points at a specific inaccuracy.

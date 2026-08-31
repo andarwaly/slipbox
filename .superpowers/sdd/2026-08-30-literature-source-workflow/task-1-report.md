@@ -19,3 +19,8 @@ Round 1 fixes:
 - Reworked Q/E/W wording to distinguish internal Conclusions from emitted Source Point headings.
 - Added an objective posture eval covering reporting attribution and explanatory certainty.
 - Preserved old terminology only in historical planning material and the glossary's explicit retired-label note.
+
+Round 2 fixes:
+
+- Replaced the remaining live existing-note and fidelity-correction `Key Claims` language with `Source Points`.
+- Strengthened the reporting-posture eval to require certainty/scope preservation and an explicit explanatory/causal distinction.
