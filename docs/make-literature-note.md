@@ -28,7 +28,9 @@ prefix belongs in the generated filename and link target, not in that H1.
 4. **Follow the inquiry** — ask one substantive question at a time. The Adaptive Split Gate
    requires semantic reconstruction for inquiry-central work, while supporting/contextual
    work may be agent-drafted; consequential material is source-verified without forced
-   paraphrase. Confident, Hesitant, Blank, and Confused reading states dispatch normally.
+   paraphrase. Confident, Hesitant, Blank, and Confused reading states dispatch normally;
+   Blank or not-started reading first offers reading alone versus collaboration, and only
+   the collaborative choice dispatches guided reading.
 5. **Stage Source Points** — checkpoint the inquiry map and `draft.md` through
    `/using-slipbox`; every final point receives a source audit. The final path is untouched
    until closeout publication.
@@ -41,11 +43,10 @@ prefix belongs in the generated filename and link target, not in that H1.
    the source — routed to the evergreen backlog as a seed for a future Take if they want
    it recorded, never into the literature note itself. "I think that's everything" always
    ends the sitting at any point.
-7. **Out-of-band fidelity correction** — at any time, in this session or a later one, the
-   user can point at an already-written Source Point that misreads the source; a narrowly
-   scoped fix (moves the note closer to the source, nothing else) goes through the same
-   Gate as any other claim, then edits that entry in place — the one case where a
-   written entry is legitimately reopened.
+7. **Out-of-band fidelity correction** — stage a narrowly scoped fix through
+   `/using-slipbox`, validate it, then publish with compare-and-swap against the expected
+   final-file fingerprint. A concurrent change stops recovery; the final path is never
+   mutated directly.
 8. **Spot terms and entities** — once the sitting ends, one batch pass finds terms and
    load-bearing named entities the claims lean on but `## Key Concepts` doesn't cover yet.
 

@@ -47,7 +47,7 @@
     },
     {
       "prompt": "/make-literature-note from resources/2026-08-08-design-tokens.md, a freshly clipped source with no literature note yet",
-      "expected_output": "Reads the whole source silently and builds a private backlog of candidate claims plus the Core Idea - never presents this list to the user as a menu to pick from. Runs one continuous, natural conversation about the source, holding the user to it. Whenever the conversation organically produces something matching a backlog candidate (in whatever reshaped form), runs it through grounding's own Gate and writes it incrementally - declarative heading plus condensed Evidence, not batched at the end. Ends with a nudge for anything genuinely untouched in the backlog, then a batch pass finding terms/entities.",
+      "expected_output": "Loads or builds source-owned analysis, creates a session-scoped inquiry map, and derives the grounding frontier at runtime without persisting a queue. Runs one continuous conversation with one substantive question at a time. Uses the Adaptive Split Gate: inquiry-central points require semantic reconstruction, while supporting/contextual points may be agent-drafted and source-verified. Stages each point through /using-slipbox and publishes only after final validation.",
       "assertions": [
         {"type": "not_contains", "text": "which do you want grounded"},
         {"type": "not_contains", "text": "surface-ideas"},
@@ -58,7 +58,7 @@
     },
     {
       "prompt": "make-literature-note on resources/2026-08-08-design-tokens.md, where the literature note already has one confirmed claim from a prior session",
-      "expected_output": "Reads the existing literature note's ### claim headings first, excludes them from the private backlog, and does not re-write the Core Idea line.",
+      "expected_output": "Reads the existing literature note's ### Source Point headings first, excludes covered units from the derived frontier, and does not re-write the Core Idea line.",
       "assertions": [
         {"type": "not_contains", "text": "menu"}
       ]
@@ -143,29 +143,29 @@
     },
     {
       "prompt": "/make-literature-note closes after several confirmed claims",
-      "expected_output": "Runs a mandatory complete source-to-note audit checking missing arguments, narrow or broad claims, overlap, and lost qualifications or gray areas; any selected finding returns through grounding and a material change restarts the audit until clean.",
+      "expected_output": "Audits every retained Source Point against its source unit for fidelity, posture, attribution, scope, certainty, and ambiguity. Uses targeted integrity checks rather than an exhaustive universal source-to-note audit; material changes re-audit affected points before staged publication.",
       "assertions": [
-        {"type": "contains", "text": "narrow"},
-        {"type": "contains", "text": "missing arguments"},
-        {"type": "contains", "text": "overlap"},
-        {"type": "contains", "text": "gray areas"},
-        {"type": "contains", "text": "material change"},
-        {"type": "contains", "text": "until the audit is clean"}
+        {"type": "contains", "text": "source unit"},
+        {"type": "contains", "text": "posture"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "contains", "text": "targeted integrity"},
+        {"type": "not_contains", "text": "exhaustive universal"},
+        {"type": "contains", "text": "material change"}
       ]
     },
     {
       "prompt": "The user declines a valid source-audit finding and asks to finish",
-      "expected_output": "Reports the literature note as deliberately partial after the user declined the valid finding, discards the private backlog, and does not persist a backlog unless explicitly requested.",
+      "expected_output": "Reports the literature note as deliberately partial after the user declined the valid finding, discards the session inquiry assessment, and does not persist a grounding frontier unless explicitly requested.",
       "assertions": [
         {"type": "contains", "text": "partial"},
-        {"type": "contains", "text": "private backlog"},
+        {"type": "contains", "text": "inquiry assessment"},
         {"type": "contains", "text": "declined"},
         {"type": "contains", "text": "does not persist"}
       ]
     },
     {
       "prompt": "A confirmed claim introduces a method, a named tool, a book, and an event",
-      "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during the claim write, then performs one mandatory final batch pass before reaction and validation.",
+      "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during staged point assembly, then performs one final batch pass before reaction and staged-artifact validation.",
       "assertions": [
         {"type": "contains", "text": "final batch"},
         {"type": "contains", "text": "Key Concepts"},

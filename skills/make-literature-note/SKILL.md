@@ -101,8 +101,11 @@ discussion, and source verification; supporting/contextual units may be agent-dr
 verified; supporting/contextual consequential units are source-verified without forced
 paraphrase. Ask exactly one substantive question at a time.
 
-For any `/grounding` turn, dispatch Confident to verification, Hesitant to Feynman, Blank
-with a source to guided reading (without one to maieutic), and Confused to self-explanation.
+For any `/grounding` turn, dispatch Confident to verification and Hesitant to Feynman.
+For Blank or not-started reading with a source, first offer the user a choice between
+reading alone and working through it collaboratively; dispatch guided reading only when
+the user chooses collaboration. If the user chooses to read alone, pause and let them
+return. Without a source, Blank uses maieutic. Confused uses self-explanation.
 Primary/secondary posture comes from the material and attribution, independently of the
 Resource `type`; preserve news allegations as attributed reports with their uncertainty.
 
@@ -200,7 +203,7 @@ status and discard the inquiry map unless the user explicitly asks to retain it.
 
 ### Checking coverage — the backlog, then the source itself
 
-Check the private backlog against what actually got covered (in whatever
+Check the derived frontier against what actually got covered (in whatever
 reshaped form). Each candidate sits in one of three states, and the two
 non-covered states get different treatment:
 
@@ -274,9 +277,9 @@ first, and wait for a real answer:
 > this source is arguing?"
 
 Read the answer as `/grounding` reads any answer. Only a Confident answer
-proceeds straight to confirmation; Hesitant, Blank, or Confused falls
-back to `/grounding`'s full reading-state dispatch table and runs the
-technique it names, exactly as anywhere else. There is no shortcut here
+proceeds straight to confirmation; Hesitant and Confused use their named
+techniques. Blank or not-started reading first offers reading alone versus
+collaboration, dispatching guided reading only for collaboration. There is no shortcut here
 because the Core Idea is already on the page.
 
 The final confirmation is open, never binary — the same shape a Claim's
@@ -351,19 +354,19 @@ this one. If what the user is asking for reads as more than a fidelity
 fix, say so and route it there instead of stretching this exemption to
 cover it.
 
-Once the user has named the inaccuracy and what the corrected wording
-should say, run that corrected wording through `/grounding`'s Gate exactly
-as any other claim gets confirmed — a correction earns no shortcut past
-the discipline every other statement in the note holds to. Only once Gate
-confirms it, edit the existing `## Source Points` entry in place: this is the
-one case in the whole file where an already-written entry is legitimately
-reopened rather than superseded by a new heading.
+Once the user has named the inaccuracy and what the corrected wording should say, stage the
+correction in the draft and inquiry map through `/using-slipbox`. Run the corrected wording
+through `/grounding`'s Gate, then validate the staged artifact and publish with a
+compare-and-swap (CAS) through `/using-slipbox`, providing the expected final-file
+fingerprint. If the CAS detects a concurrent change, stop and recover rather than overwrite.
+This is the one case where a published entry may be reopened, and it still never writes the
+final path directly.
 
 ## Final validation handoff
 
 Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete staged artifact after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
-surfacing sections on the file already written. Then run
+surfacing sections on the staged artifact. Then run
 `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
 --basename "<complete basename>.md" --title "<exact Resource title>"`. Validation
 is a handoff, not permission to silently rewrite a claim; any material claim
