@@ -886,6 +886,15 @@ if staged is None:
     staged = manifest.get("staged_mutations")
 if staged is None: fail("work finalize requires staged mutations")
 if not isinstance(staged, list): fail("staged mutations must be an array")
+# Resource publication is create-only: an existing target is a collision even
+# when its bytes still match the starting fingerprint. Other work kinds may
+# intentionally replace an existing target, so scope this guard to Resources.
+if manifest.get("kind") == "resource":
+    for mutation in staged:
+        if isinstance(mutation, dict) and isinstance(mutation.get("path"), str):
+            target = _safe_vault_path(vault, mutation["path"], "resource target")
+            if target.exists():
+                fail(f"resource target collision: {mutation['path']} already exists")
 # All validation and compare-and-swap checks happen before any lock is taken.
 backups = preflight_mutations(staged, vault, work_dir)
 lock_root = root / ".locks"; lock_root.mkdir(parents=True, exist_ok=True)

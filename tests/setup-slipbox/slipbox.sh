@@ -329,6 +329,22 @@ PY
 check_exit "new-file collision is rejected" 1 "$SLIPBOX" work finalize "$collision_id"
 check_match "collision target is untouched" '*already here*' "$(<"$SCRATCH/collision.md")"
 
+result=$("$SLIPBOX" work create --kind resource --activity clip --target existing-resource.md)
+resource_collision_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'resource replacement\n' > "$SCRATCH/work/$resource_collision_id/draft.md"
+printf 'existing resource\n' > "$SCRATCH/existing-resource.md"
+python3 - "$SCRATCH/work/$resource_collision_id/manifest.json" "$SCRATCH/existing-resource.md" <<'PY'
+import hashlib, json, sys
+manifest_path, target_path = sys.argv[1:]
+manifest = json.load(open(manifest_path))
+fingerprint = "sha256:" + hashlib.sha256(open(target_path, "rb").read()).hexdigest()
+manifest["status"] = "ready-to-finalize"
+manifest["mutations"] = [{"path":"existing-resource.md", "expected_fingerprint":fingerprint, "replacement_path":"draft.md", "kind":"artifact"}]
+json.dump(manifest, open(manifest_path, "w"))
+PY
+check_exit "Resource rejects an existing target despite matching fingerprint" 1 "$SLIPBOX" work finalize "$resource_collision_id"
+check_match "Resource collision leaves existing target untouched" '*existing resource*' "$(<"$SCRATCH/existing-resource.md")"
+
 result=$("$SLIPBOX" work create --kind literature --activity changed --target publish-target.md)
 changed_id=$(printf '%s' "$result" | json_at '["work_id"]')
 printf 'changed\n' > "$SCRATCH/work/$changed_id/replacement.md"
