@@ -64,7 +64,7 @@ a dedup pass gated behind the threshold would never get the chance to run.
 ### Classify each cluster crossing threshold
 
 For each cluster that crosses the recurrence threshold (2+ distinct notes), classify
-in this order — entity exclusion first, then the remaining admission gates:
+in this order — entity exclusion first, followed by the remaining Admission sequence:
 
 1. **Entity-check.** Is this a person, place, or organization — real or fictional?
    Check via a vault-wide, folder-agnostic filename lookup (the same way Obsidian's
@@ -77,14 +77,14 @@ in this order — entity exclusion first, then the remaining admission gates:
      Report it the same way as a Reference candidate (recurrence threshold,
      batch-presented), just without ever attempting a write.
    - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
-2. **Remaining admission sequence** (only if not an entity; see `CONTEXT.md` and
+2. **Admission sequence** (only if not an entity; see `CONTEXT.md` and
    `GLOSSARY.md`): stable lookup identity, source independence, boundedness, adaptive
    evidence sufficiency, and natural-unit scope. A candidate that fails any check, or
    never reaches threshold, stays an unresolved broken wikilink indefinitely.
 
 Non-entity books/creative works, named tools, and events continue through the same
-remaining admission gates. If all six gates pass, report them as Reference-note
-candidates; if any gate fails, leave them as unresolved Mentioned links.
+Admission gates. If all applicable gates pass, report them as Reference-note candidates;
+if any gate fails, leave them as unresolved Mentioned links.
 
 ### Present as a batch
 

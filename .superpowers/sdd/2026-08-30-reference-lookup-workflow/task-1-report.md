@@ -23,3 +23,9 @@ git diff --check: PASS
   from retired admission terminology to the current six-gate Admission sequence.
 - Kept historical plan material unchanged; it documents superseded decisions rather
   than active runtime guidance.
+
+## Round 3
+
+- Replaced the final active `reusability test` wording in `make-literature-note` and
+  the lower-case `remaining admission gates` wording in `find-connections` with the
+  current Admission sequence terminology.

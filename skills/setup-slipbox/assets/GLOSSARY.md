@@ -69,7 +69,7 @@ The grounding technique reached only from inside Verification, on a genuine mism
 _Avoid_: Verification (checks a statement against the source text; Elenchus checks whether the statement, once granted, survives its own logical consequences, reached only after Verification finds a mismatch).
 
 **Entity-check**
-The first classification step run on a candidate crossing the recurrence threshold in find-connections: is this a person, place, or organization, checked via a vault-wide filename lookup before the remaining admission gates run.
+The first classification step run on a candidate crossing the recurrence threshold in find-connections: is this a person, place, or organization, checked via a vault-wide filename lookup before the remaining Admission sequence runs.
 _Avoid_: admission gates (these run only if the entity-check comes back negative).
 
 **Evergreen note**
@@ -115,7 +115,7 @@ The literature-note section wikilinking anything a Source Point's weight actuall
 _Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for concrete named referents).
 
 **Mentioned**
-The literature-note section wikilinking concrete named referents a Source Point's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during Source Point writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the remaining admission gates to non-entities.
+The literature-note section wikilinking concrete named referents a Source Point's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during Source Point writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the remaining Admission sequence to non-entities.
 _Avoid_: Key Concepts (the sibling section for abstract concept/term/framework/method candidates, using the Reference-note prefixed format instead).
 
 **Ladder**

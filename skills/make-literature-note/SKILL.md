@@ -330,8 +330,8 @@ and explicit user additions. Do not scan unrelated source-map candidates.
 holds concrete named referents: people, places, organizations, books/creative
 works, named tools, and events. Downstream
 `find-connections --references` classification first checks people, places, and
-organizations as surfacing-only entities; non-entities then take the reusability
-test and may become Reference candidates.
+organizations as surfacing-only entities; non-entities then take the Admission
+sequence and may become Reference candidates.
 
 ### Closing with the user's own reaction
 
