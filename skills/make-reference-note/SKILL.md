@@ -171,6 +171,30 @@ The generated basename and link target use the exact configured Reference prefix
 the H1 remains the clean, unprefixed concept name. A per-link display alias is a
 separate concern and must not be used as the frontmatter alias value.
 
+## Stage and publish Reference work
+
+Use these concrete `/using-slipbox` actions for every admitted operation:
+
+- Start or resume Reference work for the candidate `/using-slipbox`, selecting
+  `create`, `extend-provenance`, or `recompose` and recording the target's
+  starting fingerprint in `manifest.json`.
+- Checkpoint the reconciled synthesis and bounded draft `/using-slipbox`.
+  Write the complete candidate note to `draft.md`; do not write the vault target.
+- Stage `mutations.json` with one artifact mutation for the Reference target,
+  whose `expected_fingerprint` is the manifest fingerprint (or `null` for a
+  new target), and a replacement path inside the work directory. For every
+  extension, include the Resource→Reference link mutation in that same list,
+  targeting `links.jsonl` with its own expected fingerprint and one `extends`
+  event replacement.
+- Checkpoint the confirmed draft `/using-slipbox`, set the manifest to
+  `ready-to-finalize`, then call `work finalize <work_id>` once. Publication is
+  the single compare-and-swap transaction for the note and link mutations;
+  never publish the note first and add the link afterward.
+- If validation, preflight, or finalization fails, preserve the work and its
+  diagnostics, inspect/resume it only after rechecking fingerprints, and report
+  failure or repair-required status. Do not claim publication or discard work
+  without the user's explicit confirmation.
+
 ## Write — extending an existing reference
 
 **This is the collision-safe path. Follow it exactly.**

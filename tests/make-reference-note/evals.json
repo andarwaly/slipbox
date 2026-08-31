@@ -200,7 +200,11 @@
       "assertions": [
         {"type": "contains", "text": "activity=create"},
         {"type": "contains", "text": "synthesis-map.json"},
-        {"type": "contains", "text": "genuine user confirmation"}
+        {"type": "contains", "text": "genuine user confirmation"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "mutations.json"},
+        {"type": "contains", "text": "ready-to-finalize"},
+        {"type": "contains", "text": "work finalize"}
       ]
     },
     {
@@ -209,7 +213,9 @@
       "assertions": [
         {"type": "contains", "text": "body bytes stable"},
         {"type": "contains", "text": "extend-provenance"},
-        {"type": "contains", "text": "Resource→Reference"}
+        {"type": "contains", "text": "Resource→Reference"},
+        {"type": "contains", "text": "same list"},
+        {"type": "contains", "text": "expected_fingerprint"}
       ]
     },
     {
@@ -218,7 +224,9 @@
       "assertions": [
         {"type": "contains", "text": "activity=recompose"},
         {"type": "contains", "text": "only the required"},
-        {"type": "contains", "text": "aliases"}
+        {"type": "contains", "text": "aliases"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "work finalize"}
       ]
     },
     {
@@ -252,7 +260,8 @@
       "assertions": [
         {"type": "contains", "text": "blocks finalization"},
         {"type": "contains", "text": "does not overwrite"},
-        {"type": "contains", "text": "resumable"}
+        {"type": "contains", "text": "resumable"},
+        {"type": "contains", "text": "expected_fingerprint"}
       ]
     }
   ]

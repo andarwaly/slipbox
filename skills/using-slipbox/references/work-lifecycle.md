@@ -6,4 +6,14 @@ The lifecycle is resumable: inspect before resume, verify fingerprints, checkpoi
 
 For Reference synthesis, checkpoint the reconciled map and bounded draft before confirmation and after confirmation. An `extend-provenance` operation keeps existing body bytes stable when a new source adds warrant only; it stages provenance and the Resource→Reference edge. A `recompose` operation stages only the bounded body fields required by a material boundary change. Re-read and fingerprint the target immediately before staging. Any concurrent target change blocks finalization; it never overwrites the user's newer synthesis. The synthesis map is transient and is not published.
 
+The concrete publication hand-off is: write the complete candidate to `draft.md`,
+stage `mutations.json` with the Reference artifact replacement and (for an
+extension) the `links.jsonl` `extends` ledger mutation, include each target's
+`expected_fingerprint`, then move the manifest to `ready-to-finalize` and call
+`work finalize <work_id>` once. The CLI validates all replacements and applies
+the note and link as one compare-and-swap transaction. If any validation,
+preflight, or finalize step fails, retain the work directory and diagnostics;
+inspect and resume or repair only after fingerprint checks, and never report
+publication success. Discard still requires explicit user confirmation.
+
 CLI output is JSON by default. Table output is opt-in with `--format table` where supported. Every usage failure exits 2 and writes one JSON error object to stderr; runtime failures exit 1 with the same error shape, never a traceback.
