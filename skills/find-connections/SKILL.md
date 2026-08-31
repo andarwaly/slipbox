@@ -64,7 +64,7 @@ a dedup pass gated behind the threshold would never get the chance to run.
 ### Classify each cluster crossing threshold
 
 For each cluster that crosses the recurrence threshold (2+ distinct notes), classify
-in this order — entity-check first, then the reusability test:
+in this order — entity exclusion first, then the remaining admission gates:
 
 1. **Entity-check.** Is this a person, place, or organization — real or fictional?
    Check via a vault-wide, folder-agnostic filename lookup (the same way Obsidian's
@@ -82,9 +82,9 @@ in this order — entity-check first, then the reusability test:
    evidence sufficiency, and natural-unit scope. A candidate that fails any check, or
    never reaches threshold, stays an unresolved broken wikilink indefinitely.
 
-Non-entity books/creative works, named tools, and events continue to the reusability
-test. If they pass, report them as Reference-note candidates; if they fail, leave them
-as unresolved Mentioned links.
+Non-entity books/creative works, named tools, and events continue through the same
+remaining admission gates. If all six gates pass, report them as Reference-note
+candidates; if any gate fails, leave them as unresolved Mentioned links.
 
 ### Present as a batch
 

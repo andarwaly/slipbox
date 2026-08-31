@@ -69,8 +69,8 @@ The grounding technique reached only from inside Verification, on a genuine mism
 _Avoid_: Verification (checks a statement against the source text; Elenchus checks whether the statement, once granted, survives its own logical consequences, reached only after Verification finds a mismatch).
 
 **Entity-check**
-The first classification step run on a candidate crossing the recurrence threshold in find-connections: is this a person, place, or organization, checked via a vault-wide filename lookup before the Admission test ever runs.
-_Avoid_: Admission test (run second, only if the entity-check comes back negative).
+The first classification step run on a candidate crossing the recurrence threshold in find-connections: is this a person, place, or organization, checked via a vault-wide filename lookup before the remaining admission gates run.
+_Avoid_: admission gates (these run only if the entity-check comes back negative).
 
 **Evergreen note**
 The file a confirmed Take gets written into: idea-oriented, not bound to one source or term, synthesized from multiple existing notes plus personal experience. Unlike a literature or Reference note, can be revisited and fully rewritten across separate sessions.
@@ -115,7 +115,7 @@ The literature-note section wikilinking anything a Source Point's weight actuall
 _Avoid_: Reference note (what a Key Concepts wikilink target may eventually become, decided downstream in find-connections, never at the point Key Concepts is written); Mentioned (the sibling section for concrete named referents).
 
 **Mentioned**
-The literature-note section wikilinking concrete named referents a Source Point's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during Source Point writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the Admission test to non-entities.
+The literature-note section wikilinking concrete named referents a Source Point's weight actually rests on: people, places, organizations, books/creative works, named tools, and events (real or fictional). Uses flat, unprefixed links with no config lookup, accumulates during Source Point writes, and receives a mandatory final batch pass. Scanned by find-connections alongside Key Concepts; downstream classification checks people, places, and organizations as surfacing-only entities first, then applies the remaining admission gates to non-entities.
 _Avoid_: Key Concepts (the sibling section for abstract concept/term/framework/method candidates, using the Reference-note prefixed format instead).
 
 **Ladder**
@@ -135,11 +135,11 @@ A user-flagged bullet in a literature note's `## Open Questions` section naming 
 _Avoid_: Tension (the agent's own prior-knowledge conflict noticed against the material, routed to the evergreen Backlog — a different thing than a gap the source itself leaves unanswered).
 
 **Origin test**
-The retired, superseded admission check that gated a Reference-note candidate on who argued or coined it first, replaced because it wrongly excluded a source's own newly introduced, genuinely reusable framework.
-_Avoid_: Admission test (the current, reusability-based replacement; say Admission test, not Origin test).
+Historical only: the retired admission check that gated a Reference-note candidate on who argued or coined it first. It was replaced because it wrongly excluded a source's own newly introduced, genuinely reusable framework.
+_Avoid_: Origin test in current routing; use the Admission sequence.
 
 **Mentioned referents**
-The surfacing-only literature-note section for concrete named people, places, organizations, books/creative works, named tools, and events, real or fictional alike. `find-connections --references` scans it alongside `Key Concepts`; downstream classification runs the entity-check first for people, places, and organizations, then the Admission test for non-entity candidates. The first group remains surfacing-only; a reusable non-entity may become a Reference note.
+The surfacing-only literature-note section for concrete named people, places, organizations, books/creative works, named tools, and events, real or fictional alike. `find-connections --references` scans it alongside `Key Concepts`; downstream classification runs entity exclusion first for people, places, and organizations, then the remaining Admission sequence for non-entity candidates. The first group remains surfacing-only; a reusable non-entity may become a Reference note.
 _Avoid_: Key Concepts (abstract concepts, methods, and frameworks); Reference note (the downstream note type, never decided while the link is written).
 
 **Prefix**
