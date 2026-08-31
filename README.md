@@ -28,7 +28,9 @@ find-connections (whole-corpus pass, run separately)
 npx skills add andarwaly/slipbox
 ```
 
-Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and installs the `slipbox` CLI.
+Run `/setup-slipbox` once per vault before any peer operation. Setup is self-contained: it checks prerequisites, discovers the vault's conventions and writing style, installs the `slipbox` CLI, and creates the runtime state used by every other skill.
+
+`/using-slipbox` is the mandatory shared runtime for peer operations. Skills that create, revise, checkpoint, publish, link, cache, recover, or finalize work must use it rather than writing vault artifacts or invoking the CLI directly.
 
 Migrated stateful workflows use the shared `/using-slipbox` runtime. It gives
 each migrated operation a recoverable `work_id`, checkpoints interrupted work under
@@ -40,7 +42,7 @@ persistence is independently `local` or `tracked`. The runtime supports
 Specialist workflow migration to this contract is shipped separately; this
 runtime documentation describes the shared interface only.
 
-The Literature and Reference workflows are regression-tested end to end across
+The Resource, Literature, Reference, and Evergreen workflows are regression-tested end to end across
 concise concepts, named frameworks, tools, events, creative works, insufficient
 coined terms, disputed definitions, warrant-only extensions, bounded
 recomposition, legacy-note recovery, and immediate Literature handoff. These

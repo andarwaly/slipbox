@@ -76,6 +76,11 @@
         {"type": "not_contains", "text": "route seed"},
         {"type": "not_contains", "text": "work finalize"}
       ]
+    },
+    {
+      "prompt": "Finalize a Resource and Evergreen batch in a repository configured with Git ask, auto, and off modes; the commit fails once.",
+      "expected_output": "Applies the configured Git policy per work item, never stages a pre-dirty unrelated path, downgrades safely when auto finalization is unsafe, and preserves failed commit evidence and recoverable work for retry without claiming publication success.",
+      "assertions": [{"type":"contains","text":"Git policy"},{"type":"contains","text":"pre-dirty"},{"type":"contains","text":"downgrade"},{"type":"contains","text":"failed commit evidence"},{"type":"contains","text":"recoverable work"},{"type":"not_contains","text":"publication success"}]
     }
   ]
 }

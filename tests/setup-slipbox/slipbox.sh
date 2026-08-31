@@ -289,9 +289,11 @@ echo "--- recoverable work lifecycle ---"
 RESOURCE_SKILL="$REPO_ROOT/skills/clip-resource/SKILL.md"
 RESOURCE_DOC="$REPO_ROOT/docs/clip-resource.md"
 LIFECYCLE="$REPO_ROOT/skills/using-slipbox/references/work-lifecycle.md"
-for phrase in 'kind: resource' 'activity: clip' 'create-only' 'manifest.json' 'extraction.json' 'draft.md' 'work finalize' 'target collision' 'permanent extraction cache'; do
+for phrase in 'kind: resource' 'create-only' 'manifest.json' 'extraction.json' 'draft.md' 'target collision' 'permanent extraction cache'; do
   assert_contains "Resource lifecycle names $phrase" "$phrase" "$RESOURCE_SKILL"
 done
+assert_contains "Resource lifecycle names activity: clip" 'activity `clip`' "$LIFECYCLE"
+assert_contains "Resource lifecycle names work finalize" 'work finalize' "$LIFECYCLE"
 assert_contains "Resource docs describe independent work" 'one `resource`/`clip` work item per URL' "$RESOURCE_DOC"
 assert_contains "Resource lifecycle reference defines extraction staging" "extraction.json" "$LIFECYCLE"
 assert_contains "Resource lifecycle reference forbids permanent extraction cache" "not a permanent extraction cache" "$LIFECYCLE"

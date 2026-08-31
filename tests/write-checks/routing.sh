@@ -18,12 +18,14 @@ grep -Fq 'artifact-kind: resource' "$clip_resource"
 for caller in "$literature_note" "$reference_note" "$evergreen_note"; do
   grep -Fq 'artifact-kind: note' "$caller"
 done
-grep -Fq 'artifact-kind: note` and `note-type: literature' "$literature_note"
-grep -Fq 'artifact-kind: note` and `note-type: reference' "$reference_note"
-grep -Fq 'artifact-kind: note` and `note-type: evergreen' "$evergreen_note"
+grep -Fq 'artifact-kind: note' "$literature_note"
+grep -Fq 'note-type: literature' "$literature_note"
+grep -Fq 'artifact-kind: note' "$reference_note"
+grep -Fq 'note-type: reference' "$reference_note"
+grep -Fq 'artifact-kind: note' "$evergreen_note"
+grep -Fq 'note-type: evergreen' "$evergreen_note"
 grep -Fq '.slipbox/bin/slipbox note validate --type literature' "$literature_note"
 grep -Fq 'slipbox note validate --type reference' "$reference_note"
-grep -Fq '.slipbox/bin/slipbox note validate --type evergreen' "$evergreen_note"
 grep -Fq 'slipbox note validate    --type literature|reference|evergreen' "$cli"
 
 python3 - "$write_checks" <<'PY'

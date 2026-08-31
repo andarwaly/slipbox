@@ -161,6 +161,16 @@
         {"type": "contains", "text": "Resource→Reference"},
         {"type": "not_contains", "text": "silently"}
       ]
+    },
+    {
+      "prompt": "Set up a repository with Git policy ask, then rerun in a pre-dirty worktree and choose local source-map cache persistence.",
+      "expected_output": "Keeps recoverable work local and untracked, stores source maps locally, records Git ask without committing during setup, and downgrades finalization safely when the worktree was already dirty instead of staging unrelated user changes.",
+      "assertions": [{"type":"contains","text":"local"},{"type":"contains","text":"untracked"},{"type":"contains","text":"ask"},{"type":"contains","text":"pre-dirty"},{"type":"contains","text":"downgrade"}]
+    },
+    {
+      "prompt": "Migrate a batch containing compatible, older-compatible, incompatible, unresolved-source, and orphaned source-map entries.",
+      "expected_output": "Reports each cache category separately, offers a selected or all-compatible migration scope, leaves unresolved and orphaned entries untouched, and keeps cache migration authorization independent from Literature heading and Reference note migration.",
+      "assertions": [{"type":"contains","text":"older-compatible"},{"type":"contains","text":"incompatible"},{"type":"contains","text":"unresolved"},{"type":"contains","text":"orphaned"},{"type":"contains","text":"independent from"}]
     }
   ]
 }

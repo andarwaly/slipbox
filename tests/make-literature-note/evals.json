@@ -368,6 +368,11 @@
       "files": ["fixtures/immediate-reference-handoff.md"],
       "expected_output": "Completes Literature closeout first, adds the framework to Key Concepts, offers the context-aware Reference handoff only after the Literature artifact is validated and saved, and passes grounded source identity forward without rerunning Literature work.",
       "assertions": [{"type":"contains","text":"Literature closeout first"},{"type":"contains","text":"Key Concepts"},{"type":"contains","text":"Reference handoff"},{"type":"contains","text":"validated and saved"}]
+    },
+    {
+      "prompt": "Immediately hand off a newly clipped Resource to Literature, then to Reference, while another clip runs at the same time.",
+      "expected_output": "Keeps the Resource clip, Literature note, and Reference synthesis as three distinct work_ids with explicit source identity and commit boundaries; the second URL receives its own Resource work and cannot share or overwrite the first operation's state.",
+      "assertions": [{"type":"contains","text":"three distinct work_ids"},{"type":"contains","text":"commit boundaries"},{"type":"contains","text":"second URL"},{"type":"not_contains","text":"same work_id"}]
     }
   ]
 }

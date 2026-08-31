@@ -76,6 +76,11 @@
         {"type": "contains", "text": "diagnostics"},
         {"type": "not_contains", "text": "publication success"}
       ]
+    },
+    {
+      "prompt": "A Literature discussion surfaces a reader-owned implication; record it now and create the Evergreen note later.",
+      "expected_output": "Records the approved proposition verbatim as an Evergreen candidate with reason and origin paths, leaves the Literature note source-pure, and later starts a separate Evergreen create work that consumes the candidate without rewriting its meaning.",
+      "assertions": [{"type":"contains","text":"Evergreen candidate"},{"type":"contains","text":"verbatim"},{"type":"contains","text":"origin paths"},{"type":"contains","text":"separate Evergreen create work"},{"type":"not_contains","text":"Literature note Take"}]
     }
   ]
 }

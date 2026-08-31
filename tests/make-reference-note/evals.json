@@ -375,6 +375,11 @@
         {"type": "contains", "text": "make-literature-note"},
         {"type": "not_contains", "text": "synthesizes from ungrounded material"}
       ]
+    },
+    {
+      "prompt": "After a Resource becomes a Literature note, make-reference-note immediately from its grounded Source Point while a separate Resource remains in flight.",
+      "expected_output": "Resolves provenance back to the original frozen Resource, starts a distinct Reference work_id after Literature closeout, and never reuses or mutates the other Resource operation's work state.",
+      "assertions": [{"type":"contains","text":"frozen Resource"},{"type":"contains","text":"distinct Reference work_id"},{"type":"contains","text":"Literature closeout"},{"type":"not_contains","text":"overwrites the other Resource"}]
     }
   ]
 }
