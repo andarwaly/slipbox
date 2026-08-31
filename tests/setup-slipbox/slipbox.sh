@@ -130,7 +130,10 @@ else:
         if not isinstance(migrations, dict): return False
         reference = migrations.get("reference")
         if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","selected","lazy","defer"}): return False
-        if reference and reference["mode"] == "selected" and not isinstance(reference.get("selected"), list): return False
+        if reference and reference["mode"] == "selected" and (not isinstance(reference.get("selected"), list) or not reference["selected"]): return False
+        if reference and reference.get("selected"):
+            import re
+            if any(not isinstance(path, str) or not path or path.startswith("/") or any(part in {".", ".."} for part in path.split("/")) for path in reference["selected"]): return False
         if reference and reference["mode"] != "selected" and "selected" in reference: return False
         return True
 assert valid({**base, "git": {**base["git"], "mode":"never"}}) is False

@@ -413,11 +413,21 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
                     for key in ("source_slug", "target_slug", "rel_type"):
                         if not isinstance(mutation.get(key), str) or not mutation[key].strip(): raise ValueError(f"ledger mutation requires {key}")
                     if mutation["rel_type"] not in {"cites", "extends"}: raise ValueError("ledger mutation rel_type must be cites or extends")
-                for line in ledger_lines:
+                for line_index, line in enumerate(ledger_lines):
                     row = json.loads(line)
                     if not isinstance(row, dict): raise ValueError("event must be an object")
                     if set(row) != {"op", "source_slug", "target_slug", "rel_type"}: raise ValueError("event has unknown or missing fields")
                     canonical = normalize_link_event(row)
+                    if kind == "ledger-events":
+                        if not isinstance(mutation.get("events"), list) or not mutation["events"]:
+                            raise ValueError("ledger-events mutation requires a non-empty events list")
+                        if len(mutation["events"]) != len(ledger_lines):
+                            raise ValueError("events list must match replacement event count")
+                        expected_event = mutation["events"][line_index]
+                        if not isinstance(expected_event, dict) or set(expected_event) != {"op", "source_slug", "target_slug", "rel_type"}:
+                            raise ValueError("events list contains an invalid event")
+                        if canonical != normalize_link_event(expected_event):
+                            raise ValueError("replacement event does not match events list order")
                     if kind != "ledger-events" and canonical["op"] != "add": raise ValueError("ledger replacement events must be adds")
                     if kind != "ledger-events" and (canonical["source_slug"] != mutation["source_slug"] or canonical["target_slug"] != mutation["target_slug"] or canonical["rel_type"] != mutation["rel_type"]):
                         raise ValueError("ledger event does not match mutation identity")
@@ -473,7 +483,11 @@ def compensate(mutations: list[dict], backups: list[dict], applied: list[int], v
                 events = mutation.get("events") or [{"op": "add", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}]
                 with ledger.open("a", encoding="utf-8") as handle:
                     for event in reversed(events):
-                        inverse = {"op": "remove" if event["op"] == "add" else "add", "source_slug": event["source_slug"], "target_slug": event["target_slug"], "rel_type": event["rel_type"]}
+                        try:
+                            canonical = normalize_link_event(event)
+                        except (KeyError, ValueError, TypeError) as exc:
+                            raise ValueError(f"invalid compensation event: {exc}")
+                        inverse = {"op": "remove" if canonical["op"] == "add" else "add", "source_slug": canonical["source_slug"], "target_slug": canonical["target_slug"], "rel_type": canonical["rel_type"]}
                         handle.write(json.dumps(inverse, separators=(",", ":")) + "\n")
             elif backup["existed"]:
                 target.parent.mkdir(parents=True, exist_ok=True)
