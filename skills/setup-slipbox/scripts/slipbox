@@ -404,6 +404,15 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
         replacement_file = work_dir / replacement_path
         if not replacement_file.is_file(): fail(f"replacement file not found: {replacement}")
         kind = mutation.get("kind", "artifact")
+        if kind == "backlog-events":
+            new_path_value = mutation.get("new_path")
+            if not isinstance(new_path_value, str) or not new_path_value:
+                fail("backlog-events mutation requires new_path")
+            new_target = _safe_vault_path(vault_root, new_path_value, "backlog mutation new_path")
+            if new_target.exists():
+                fail(f"backlog mutation destination already exists: {new_path_value}")
+            if not isinstance(mutation.get("operation"), str) or mutation["operation"] not in {"rename", "update"}:
+                fail("backlog-events mutation operation must be rename or update")
         if kind in {"ledger-add", "link-add", "ledger-events"}:
             if path_value != "links.jsonl": fail("ledger mutations must target links.jsonl")
             try:
@@ -439,7 +448,12 @@ def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path)
 
 
 def _lock_paths(vault_root, mutations):
-    return sorted({_safe_vault_path(vault_root, m["path"]) for m in mutations}, key=lambda p: str(p))
+    paths = set()
+    for mutation in mutations:
+        paths.add(_safe_vault_path(vault_root, mutation["path"]))
+        if mutation.get("kind") == "backlog-events":
+            paths.add(_safe_vault_path(vault_root, mutation["new_path"]))
+    return sorted(paths, key=lambda p: str(p))
 
 
 def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path, work_dir: Path) -> list[int]:
@@ -460,6 +474,12 @@ def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path
             try: replacement.unlink()
             except OSError as exc:
                 error = exc; error.applied = applied; raise error
+        elif mutation.get("kind") == "backlog-events":
+            destination = _safe_vault_path(vault_root, mutation["new_path"])
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(replacement, destination)
+            target.unlink()
+            applied.append(index)
         else:
             fd, tmp = tempfile.mkstemp(prefix=".slipbox-publish-", dir=str(target.parent))
             with os.fdopen(fd, "wb") as handle: handle.write(replacement_bytes)
@@ -763,6 +783,7 @@ def git_root_and_baselines(paths):
     return root, baselines
 git_root, git_baselines = git_root_and_baselines(affected)
 manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}, "git_baselines": git_baselines}
+manifest["affected_starting_fingerprints"] = {path: file_fingerprint(vault_root / path) for path in affected}
 save_work_manifest(work_root / work_id, manifest)
 print(json.dumps(manifest, indent=2))
 PYEOF
@@ -861,7 +882,9 @@ work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_I
 def current(identity):
     return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / identity) if identity else None
 source, target = manifest.get("source_identity"), manifest.get("target_identity")
-matches = current(source) == manifest.get("source_starting_fingerprint") and current(target) == manifest.get("target_starting_fingerprint")
+expected_affected = manifest.get("affected_starting_fingerprints", {})
+affected_matches = all(current(path) == fingerprint for path, fingerprint in expected_affected.items())
+matches = current(source) == manifest.get("source_starting_fingerprint") and current(target) == manifest.get("target_starting_fingerprint") and affected_matches
 if not matches:
     manifest["status"] = "blocked"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest)
 state = dict(manifest); state["fingerprints_match"] = matches; state["resumable"] = matches
@@ -1211,6 +1234,11 @@ else:
                 continue
             if isinstance(entry, str):
                 name, kind, zone = entry, "text", "top"
+            elif mutation.get("kind") == "backlog-events":
+                destination = _safe_vault_path(vault_root, mutation["new_path"])
+                if destination.exists(): destination.unlink()
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(backup["bytes"] or b"")
             else:
                 name = entry.get("name", field)
                 kind = entry.get("type", "text")

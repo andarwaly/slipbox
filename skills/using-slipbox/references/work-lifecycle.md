@@ -16,6 +16,9 @@ the same mutation list contains the note replacement, exactly one `ledger-events
 mutation containing every `cites` event, and, when applicable, one atomic backlog
 atomic backlog mutation. A first-write backlog rename is a create-new-row plus remove/tombstone-old-row
 operation in that mutation; a revision updates the existing row and iteration.
+The mutation uses `kind: "backlog-events"`, `path` for the old candidate,
+`new_path` for the new candidate, `operation: "rename"|"update"`, and a staged
+`replacement_path`; both paths are locked and compare-and-swapped together.
 The CLI validates all replacements and applies them as one compare-and-swap transaction. If any
 validation, preflight, or finalize step fails, retain the work directory and
 diagnostics; inspect and resume or repair only after fingerprint checks, and never
