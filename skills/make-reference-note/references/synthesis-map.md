@@ -14,7 +14,7 @@ The map records:
 - `agreements` — claims or facets supported across inputs;
 - `conflicts` — materially competing definitions, with the user decision or unresolved status;
 - `proposed_changes` — exact body/frontmatter changes and whether activity is `extend-provenance` or `recompose`; and
-- `checkpoint` — the latest semantic boundary and confirmation state.
+- `checkpoint` — the latest semantic boundary and selection or ambiguity-resolution state.
 
 A source that only strengthens warrant changes `resources`, provenance, and the
 Resource→Reference link; it must not cause body bytes to change. A source that
