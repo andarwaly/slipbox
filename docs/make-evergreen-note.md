@@ -15,8 +15,11 @@ rather than only appending to it.
 1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming
    `setup-slipbox` has run; every `slipbox` CLI call throughout this skill goes
    through `.slipbox/bin/slipbox`, never bare `slipbox`.
-2. **Take the material** — named notes, a bare hunch to search around, or a pull from
-   the evergreen backlog.
+2. **Recoverable work and material** — starts or resumes one `create` or `revise`
+   Evergreen work item through `/using-slipbox`. Its `manifest.json`, transient
+   `synthesis-map.json`, and `draft.md` preserve the operation across interruption.
+   Then takes named notes, a bare hunch to search around, or a pull from the
+   evergreen backlog.
 3. **Ground it** — a `/grounding` session where your own answers are free (personal
    experience, memory, anything unwritten), but your own questions and reflections must
    trace to what the retrieved notes actually establish, never to your own training.
@@ -26,8 +29,11 @@ rather than only appending to it.
    pursued this sitting gets logged to the evergreen backlog for later. Before writing,
    every sentence in the draft gets a purity check: does it just restate one cited
    note's claim unchanged? If so, the conversation isn't done.
-4. **Write** — cites every note it draws on with a one-line reason; never links
-   silently. Can be a full rewrite if revisiting an existing evergreen note.
+4. **Write and publish** — cites every note it draws on with a one-line reason;
+   never links silently. The complete draft, citation events, and any backlog
+   status/slug/note-path update are staged in one compensated work item and
+   finalized together. A revisit is a full rewrite. Concurrent target changes or
+   failed compensation leave recoverable diagnostics and are not reported as success.
 5. **Sign-off** — checked against five criteria (complete-claim title,
    standalone-comprehensible, about one thing, every link has a reason, answers or
    spawns a "so what"), each grounded in Matuschak's evergreen-note practice and
@@ -35,8 +41,8 @@ rather than only appending to it.
    deliberately sides on, spelled out in its own `references/sign-off-theory.md` —
    before the session finishes.
 
-Once done, the note is on disk (or updated, if revisiting), every cited note is linked
-with a reason, and any flagged tension is logged as its own evergreen-backlog entry. If
+Once finalized, the note is on disk (or updated, if revisiting), every cited note is linked
+with a reason, and any flagged tension is recorded. If
 this session's material came from the backlog itself, that row gets closed out —
 renamed to the note's own slug on a first write, or its `--iteration` bumped on a
 revisit — and the user is told the file path.

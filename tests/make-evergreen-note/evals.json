@@ -27,6 +27,55 @@
       "assertions": [
         {"type": "not_contains", "text": "cannot proceed"}
       ]
+    },
+    {
+      "prompt": "make-evergreen-note from a pending evergreen backlog candidate",
+      "expected_output": "Starts one Evergreen create work item, preserves the candidate proposition, reason, origin, and paths in synthesis-map.json, and stages the discussed status, final slug, note path, and iteration bookkeeping with the note publication.",
+      "assertions": [
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "contains", "text": "staged"}
+      ]
+    },
+    {
+      "prompt": "make-evergreen-note from a bare hunch, then resume after interruption",
+      "expected_output": "Resumes the same work_id after inspecting manifest.json and synthesis-map.json, verifies fingerprints, and does not create a second work item or publish a partial note.",
+      "assertions": [
+        {"type": "contains", "text": "work_id"},
+        {"type": "not_contains", "text": "partial note"}
+      ]
+    },
+    {
+      "prompt": "revise an existing Evergreen note while another process changes it",
+      "expected_output": "Uses activity revise, re-reads and fingerprints the existing target, and blocks finalization on a concurrent target change without overwriting the newer content.",
+      "assertions": [
+        {"type": "contains", "text": "concurrent"},
+        {"type": "contains", "text": "blocks"}
+      ]
+    },
+    {
+      "prompt": "publish an Evergreen note with two citations and a backlog update",
+      "expected_output": "Stages the note replacement, both cites ledger events, and the backlog update in one mutations.json, then calls work finalize once; no direct links add or evergreen update follows.",
+      "assertions": [
+        {"type": "contains", "text": "mutations.json"},
+        {"type": "contains", "text": "once"},
+        {"type": "not_contains", "text": "links add"}
+      ]
+    },
+    {
+      "prompt": "write an Evergreen note whose configured filename has a prefix",
+      "expected_output": "Validates the exact prefixed basename and clean H1 before staging the draft.",
+      "assertions": [
+        {"type": "contains", "text": "prefixed basename"},
+        {"type": "contains", "text": "clean H1"}
+      ]
+    },
+    {
+      "prompt": "finalize Evergreen work and the citation mutation fails midway",
+      "expected_output": "Compensates the partial application, preserves diagnostics and the work directory, and reports failed or repair-required rather than publication success.",
+      "assertions": [
+        {"type": "contains", "text": "diagnostics"},
+        {"type": "not_contains", "text": "publication success"}
+      ]
     }
   ]
 }

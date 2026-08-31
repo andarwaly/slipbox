@@ -5,7 +5,7 @@ description: Ground a hunch into a Take — the user's own synthesized
   evergreen note.
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Make-evergreen-note
@@ -19,6 +19,16 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 - NEVER: call bare `slipbox` — always `.slipbox/bin/slipbox`, which isn't guaranteed to be on `PATH`.
 
 ## Workflow
+
+### Recoverable work
+
+Start or resume Evergreen work `/using-slipbox` before gathering material. Use
+activity `create` for a new Take and `revise` when an existing Evergreen note is
+being revisited. Record the target path, target fingerprint (or `null` for a new
+note), and all contributing note identities in `manifest.json`. Keep the complete
+transient evidence in `synthesis-map.json`; never write the vault note while the
+conversation is in progress. If interrupted, inspect the same `work_id`, verify
+all fingerprints, and resume it rather than starting a second operation.
 
 ### 01 - Take the material
 
@@ -57,12 +67,11 @@ directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
 gets logged to the evergreen backlog (see Compass's own Guardrail).
 
 `/grounding` hands back the confirmed Take, and — only if the user opted
-in — a flagged tension. If a tension came back, insert it into the evergreen
-backlog:
+in — a flagged tension. If a tension came back, preserve its exact wording,
+reason, and origin in the work map and record the Evergreen candidate
+`/using-slipbox`:
 
-```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
-```
+Do not publish this backlog side effect separately.
 
 before moving on to writing.
 
@@ -71,43 +80,36 @@ attributable to a single cited note's claim, unchanged? If yes for any
 sentence, the conversation isn't done — keep sharpening until the Take
 states something none of the individual notes said on their own.
 
-### 03 - Write
+### 03 - Write and stage publication
 
-- Run a `/write-checks` session with `artifact-kind: note` and `note-type: evergreen`, passing the evergreen field
-  list (`type`, `created`, `derived-from`, `updated-at`) — it resolves each
-  field's mapping, formatting, and zone placement, and checks the draft's
-  style and humanize signals. `updated-at` gets `created`'s own timestamp
-  on a first write, and is refreshed to the current time on a revisit.
-- Write into the folder from `.slipbox/bin/slipbox config get paths.evergreen`, filename per
-  `.slipbox/bin/slipbox config get filenames.evergreen` casing convention.
-- Re-read the target path from disk right before writing.
-- Assemble the frontmatter from `/write-checks`' returned fields into the complete
-  temporary draft — a full rewrite of existing content on a revisit, since unlike
-  a literature note this doesn't mean starting a new file.
-- Validate the complete assembled temporary draft with `/write-checks`, including the
-  complete basename and exact H1. This pre-write validation is a hard gate: write
-  only after it passes. Then write the validated draft, re-read the saved path, and run
-  `.slipbox/bin/slipbox note validate --type evergreen --path <saved-path>
-  --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
-  check blocks success.
-- Cite every note it draws on, each with a one-line reason. Never link
-  silently.
-- Every citation also gets written as a links row:
-
-  ```bash
-  .slipbox/bin/slipbox links add --source <this-evergreen-slug> --target <cited-note-slug> --rel cites
-  ```
-
-  one call per cited note.
+- Run `/write-checks` with `artifact-kind: note`, `note-type: evergreen`, and
+  fields `type`, `created`, `derived-from`, and `updated-at`. `updated-at` uses
+  `created` on a first write and the current time on a revision.
+- Resolve the configured Evergreen path, filename casing, exact prefixed basename,
+  and clean H1. Re-read and fingerprint the target immediately before assembling
+  the complete draft. Write that draft only to the work directory as `draft.md`,
+  including a full replacement on `revise`.
+- Validate the complete `draft.md` with `/write-checks`, then run the configured
+  Evergreen note validator against the staged draft. A collision on `create`, a
+  malformed H1/basename, or a failed check blocks staging.
+- Put every cited note and its one-line reason in `synthesis-map.json`. Stage one
+  `mutations.json` containing the note replacement and one `cites` ledger event
+  per cited note. If the material came from a backlog candidate, include its
+  status, slug, note-path, and iteration update in the same staged mutations.
+- Checkpoint the map and draft `/using-slipbox`, set the manifest to
+  `ready-to-finalize`, and call `work finalize <work_id>` once. This is the only
+  publication call: note, citations, and backlog bookkeeping are one compensated
+  compare-and-swap transaction. Never call `links add`, write the target, or
+  update the backlog separately.
 - Whether a citation is also rendered as an inline `[[wikilink]]` in the
   note's prose depends on a two-part test: (a) it has this links row (the
   mechanical baseline — only cited notes are ever eligible), and (b) the
   specific sentence containing the mention is actually asserting something
   about that note's subject, not just incidentally naming it while the
   sentence is really about something else.
-- Filename collision on a first write → stop and ask, never
-  auto-disambiguate. On a revisit, the existing file is expected — not a
-  collision.
+- If preflight or finalization fails, preserve the work directory and diagnostics.
+  Recompute every mutation fingerprint before resuming; a concurrent target
+  change blocks publication and never overwrites newer user content.
 
 ### 04 - Sign-off, shown to the user before finishing
 
@@ -124,16 +126,13 @@ sides on — see `references/sign-off-theory.md` for the rationale.
 
 ## Done
 
-The Take note exists on disk (or is updated, if revisiting), every cited
-note is linked with a reason, any flagged tension is logged as its own
-backlog entry, and the user is told the file path.
+The finalized work item has published the Take (or revision), every cited note
+and reason, any flagged tension, and the related backlog bookkeeping together;
+then tell the user the file path. A failed or repair-required work item is not
+success.
 
 If this session's material came from the evergreen backlog rather than
 being freshly named or a bare hunch, close out the row it drew from:
-
-```bash
-.slipbox/bin/slipbox evergreen update <slug> --status discussed --note-path <path>
-```
 
 Apply the installed `.slipbox/AGENTS.md` Backlog contract for lifecycle details,
 including first-write slug renames, revisit iteration bumps, and the candidate's
