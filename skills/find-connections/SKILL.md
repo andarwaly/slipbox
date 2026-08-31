@@ -10,6 +10,8 @@ metadata:
 # Find-connections
 
 Bold terms in this file are defined in `GLOSSARY.md`.
+At runtime, resolve that glossary from the installed vault path `.slipbox/GLOSSARY.md`;
+the repository `CONTEXT.md` is authoring-only and is not runtime input.
 
 ## Prerequisite
 

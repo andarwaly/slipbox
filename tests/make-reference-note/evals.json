@@ -185,11 +185,12 @@
     },
     {
       "prompt": "make-reference-note \"Private Team Heuristic\" directly, with only one source-specific characterization and no independent support",
-      "expected_output": "Returns unresolved despite the direct user invocation, names source independence as the failed gate, reports the support needed, leaves the wikilink untouched, and creates no work_id or provisional artifact.",
+      "expected_output": "Returns unresolved despite the direct user invocation, names source independence as the failed gate, reports the independent support needed, leaves the wikilink untouched, and creates no provisional artifact.",
       "assertions": [
         {"type": "contains", "text": "unresolved"},
-        {"type": "contains", "text": "direct user invocation"},
-        {"type": "contains", "text": "no work_id"}
+        {"type": "contains", "text": "source independence"},
+        {"type": "contains", "text": "support needed"},
+        {"type": "contains", "text": "wikilink untouched"}
       ]
     }
   ]

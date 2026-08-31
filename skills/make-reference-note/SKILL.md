@@ -15,6 +15,8 @@ Bold terms in this file are defined in `GLOSSARY.md`. This skill never runs
 `/grounding` — that already happened upstream, at the claim level, inside the
 literature notes whose `## Key Concepts` wikilink to this reference; this skill only
 pulls those already-grounded characterizations back out, reconciles them, and writes.
+At runtime, resolve that glossary from the installed vault path `.slipbox/GLOSSARY.md`;
+the repository `CONTEXT.md` is authoring-only and is not runtime input.
 
 ## Prerequisite
 

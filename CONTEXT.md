@@ -1,5 +1,8 @@
 # Slipbox — Domain Language
 
+This repository copy is authoring-only. Installed skills use the runtime glossary at
+`.slipbox/GLOSSARY.md`; do not treat this file as runtime-reachable.
+
 ## Language
 
 One frozen source-type plus five knowledge-management note types (Literature, Reference,

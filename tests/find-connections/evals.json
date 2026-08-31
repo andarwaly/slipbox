@@ -79,7 +79,9 @@
       "assertions": [
         {"type": "contains", "text": "unresolved"},
         {"type": "contains", "text": "recurrence does not establish warrant"},
-        {"type": "contains", "text": "no provisional Reference artifact"}
+        {"type": "contains", "text": "no provisional Reference artifact"},
+        {"type": "contains", "text": "no work_id"},
+        {"type": "contains", "text": "wikilink untouched"}
       ]
     }
   ]
