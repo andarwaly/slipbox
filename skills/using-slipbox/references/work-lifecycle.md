@@ -6,7 +6,7 @@ Evergreen work uses activities `create` and `revise`; its directory stages `synt
 
 The lifecycle is resumable: inspect before resume, verify fingerprints, checkpoint after meaningful boundaries, and preserve failed state for repair. Publication is transactional and must pass `/write-checks` before the CLI writes. A specialist stages `mutations.json` (or `manifest.mutations`) and moves the manifest to `ready-to-finalize`; `work finalize <work-id>` validates every replacement and expected fingerprint before taking sorted per-path locks. Targets are compare-and-swapped, so collisions and concurrent changes cannot overwrite them. Partial application is compensated from byte backups; ledger additions use append-only link tombstones. Successful work becomes `published`, rollback becomes `failed`, and unsuccessful compensation becomes `repair-required` with diagnostics. Discard requires explicit confirmation and affects only the selected work directory.
 
-For Reference synthesis, checkpoint the reconciled map and bounded draft before confirmation and after confirmation. An `extend-provenance` operation keeps existing body bytes stable when a new source adds warrant only; it stages provenance and the Resource→Reference edge. A `recompose` operation stages only the bounded body fields required by a material boundary change. Re-read and fingerprint the target immediately before staging. Any concurrent target change blocks finalization; it never overwrites the user's newer synthesis. The synthesis map is transient and is not published.
+For Reference synthesis, checkpoint the reconciled map and bounded draft at admission and again after any ambiguity or conflict is resolved. An `extend-provenance` operation keeps existing body bytes stable when a new source adds warrant only; it stages provenance and the Resource→Reference edge. A `recompose` operation stages only the bounded body fields required by a material boundary change. Re-read and fingerprint the target immediately before staging. Any concurrent target change blocks finalization; it never overwrites the user's newer synthesis. The synthesis map is transient and is not published.
 
 The concrete publication hand-off is: write the complete candidate to `draft.md`,
 stage `mutations.json` with the artifact replacement and all related side effects,
@@ -14,7 +14,7 @@ include each target's `expected_fingerprint`, then move the manifest to
 `ready-to-finalize` and call `work finalize <work_id>` once. For Evergreen work,
 the same mutation list contains the note replacement, exactly one `ledger-events`
 mutation containing every `cites` event, and, when applicable, one atomic backlog
-atomic backlog mutation. A first-write backlog rename is a create-new-row plus remove/tombstone-old-row
+mutation. A first-write backlog rename is a create-new-row plus remove/tombstone-old-row
 operation in that mutation; a revision updates the existing row and iteration.
 The mutation uses `kind: "backlog-events"`, `path` for the old candidate,
 `new_path` for the new candidate, `operation: "rename"|"update"`, and a staged

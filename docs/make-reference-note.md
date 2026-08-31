@@ -46,7 +46,8 @@ queue this skill owns.
 - **Synthesize and resolve ambiguity** — reconcile agreeing or complementary
   characterizations into one coherent definition. Surface genuine conflicts,
   naming issues, or scope ambiguity for resolution; the user's explicit invocation
-  already confirms selection, so do not ask for a ceremonial second confirmation.
+  explicitly invokes the skill, so proceed unless a genuine ambiguity requires
+  resolution; do not add a ceremonial approval step.
   Report the completed result and path after writing.
 - **Write — new reference** — running `/write-checks` with `artifact-kind: note` and
   `note-type: reference` for full field
@@ -61,7 +62,7 @@ queue this skill owns.
   wholesale, then recording a typed `links` edge (`rel_type: 'extends'`)
   connecting the new resource to the reference note.
 
-The file on disk ends up reflecting either the confirmed new definition, or
+The file on disk ends up reflecting either the explicitly invoked definition, or
 every source that has ever fed the note (old and new); any flagged tension is
 logged to the evergreen backlog, and the user is told the file path.
 

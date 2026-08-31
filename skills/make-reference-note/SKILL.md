@@ -191,8 +191,8 @@ Use the shared actions below for every admitted operation:
   never publish the note first and add the link afterward.
 - If validation, preflight, or finalization fails, preserve the work and its
   diagnostics, inspect/resume it only after rechecking fingerprints, and report
-  failure or repair-required status. Do not claim publication or discard work
-  without adding any confirmation ritual.
+  failure or repair-required status. Never claim publication or discard the work
+  unless that operation actually succeeded.
 
 ## Write — extending an existing reference
 

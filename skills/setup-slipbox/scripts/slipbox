@@ -882,12 +882,18 @@ status = os.environ.get("STATUS", "")
 if status and status not in WORK_STATUSES: fail("--status must be one of active, blocked, failed, ready-to-finalize, commit-failed, repair-required", USAGE_EXIT)
 if status: manifest["status"] = status
 if os.environ.get("ACTIVITY", ""): manifest["activity"] = os.environ["ACTIVITY"]
+changed_identities = set()
 for field in ("source", "target"):
     value = os.environ.get(field.upper(), "")
     if value:
         _safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}")
+        previous_identity = manifest.get(field + "_identity")
+        identity_changed = previous_identity != value
+        if identity_changed:
+            changed_identities.add(value)
         manifest[field + "_identity"] = value
-        manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}"))
+        if identity_changed or not manifest.get(field + "_starting_fingerprint"):
+            manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}"))
         manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
 paths = list(manifest.get("affected_paths", []))
 vault_root = Path(os.environ["WORK_ROOT"]).parent
@@ -900,10 +906,9 @@ for identity in (manifest.get("source_identity"), manifest.get("target_identity"
         _safe_vault_path(vault_root, identity)
         if identity not in paths: paths.append(identity)
 fingerprints = dict(manifest.get("affected_starting_fingerprints", {}))
-explicit_identities = {value for value in (os.environ.get("SOURCE", ""), os.environ.get("TARGET", "")) if value}
 for path in paths:
     _safe_vault_path(vault_root, path)
-    if path not in fingerprints or path in explicit_identities:
+    if path not in fingerprints or path in changed_identities:
         fingerprints[path] = file_fingerprint(_safe_vault_path(vault_root, path))
 manifest["affected_starting_fingerprints"] = fingerprints
 manifest["affected_paths"] = paths

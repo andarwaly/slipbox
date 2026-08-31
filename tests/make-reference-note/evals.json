@@ -255,11 +255,11 @@
     },
     {
       "prompt": "make-reference-note invoked directly for a synthesized definition",
-      "expected_output": "Publishes the bounded draft selected by the explicit invocation through the transactional work lifecycle; it does not ask for a ceremonial second confirmation or a binary approval ritual.",
+      "expected_output": "Publishes the bounded draft selected by the explicit invocation through the transactional work lifecycle; it proceeds without requesting a second approval and consults the user only to resolve genuine ambiguity.",
       "assertions": [
         {"type": "contains", "text": "explicit invocation"},
-        {"type": "contains", "text": "does not ask for a ceremonial second confirmation"},
-        {"type": "not_contains", "text": "confirmation ritual"}
+        {"type": "contains", "text": "without requesting a second approval"},
+        {"type": "contains", "text": "genuine ambiguity"}
       ]
     },
     {
