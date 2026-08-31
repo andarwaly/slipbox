@@ -67,13 +67,10 @@ directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
 gets logged to the evergreen backlog (see Compass's own Guardrail).
 
 `/grounding` hands back the confirmed Take, and — only if the user opted
-in — a flagged tension. If a tension came back, preserve its exact wording,
-reason, and origin in the work map and record the Evergreen candidate
-`/using-slipbox`:
-
-Do not publish this backlog side effect separately.
-
-before moving on to writing.
+in — a flagged tension. If a tension came back, preserve it in the map's
+`tensions` array as `{ proposition, reason, origin_paths, status: "pending" }`,
+then record the Evergreen candidate `/using-slipbox` before moving on to writing.
+The candidate remains a staged side effect; do not publish it separately.
 
 Before writing, run a purity check on the draft: test each sentence — is it
 attributable to a single cited note's claim, unchanged? If yes for any
@@ -93,9 +90,14 @@ states something none of the individual notes said on their own.
   Evergreen note validator against the staged draft. A collision on `create`, a
   malformed H1/basename, or a failed check blocks staging.
 - Put every cited note and its one-line reason in `synthesis-map.json`. Stage one
-  `mutations.json` containing the note replacement and one `cites` ledger event
-  per cited note. If the material came from a backlog candidate, include its
+  `mutations.json` containing the note replacement and exactly one `ledger-events`
+  mutation for `links.jsonl`; that mutation contains all `cites` events for this
+  publication. If the material came from a backlog candidate, include its
   status, slug, note-path, and iteration update in the same staged mutations.
+- For a first-write backlog slug change, stage a create-new-row operation and a
+  tombstone/removal for the old slug in the same atomic backlog mutation. For a
+  revision, stage the iteration and note-path update without creating a second
+  candidate. The operation must preserve the candidate's verbatim proposition.
 - Checkpoint the map and draft `/using-slipbox`, set the manifest to
   `ready-to-finalize`, and call `work finalize <work_id>` once. This is the only
   publication call: note, citations, and backlog bookkeeping are one compensated
