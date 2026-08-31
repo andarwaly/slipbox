@@ -83,6 +83,24 @@
         {"type": "contains", "text": "no work_id"},
         {"type": "contains", "text": "wikilink untouched"}
       ]
+    },
+    {
+      "prompt": "find-connections --references where a recurring candidate is approved but one contributing source has no grounded Literature note",
+      "expected_output": "Presents the candidate in the read-only batch, then directs the user to make-literature-note for the ungrounded source before make-reference-note; it creates no Reference artifact during discovery.",
+      "assertions": [
+        {"type": "contains", "text": "read-only"},
+        {"type": "contains", "text": "make-literature-note"},
+        {"type": "not_contains", "text": "creates a Reference artifact"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where a recurring cluster is a tool, event, or creative work rather than an abstract concept",
+      "expected_output": "Reports the cluster as a Reference candidate when the ordered admission gates pass, showing alt_names, recurrence count, and source notes; it remains batch-presented and the user invokes make-reference-note themselves.",
+      "assertions": [
+        {"type": "contains", "text": "alt_names"},
+        {"type": "contains", "text": "batch-presented"},
+        {"type": "contains", "text": "make-reference-note"}
+      ]
     }
   ]
 }

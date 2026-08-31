@@ -321,6 +321,60 @@
         {"type": "contains", "text": "blocks publication"},
         {"type": "contains", "text": "recoverable work"}
       ]
+    },
+    {
+      "prompt": "make-reference-note for a concise bounded concept, a named framework, a tool, an event, and a creative work",
+      "expected_output": "Adapts the same bounded lookup shape across all five subject kinds: clean H1, concise definition, essential characteristics where useful, and Resource-only provenance without subtype-specific headings or a source dossier.",
+      "assertions": [
+        {"type": "contains", "text": "bounded lookup"},
+        {"type": "contains", "text": "Resource-only provenance"},
+        {"type": "not_contains", "text": "source dossier"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for an insufficient coined term with no independent support",
+      "expected_output": "Leaves the coined term unresolved at the source-independence gate, reports the independent support needed, leaves the wikilink untouched, and creates no provisional artifact or work_id.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "source-independence"},
+        {"type": "not_contains", "text": "provisional artifact"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for materially disputed definitions with competing grounded variants",
+      "expected_output": "Preserves both variants in synthesis-map.json, surfaces the conflict, and waits for independent support or an explicit user resolution instead of silently selecting a definition.",
+      "assertions": [
+        {"type": "contains", "text": "both variants"},
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "not_contains", "text": "silently selecting"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note where the new grounded source adds warrant only",
+      "expected_output": "Uses extend-provenance, keeps the existing body bytes and aliases stable, appends only a deduplicated Resource, and finalizes the artifact and Resource→Reference ledger edge together with compare-and-swap fingerprints.",
+      "assertions": [
+        {"type": "contains", "text": "body bytes"},
+        {"type": "contains", "text": "deduplicated Resource"},
+        {"type": "contains", "text": "together"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note where the new grounded source changes the definition boundary",
+      "expected_output": "Uses recompose, changes only the bounded body fields required by the new synthesis, preserves aliases and prior provenance, and finalizes the note and links mutation atomically.",
+      "assertions": [
+        {"type": "contains", "text": "recompose"},
+        {"type": "contains", "text": "preserves aliases"},
+        {"type": "contains", "text": "atomically"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note directly for a source that has not yet gone through make-literature-note",
+      "expected_output": "Stops at the Literature-first boundary and hands the source to make-literature-note; it does not synthesize a Reference from ungrounded material.",
+      "assertions": [
+        {"type": "contains", "text": "Literature-first boundary"},
+        {"type": "contains", "text": "make-literature-note"},
+        {"type": "not_contains", "text": "synthesizes from ungrounded material"}
+      ]
     }
   ]
 }

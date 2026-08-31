@@ -4,7 +4,7 @@ description: Scan existing notes for missing links, sparked ideas, and recurring
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.4.2"
+  version: "1.5.0"
 ---
 
 # Find-connections
@@ -168,3 +168,9 @@ threshold, stays a broken wikilink — expected, not an error.
 criterion is met, the inline wikilink); every sparked idea is logged in the evergreen
 backlog, not written as a note. The user is told what was added and what was routed to
 the backlog.
+
+Reference candidates are handed off only after the user approves a batch item:
+invoke `make-literature-note` for any source that is not yet grounded, then
+invoke `make-reference-note` once its Literature note has a grounded `Key
+Concepts` link. Discovery remains read-only while preserving the
+Literature-first boundary.

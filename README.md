@@ -40,11 +40,12 @@ persistence is independently `local` or `tracked`. The runtime supports
 Specialist workflow migration to this contract is shipped separately; this
 runtime documentation describes the shared interface only.
 
-The Literature workflow is regression-tested end to end across short essays,
-reference-style explanations, breaking-news allegations, lectures, mixed
-investigations, interrupted reading, legacy-note recovery, and immediate
-Reference handoff. These cases preserve source posture and uncertainty while
-exercising the shared recoverable-work and publication contract.
+The Literature and Reference workflows are regression-tested end to end across
+concise concepts, named frameworks, tools, events, creative works, insufficient
+coined terms, disputed definitions, warrant-only extensions, bounded
+recomposition, legacy-note recovery, and immediate Literature handoff. These
+cases preserve source posture and uncertainty while exercising the shared
+recoverable-work and publication contract.
 
 ## Skills
 

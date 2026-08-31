@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.9.0"
+  version: "1.10.0"
 ---
 
 # Make-reference-note
@@ -238,6 +238,11 @@ write — no field resolution needed here.
   publication blocks concurrent target edits.
 - Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.
+
+When the user asks for a Reference from a source that has not yet become a
+grounded Literature note, stop at that boundary and hand the source to
+`make-literature-note` first. This immediate handoff is required even when the
+user names the Reference directly; do not synthesize from an ungrounded source.
 
 ## Migrate a legacy Reference safely
 
