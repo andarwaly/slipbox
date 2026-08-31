@@ -42,7 +42,8 @@ before writing. Apply the `.slipbox/bin/slipbox config get filenames.reference` 
 
 ## Gather the grounded characterizations
 
-Start or resume Reference work for the candidate `/using-slipbox`. The work
+Start or resume work for the Reference candidate with its target and source identities
+`/using-slipbox`. The work
 manifest's `kind` is `reference`, and its `activity` is one of `create`,
 `recompose`, or `extend-provenance`. Keep the work local under
 `.slipbox/work/<work_id>/`; a Reference work directory contains:
@@ -51,7 +52,7 @@ manifest's `kind` is `reference`, and its `activity` is one of `create`,
 - `synthesis-map.json` — the reconciled evidence map (see `references/synthesis-map.md`); and
 - `draft.md` — the complete bounded Reference draft, including frontmatter.
 
-Checkpoint the reconciled synthesis and bounded draft `/using-slipbox` after
+Checkpoint work with the reconciled synthesis and bounded draft `/using-slipbox` after
 the source-resolution/admission boundary and again after user confirmation.
 There is no permanent synthesis cache: `synthesis-map.json` is transient work
 state and is discarded with the work item after publication.
@@ -129,11 +130,8 @@ trail for the current work, not a second note and not a source-by-source body.
   family gets handled: if the user opts in to flagging it rather than resolving it now,
   insert it into the evergreen backlog before moving on to writing. The
   installed `.slipbox/AGENTS.md` is the canonical reference for backlog
-  semantics and lifecycle; this skill retains the command it executes:
-
-  ```bash
-  .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
-  ```
+  semantics and lifecycle. Record an Evergreen candidate with the proposition,
+  reason, and origin paths `/using-slipbox`.
 
 - Present the bounded synthesized definition and resolved Resource provenance to the
   user for confirmation before writing
@@ -174,12 +172,12 @@ separate concern and must not be used as the frontmatter alias value.
 
 ## Stage and publish Reference work
 
-Use these concrete `/using-slipbox` actions for every admitted operation:
+Use the shared actions below for every admitted operation:
 
-- Start or resume Reference work for the candidate `/using-slipbox`, selecting
+- Start or resume work for the Reference candidate `/using-slipbox`, selecting
   `create`, `extend-provenance`, or `recompose` and recording the target's
   starting fingerprint in `manifest.json`.
-- Checkpoint the reconciled synthesis and bounded draft `/using-slipbox`.
+- Checkpoint work with the reconciled synthesis and bounded draft `/using-slipbox`.
   Write the complete candidate note to `draft.md`; do not write the vault target.
 - Stage `mutations.json` with one artifact mutation for the Reference target,
   whose `expected_fingerprint` is the manifest fingerprint (or `null` for a
@@ -187,8 +185,8 @@ Use these concrete `/using-slipbox` actions for every admitted operation:
   extension, include the Resource→Reference link mutation in that same list,
   targeting `links.jsonl` with its own expected fingerprint and one `extends`
   event replacement.
-- Checkpoint the confirmed draft `/using-slipbox`, set the manifest to
-  `ready-to-finalize`, then call `work finalize <work_id>` once. Publication is
+- Checkpoint work with the confirmed draft `/using-slipbox`, set the manifest to
+  `ready-to-finalize`, then publish an artifact `/using-slipbox` once. Publication is
   the single compare-and-swap transaction for the note and link mutations;
   never publish the note first and add the link afterward.
 - If validation, preflight, or finalization fails, preserve the work and its
@@ -220,9 +218,9 @@ write — no field resolution needed here.
    the artifact replacement (`path`, `replacement_path`, and expected fingerprint)
    and a `links.jsonl` ledger mutation with its own expected fingerprint and one
    `extends` event. The two mutations must be finalized together.
-5. Checkpoint the staged draft and map `/using-slipbox`, set the manifest to
-   `ready-to-finalize`, and invoke `work finalize <work_id>` exactly once. Do not
-   call `links add` separately and do not perform a direct target write.
+5. Checkpoint work with the staged draft and map `/using-slipbox`, set the manifest to
+   `ready-to-finalize`, and publish an artifact `/using-slipbox` exactly once. Do not
+   perform a direct target write.
 6. If validation, preflight, or finalization fails, preserve diagnostics and the
    work directory; resume only after recomputing fingerprints for every mutation
    path, or leave it `repair-required`. Semantic conflicts remain stop-and-ask
@@ -279,7 +277,7 @@ not block unrelated resolvable values unless they make the candidate's identity 
 definition ambiguous.
 
 For selected notes whose body is not already a bounded lookup, start a `migration`
-Reference work through `/using-slipbox`, re-verify the original Literature notes,
+Reference work with Start or resume work `/using-slipbox`, re-verify the original Literature notes,
 Resources, and source-map fingerprints, and checkpoint before editing the draft. Classify
 each removed or displaced passage as `already preserved source detail`, `reader-owned
 Evergreen candidate`, `unsupported`, or `unresolved`. Preserve each classification in

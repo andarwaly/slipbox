@@ -67,13 +67,24 @@ Read the template first — its location comes from the `templates.<type>_path` 
 
 Classify whether the resolved template used bare variables or a quoted instruction (see `references/variable-glossary.md`); this controls whether the staged draft needs the Resource-mode `/write-checks` gate below.
 
-Start Resource work for this URL with `/using-slipbox`, using `kind: resource` and `activity: clip`; the target is create-only and frozen. Record the detected type, extraction method, metadata, status, and any failure details in the work state. Do not create a permanent extraction cache.
+Start or resume work for this Resource with kind `resource`, activity `clip`, and the
+source URL `/using-slipbox`; the target is create-only and frozen. Record the detected
+type, extraction method, metadata, status, and any failure details in the work state. Do
+not create a permanent extraction cache.
 
-Checkpoint `manifest.json` plus `extraction.json` in the work directory after fetch/extraction, including the source URL and the extracted payload or a structured failure. Resolve the template into `draft.md` and checkpoint it through `/using-slipbox` before publication. A bare-variable draft is still transactional; never write the final Resource directly from the fetched response.
+Checkpoint work with `manifest.json` plus `extraction.json` after fetch/extraction, including
+the source URL and the extracted payload or a structured failure. Resolve the template into
+`draft.md` and checkpoint work `/using-slipbox` before publication. A bare-variable draft
+is still transactional; never write the final Resource directly from the fetched response.
 
 If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run `/write-checks` with `artifact-kind: resource` on the synthesized draft before publication. Resource mode runs Style and Humanize only and returns the pass/revise signal — it does not resolve fields, place zones, or invoke `note validate`. If this clip used only bare variables, skip the checks — nothing was synthesized to check.
 
-Stage one create-only mutation from `draft.md`, with the target's expected starting fingerprint, and publish it with `work finalize` through `/using-slipbox`. A target collision — including a pre-existing file or a target changed during work — fails without replacement. On successful publication, treat the Resource as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, resume or discard the preserved work and start a fresh clip; never patch the frozen target.
+Publish an artifact `/using-slipbox` from the staged `draft.md`, with the target's expected
+starting fingerprint and create-only semantics. A target collision — including a pre-existing
+file or a target changed during work — fails without replacement. On successful publication,
+treat the Resource as frozen: this skill does not reopen it to edit, append, or correct it.
+If the fetch or transform needs a fix, resume or discard the preserved work and start a fresh
+clip; never patch the frozen target.
 
 If fetch or transform fails, persist the failed extraction and draft state in the Resource work directory and report the failure; do not publish a partial Resource. Work may be resumed or explicitly discarded later. A failed URL never aborts another URL's work.
 

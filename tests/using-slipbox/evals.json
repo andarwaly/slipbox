@@ -63,6 +63,19 @@
         {"type": "contains", "text": "CLI"},
         {"type": "contains", "text": "tombstone"}
       ]
+    },
+    {
+      "prompt": "Audit the peer callers for shared action vocabulary.",
+      "expected_output": "Peer callers use Start or resume work, Checkpoint work, Publish an artifact, Record an Evergreen candidate, and Record a link followed by `/using-slipbox`; they do not repeat raw links/evergreen commands, `work finalize`, or phrases such as log tension or route seed.",
+      "assertions": [
+        {"type": "contains", "text": "Start or resume work"},
+        {"type": "contains", "text": "Checkpoint work"},
+        {"type": "contains", "text": "Publish an artifact"},
+        {"type": "contains", "text": "Record a link"},
+        {"type": "not_contains", "text": "log tension"},
+        {"type": "not_contains", "text": "route seed"},
+        {"type": "not_contains", "text": "work finalize"}
+      ]
     }
   ]
 }

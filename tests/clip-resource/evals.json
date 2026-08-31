@@ -134,7 +134,7 @@
     },
     {
       "prompt": "Clip this article, but I may need to resume if the run is interrupted: https://example.com/recoverable",
-      "expected_output": "Starts independent Resource work with activity clip, checkpoints manifest.json and extraction.json, resolves the template into draft.md, and publishes a frozen create-only target through /using-slipbox. It does not write the Resource directly.",
+      "expected_output": "Starts independent Resource work with activity clip, checkpoints manifest.json and extraction.json, resolves the template into draft.md, and publishes a frozen create-only target with the shared engine /using-slipbox. It does not write the Resource directly.",
       "fixture_vault": "fixtures/vault-configured",
       "assertions": [
         {"type": "contains", "text": "manifest.json"},

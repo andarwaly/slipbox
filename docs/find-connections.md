@@ -68,11 +68,11 @@ connections relating to just those notes, instead of a whole-vault scan.
    suggesting a link, checks `.slipbox/bin/slipbox links find --source <slug>` first,
    so an already-linked pair is never re-suggested.
 2. **Link suggestions, presented as a batch** — every candidate shown together, approved
-   or rejected in one pass, never one-at-a-time. Each approved link is written with
-   `.slipbox/bin/slipbox links add --source <slug> --target <slug> --rel cites`.
+   or rejected in one pass, never one-at-a-time. Record each approved link with its exact
+   source, target, relation, and provenance `/using-slipbox`.
 3. **Sparked ideas, routed to the evergreen backlog** — never written as a note directly;
-   logged with `.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the
-   spark, described>"`, and `make-evergreen-note` picks them up from there later.
+   record each as an Evergreen candidate with its proposition, reason, and origin paths
+   `/using-slipbox`, and `make-evergreen-note` picks it up later.
 
 ## Done
 

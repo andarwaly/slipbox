@@ -23,7 +23,7 @@
     },
     {
       "prompt": "make-evergreen-note, and a Compass direction spawns a genuinely new sub-idea partway through that doesn't get pursued in this sitting",
-      "expected_output": "Logs the unpursued sub-idea to the evergreen backlog (slipbox evergreen add) rather than losing it or forcing it into the current session's Take.",
+      "expected_output": "Records the unpursued sub-idea as an Evergreen candidate rather than losing it or forcing it into the current session's Take.",
       "assertions": [
         {"type": "not_contains", "text": "cannot proceed"}
       ]
@@ -54,7 +54,7 @@
     },
     {
       "prompt": "publish an Evergreen note with two citations and a backlog update",
-      "expected_output": "Stages the note replacement, both cites ledger events, and the backlog update in one mutations.json, then calls work finalize once; no direct links add or evergreen update follows.",
+      "expected_output": "Stages the note replacement, both cites ledger events, and the backlog update in one mutations.json, then publishes the artifact once; no direct link or backlog mutation follows.",
       "assertions": [
         {"type": "contains", "text": "mutations.json"},
         {"type": "contains", "text": "once"},

@@ -133,9 +133,8 @@ rejects, or edits each one in one pass.
 
 For each approved suggestion:
 
-```bash
-.slipbox/bin/slipbox links add --source <slug> --target <slug> --rel cites
-```
+Record the link with its exact source, target, relation, and provenance
+`/using-slipbox`.
 
 Then add the matching `[[wikilink]]` in whichever note's prose the connection belongs
 to, per the existing two-part criterion: it needs the `links` row above as a mechanical
@@ -147,9 +146,8 @@ note's subject, not just incidentally name it.
 For each sparked idea, insert it as its own candidate — never write a note directly, and
 never fold it into a link suggestion:
 
-```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the spark, described>"
-```
+Record an Evergreen candidate with the proposition, reason, and origin paths
+`/using-slipbox`.
 
 `make-evergreen-note` picks these up from its own backlog read, same as any other flagged
 tension.

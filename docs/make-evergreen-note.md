@@ -16,7 +16,7 @@ rather than only appending to it.
    `setup-slipbox` has run; every `slipbox` CLI call throughout this skill goes
    through `.slipbox/bin/slipbox`, never bare `slipbox`.
 2. **Recoverable work and material** — starts or resumes one `create` or `revise`
-   Evergreen work item through `/using-slipbox`. Its `manifest.json`, transient
+   Evergreen work item with Start or resume work `/using-slipbox`. Its `manifest.json`, transient
    `synthesis-map.json`, and `draft.md` preserve the operation across interruption.
    Then takes named notes, a bare hunch to search around, or a pull from the
    evergreen backlog.

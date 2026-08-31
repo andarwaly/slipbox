@@ -21,12 +21,13 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ## Invocation
 
-Start or resume Literature work for the Resource `/using-slipbox`.
+Start or resume work for the Literature Resource with its source identity, inquiry
+context, and known paths `/using-slipbox`.
 
 The caller may identify the Resource explicitly — `/make-literature-note from this
 article` (or a URL or path) — or leave it implicit when a just-clipped Resource, pasted
 URL, or open file makes the source unambiguous. Ask only when nothing is inferrable.
-Pass the source identity, inquiry context, and known paths to `/using-slipbox` before
+Pass the source identity, inquiry context, and known paths in that action before
 reading or writing. A returning invocation resumes the matching unfinished work item;
 it does not start a second interview.
 
@@ -57,7 +58,7 @@ points at this resource.
 
 ## Build the source and inquiry maps
 
-Use `/using-slipbox` to inspect the Resource's source cache. Load a compatible source map;
+Inspect source analysis for the Resource `/using-slipbox`. Load a compatible source map;
 otherwise build one from the whole frozen Resource using `references/source-architecture.md`
 and `references/qew-theory.md`, then store it as source-owned analysis. For an existing
 vault with no cache, source-first construction is mandatory: read the complete Resource
@@ -76,7 +77,7 @@ selection, disposition, and draft state. If purpose is absent, ask one natural p
 question; if the user is exploring, use that as context rather than forcing a fixed goal.
 Reassess the map as the conversation changes. Derive the grounding frontier at runtime;
 never persist it as an authoritative backlog. On recovery, compare Resource and note
-fingerprints through `/using-slipbox`, reuse prior comprehension evidence and staged points,
+fingerprints through the same work item, reuse prior comprehension evidence and staged points,
 and resume at the next unresolved thinking obligation rather than repeating settled questions.
 
 The source-architecture and Q/E/W reasoning below remain internal. Before
@@ -134,9 +135,8 @@ they receive source verification and a final source audit.
 If a tension comes back from a Gate pass, insert it into the evergreen
 backlog before continuing:
 
-```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
-```
+Record an Evergreen candidate with the proposition, reason, and origin paths
+`/using-slipbox`.
 
 When the user notices a genuine gap in the source itself — something the
 source leaves unclear, ambiguous, or unanswered — offer to record it as an
@@ -167,10 +167,10 @@ unresolved inquiry obligation:
 - Assemble and review the Source Point per `references/writing-a-source-point.md`. Preserve
   local posture, scope, attribution, and certainty: a news allegation remains an attributed
   report, never the source's own claim.
-- Use `/using-slipbox` to checkpoint the inquiry map and complete staged `draft.md`. Run
+- Checkpoint work with the inquiry map and complete staged `draft.md` `/using-slipbox`. Run
   `/write-checks` against the staged artifact and repair only mechanical defects. Never
   mutate the final literature path mid-session; publish once at closeout through
-  `/using-slipbox`.
+  Publish an artifact `/using-slipbox`.
 - Derive the intended target in the folder from `.slipbox/bin/slipbox config get paths.literature`, filename per
   `.slipbox/bin/slipbox config get filenames.literature` casing convention. The Literature H1
   preserves the Resource's source title exactly and is always clean/unprefixed; it is never
@@ -209,7 +209,7 @@ unresolved inquiry obligation:
   session stands without every turn being labeled.
 
 An `## Open Questions` entry (and any nested `*Assumption*`/`*Answered*`
-bullet) is staged through `/using-slipbox` as soon as it's flagged. It is not
+bullet) is staged with Checkpoint work `/using-slipbox` as soon as it's flagged. It is not
 published mid-session; unlike most other sections it can still be appended to
 later in a subsequent session.
 
@@ -292,7 +292,7 @@ pad toward, and never a mid-conversation interrupt. A dense source can
 honestly support more; a short one can honestly support two. The number
 only prompts a harder look at overlap when the count runs well past it.
 Where the merge test does fire, offer the merge; if accepted, re-audit the
-affected point and stage the revised draft through `/using-slipbox`.
+affected point and checkpoint work with the revised draft `/using-slipbox`.
 
 Then confirm the Core Idea. It was written on the note's first claim,
 before most of the conversation existed, so it's the one line on the page
@@ -357,11 +357,8 @@ persistent-opinion offer:
 > "want to capture that as its own idea for the evergreen backlog, or set
 > it aside for now?"
 
-Only on a yes:
-
-```bash
-.slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<the user's own reaction, in their words>"
-```
+Only on a yes, record an Evergreen candidate with the proposition, reason, and origin
+paths `/using-slipbox`.
 
 A shrug, a "nothing really," or a decline is a complete, valid end to the
 session.
@@ -396,9 +393,9 @@ fix, say so and route it there instead of stretching this exemption to
 cover it.
 
 Once the user has named the inaccuracy and what the corrected wording should say, stage the
-correction in the draft and inquiry map through `/using-slipbox`. Run the corrected wording
+correction in the draft and inquiry map with Checkpoint work `/using-slipbox`. Run the corrected wording
 through `/grounding`'s Gate, then validate the staged artifact and publish with a
-compare-and-swap (CAS) through `/using-slipbox`, providing the expected final-file
+compare-and-swap (CAS) with Publish an artifact `/using-slipbox`, providing the expected final-file
 fingerprint. If the CAS detects a concurrent change, stop and recover rather than overwrite.
 This is the one case where a published entry may be reopened, and it still never writes the
 final path directly.
@@ -408,12 +405,12 @@ final path directly.
 Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete
 staged artifact at `<staged-draft>` after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
-surfacing sections on the staged artifact. Publish it through `/using-slipbox`, then run the
+surfacing sections on the staged artifact. Publish an artifact `/using-slipbox`, then run the
 post-publication check on
 `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
 --basename "<complete basename>.md" --title "<exact Resource title>"`. Validation
 is a handoff, not permission to silently rewrite a claim; any material claim
-change re-audits the affected points before publication through `/using-slipbox`.
+change re-audits the affected points before publication `/using-slipbox`.
 
 ### Compact closeout
 

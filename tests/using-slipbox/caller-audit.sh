@@ -42,4 +42,16 @@ for mutation in missing altered-first duplicate; do
   fi
   rm -rf "$malformed"
 done
+
+for forbidden in 'log tension' 'route seed' '.slipbox/bin/slipbox links add' '.slipbox/bin/slipbox evergreen add' 'work finalize'; do
+  forbidden_fixture="$(mktemp -d)"
+  mkdir -p "$forbidden_fixture/skills/caller"
+  cp "$root/skills/find-connections/SKILL.md" "$forbidden_fixture/skills/caller/SKILL.md"
+  printf '\nCaller text: %s\n' "$forbidden" >> "$forbidden_fixture/skills/caller/SKILL.md"
+  if python3 "$checker" "$forbidden_fixture" >/dev/null 2>&1; then
+    echo "checker failed to reject forbidden shared action: $forbidden" >&2
+    exit 1
+  fi
+  rm -rf "$forbidden_fixture"
+done
 echo "operative caller audit: PASS"

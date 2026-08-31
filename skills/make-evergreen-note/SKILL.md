@@ -22,7 +22,7 @@ Bold terms in this file are defined in `GLOSSARY.md`.
 
 ### Recoverable work
 
-Start or resume Evergreen work `/using-slipbox` before gathering material. Use
+Start or resume work for the Evergreen Take `/using-slipbox` before gathering material. Use
 activity `create` for a new Take and `revise` when an existing Evergreen note is
 being revisited. Record the target path, target fingerprint (or `null` for a new
 note), and all contributing note identities in `manifest.json`. Keep the complete
@@ -38,11 +38,7 @@ all fingerprints, and resume it rather than starting a second operation.
   see `/grounding`'s own handling of "neither present."
 - **From the backlog** → query the pending queue. The installed
   `.slipbox/AGENTS.md` is the canonical reference for backlog semantics and
-  lifecycle; this skill retains the command it executes:
-
-  ```bash
-  .slipbox/bin/slipbox evergreen find --status to-discuss
-  ```
+  lifecycle; inspect the pending Evergreen candidates `/using-slipbox`.
 
   Offer these; let the user choose one. This is how a flagged tension from
   `make-literature-note` — or a spawned Compass sub-idea from a prior
@@ -64,7 +60,7 @@ starts.
 Orient the take with the Compass technique — reach for whichever direction
 the conversation calls for, no fixed order. Compass's own
 directions may recurse into fresh sub-ideas; an unpursued spawned sub-idea
-gets logged to the evergreen backlog (see Compass's own Guardrail).
+gets recorded as an Evergreen candidate `/using-slipbox` (see Compass's own Guardrail).
 
 `/grounding` hands back the confirmed Take, and — only if the user opted
 in — a flagged tension. If a tension came back, preserve it in the map's
@@ -99,11 +95,10 @@ states something none of the individual notes said on their own.
   tombstone/removal for the old slug in the same atomic backlog mutation. For a
   revision, stage the iteration and note-path update without creating a second
   candidate. The operation must preserve the candidate's verbatim proposition.
-- Checkpoint the map and draft `/using-slipbox`, set the manifest to
-  `ready-to-finalize`, and call `work finalize <work_id>` once. This is the only
+- Checkpoint work with the map and draft `/using-slipbox`, set the manifest to
+  `ready-to-finalize`, and publish an artifact `/using-slipbox` once. This is the only
   publication call: note, citations, and backlog bookkeeping are one compensated
-  compare-and-swap transaction. Never call `links add`, write the target, or
-  update the backlog separately.
+compare-and-swap transaction. Do not write the target or update the backlog separately.
 - Whether a citation is also rendered as an inline `[[wikilink]]` in the
   note's prose depends on a two-part test: (a) it has this links row (the
   mechanical baseline — only cited notes are ever eligible), and (b) the

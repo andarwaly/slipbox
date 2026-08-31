@@ -4,7 +4,12 @@ from pathlib import Path
 import re
 import sys
 
-PATTERN = re.compile(r"Run `/using-slipbox`|through `/using-slipbox`")
+PATTERN = re.compile(
+    r"Run `/using-slipbox`|through `/using-slipbox`|"
+    r"\blog tension\b|\broute seed\b|"
+    r"\.slipbox/bin/slipbox (?:links add|evergreen add)\b|"
+    r"\bwork finalize\b"
+)
 QUOTE = (
     "Caller skills state the natural imperative action and append `/using-slipbox`.",
     "Write “Record the link `/using-slipbox`,” never “Run `/using-slipbox`” or",
@@ -14,6 +19,7 @@ QUOTE = (
 
 def operative_lines(path: Path):
     lines = path.read_text(encoding="utf-8").splitlines()
+    engine_scope = "skills/using-slipbox/" in path.as_posix()
     is_engine = path.as_posix().endswith("skills/using-slipbox/SKILL.md")
     if is_engine:
         exact_starts = [index for index in range(len(lines) - 2) if tuple(lines[index:index + 3]) == QUOTE]
@@ -38,8 +44,14 @@ def main(root: Path) -> int:
         for path in base.rglob("*.md"):
             if "docs/superpowers/plans/" in path.as_posix():
                 continue
+            if path.as_posix().endswith(("skills/make-reference-note/references/synthesis-map.md", "docs/slipbox-cli.md")):
+                continue
+            engine_scope = "skills/using-slipbox/" in path.as_posix()
+            is_engine = path.as_posix().endswith("skills/using-slipbox/SKILL.md")
             try:
                 for number, line in operative_lines(path):
+                    if engine_scope and not is_engine:
+                        continue
                     if PATTERN.search(line):
                         violations.append(f"{path}:{number}:{line.strip()}")
             except ValueError as error:

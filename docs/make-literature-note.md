@@ -6,7 +6,7 @@ literature note for that source.
 
 ## When to use
 
-Start or resume Literature work for the Resource `/using-slipbox`. The source may be
+Start or resume work for the Literature Resource with its source identity `/using-slipbox`. The source may be
 explicit (`/make-literature-note from this article`) or inferred from a just-clipped
 Resource, pasted URL, or open file; ask only when nothing is inferrable.
 
@@ -20,7 +20,7 @@ prefix belongs in the generated filename and link target, not in that H1.
 1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming `setup-slipbox`
    has run; every `slipbox` CLI call throughout this skill goes through
    `.slipbox/bin/slipbox`, never bare `slipbox`.
-2. **Load or build source analysis** — `/using-slipbox` reads or creates a reusable source
+2. **Load or build source analysis** — Inspect or store source analysis `/using-slipbox` for a reusable source
    map keyed by the Resource fingerprint; it stays source-owned and separate from inquiry.
 3. **Create inquiry context** — build a session-scoped inquiry map with purpose, reflection,
    source-unit IDs, comprehension, relevance, risk, and draft state. Derive the grounding
@@ -31,7 +31,7 @@ prefix belongs in the generated filename and link target, not in that H1.
    paraphrase. Confident, Hesitant, Blank, and Confused reading states dispatch normally;
    Blank or not-started reading first offers reading alone versus collaboration, and only
    the collaborative choice dispatches guided reading.
-5. **Stage Source Points** — checkpoint the inquiry map and `draft.md` through
+5. **Stage Source Points** — Checkpoint work with the inquiry map and `draft.md`
    `/using-slipbox`; every final point receives a source audit. Validate the explicit
    `<staged-draft>` path before publication; the final path is untouched until closeout,
    then retain the saved-path post-publication validation.
