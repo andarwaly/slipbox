@@ -334,7 +334,7 @@
       "assertions": [{"type":"contains","text":"source units"},{"type":"contains","text":"limitation"},{"type":"contains","text":"qualification"},{"type":"contains","text":"Adaptive Split Gate"}]
     },
     {
-      "prompt": "End-to-end fixture: breaking news reports an allegation attributed to a named official, includes a denial, and leaves verification pending.",
+      "prompt": "End-to-end fixture: breaking news reports an allegation attributed to a former contractor, includes that contractor's denial, and leaves verification pending.",
       "files": ["fixtures/breaking-news-allegation.md"],
       "expected_output": "Preserves attribution, denial, uncertainty, chronology, and reported-versus-verified status, and never rewrites the allegation as an established fact.",
       "assertions": [{"type":"contains","text":"attribution"},{"type":"contains","text":"denial"},{"type":"contains","text":"uncertainty"},{"type":"contains","text":"reported-versus-verified"}]
@@ -346,7 +346,7 @@
       "assertions": [{"type":"contains","text":"guided reading"},{"type":"contains","text":"one substantive question"},{"type":"contains","text":"one open Gate"},{"type":"contains","text":"Source Points"}]
     },
     {
-      "prompt": "End-to-end fixture: a mixed investigation combines direct observations, a quoted expert interpretation, competing hypotheses, and unresolved evidence.",
+      "prompt": "End-to-end fixture: a mixed investigation combines direct observations, a paraphrased expert interpretation, competing hypotheses, and unresolved evidence.",
       "files": ["fixtures/mixed-investigation.md"],
       "expected_output": "Maps observations, attributed interpretation, hypotheses, and unresolved evidence separately; preserves speaker, analysis-versus-observation, dispute, and certainty; and records unresolved gaps as Open Questions.",
       "assertions": [{"type":"contains","text":"direct observations"},{"type":"contains","text":"analysis-versus-observation"},{"type":"contains","text":"Open Questions"},{"type":"contains","text":"dispute"}]

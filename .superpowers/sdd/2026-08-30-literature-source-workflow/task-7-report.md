@@ -36,3 +36,15 @@ bash tests/write-checks/routing.sh    PASS
 
 The runtime suite exercises setup, cache/work lifecycle, staged publication,
 compare-and-swap, rollback, link compensation, and validation routing.
+
+## Round 3
+
+- Aligned the breaking-news case with the fixture's unnamed former-contractor
+  attribution and denial.
+- Aligned the mixed-investigation case with the fixture's paraphrased expert
+  interpretation rather than a direct quote.
+
+```text
+python3 -m json.tool tests/make-literature-note/evals.json: PASS
+git diff --check: PASS
+```
