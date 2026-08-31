@@ -190,7 +190,8 @@
         {"type": "contains", "text": "unresolved"},
         {"type": "contains", "text": "source independence"},
         {"type": "contains", "text": "support needed"},
-        {"type": "contains", "text": "wikilink untouched"}
+        {"type": "contains", "text": "wikilink untouched"},
+        {"type": "not_contains", "text": "work_id"}
       ]
     }
   ]

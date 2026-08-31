@@ -27,3 +27,10 @@ git diff --check: PASS
   assertions.
 - Replaced the brittle direct-invocation phrase assertion with assertions for the failed
   source-independence gate and required independent support.
+
+## Round 3
+
+- Replaced the remaining runtime admission-sequence references to authoring-only
+  `CONTEXT.md` with the installed `.slipbox/GLOSSARY.md` path.
+- Restored the direct-invocation eval's negative assertion that unresolved handling does
+  not create a `work_id`.

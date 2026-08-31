@@ -68,7 +68,7 @@ one.
 ## Route the evidence
 
 Admission is a deterministic decision, separate from recurrence and from the user's
-request to write a note. Apply the checks in the order defined in `CONTEXT.md`:
+request to write a note. Apply the checks in the order defined in `.slipbox/GLOSSARY.md`:
 
 - Exclude people, locations, and organizations first; they remain surfacing-only
   `Mentioned` referents.

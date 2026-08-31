@@ -79,8 +79,8 @@ in this order — entity exclusion first, followed by the remaining Admission se
      Report it the same way as a Reference candidate (recurrence threshold,
      batch-presented), just without ever attempting a write.
    - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
-2. **Admission sequence** (only if not an entity; see `CONTEXT.md` and
-   `GLOSSARY.md`): stable lookup identity, source independence, boundedness, adaptive
+2. **Admission sequence** (only if not an entity; see `.slipbox/GLOSSARY.md`): stable
+   lookup identity, source independence, boundedness, adaptive
    evidence sufficiency, and natural-unit scope. Apply evidence sufficiency after the
    other checks, not as a reward for recurrence: one authoritative primary source can
    support a settled standard, while otherwise two independently grounded sources are
