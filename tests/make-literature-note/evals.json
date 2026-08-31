@@ -33,6 +33,27 @@
       ]
     },
     {
+      "prompt": "A Literature session has Blank or not-started reading with a source. The user first considers reading alone, then chooses to work through the source collaboratively.",
+      "expected_output": "Offers the choice between reading alone and collaboration. If the user reads alone, pauses without dispatching guided reading; if the user chooses collaboration, dispatches guided reading and continues one substantive question at a time.",
+      "assertions": [
+        {"type": "contains", "text": "reading alone"},
+        {"type": "contains", "text": "collaboration"},
+        {"type": "contains", "text": "guided reading"},
+        {"type": "not_contains", "text": "always dispatch guided reading"}
+      ]
+    },
+    {
+      "prompt": "The user identifies a fidelity error in a previously published Source Point and supplies corrected wording while another process may have changed the final note.",
+      "expected_output": "Stages the correction in the explicit <staged-draft> path, validates that staged artifact, and publishes through /using-slipbox with compare-and-swap against the expected final-file fingerprint. A concurrent change stops recovery and never overwrites the final path directly; after successful publication, validates the saved path.",
+      "assertions": [
+        {"type": "contains", "text": "<staged-draft>"},
+        {"type": "contains", "text": "compare-and-swap"},
+        {"type": "contains", "text": "expected final-file fingerprint"},
+        {"type": "contains", "text": "never overwrites"},
+        {"type": "contains", "text": "saved path"}
+      ]
+    },
+    {
       "prompt": "Build a source map and inquiry map for a conceptual source with several argument moves and uneven user relevance.",
       "expected_output": "Keeps the reusable source map source-owned and separate from reader inquiry or transcript; references source-unit IDs from the inquiry map; derives a grounding frontier at runtime rather than storing an authoritative queue. Routes high-learning/low-risk work through a user semantic relation before the agent drafts, while low-learning/high-risk work is verified against the source without forcing paraphrase.",
       "assertions": [

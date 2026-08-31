@@ -167,15 +167,16 @@ unresolved inquiry obligation:
   it's already there.
 - Re-read the staged draft and inquiry map right before each checkpoint; do not read or
   overwrite the final target as a session scratchpad.
-- Assemble the complete staged draft, then run `/write-checks` artifact validation with the
-  complete basename and exact Resource title. Repair only mechanical defects; stop and ask
-  for semantic conflicts, collisions, uncertain titles, or uncertain protected names.
+- Assemble the complete staged draft, then run `/write-checks` artifact validation against
+  the explicit `<staged-draft>` path with the complete basename and exact Resource title.
+  Repair only mechanical defects; stop and ask for semantic conflicts, collisions, uncertain
+  titles, or uncertain protected names.
 - Re-read staged state before each checkpoint. A failed post-write check blocks the next
   frontier item and success acknowledgment. The final path is written only by the publish
-  action at closeout, then run
+  action at closeout. A failed staged check blocks the next frontier item and success
+  acknowledgment. After publication, run the post-publication check against
   `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
-  --basename "<complete basename>.md" --title "<exact Resource title>"`. A failed
-  post-write check blocks the next claim and the success acknowledgment.
+  --basename "<complete basename>.md" --title "<exact Resource title>"`.
 - Filename collision on the note's first claim → stop and ask, never
   auto-disambiguate. On a second or later claim for an existing note, the
   existing file is expected, not a collision.
@@ -364,9 +365,11 @@ final path directly.
 
 ## Final validation handoff
 
-Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete staged artifact after the final batch. Check
+Run `/write-checks` with `artifact-kind: note` and `note-type: literature` against the complete
+staged artifact at `<staged-draft>` after the final batch. Check
 required fields, section order, claim headings, Core Idea placement, and both
-surfacing sections on the staged artifact. Then run
+surfacing sections on the staged artifact. Publish it through `/using-slipbox`, then run the
+post-publication check on
 `.slipbox/bin/slipbox note validate --type literature --path <saved-path>
 --basename "<complete basename>.md" --title "<exact Resource title>"`. Validation
 is a handoff, not permission to silently rewrite a claim; any material claim
