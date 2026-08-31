@@ -131,6 +131,82 @@
         {"type": "not_contains", "text": "npm install"},
         {"type": "not_contains", "text": "pip install"}
       ]
+    },
+    {
+      "prompt": "Clip this article, but I may need to resume if the run is interrupted: https://example.com/recoverable",
+      "expected_output": "Starts independent Resource work with activity clip, checkpoints manifest.json and extraction.json, resolves the template into draft.md, and publishes a frozen create-only target through /using-slipbox. It does not write the Resource directly.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "manifest.json"},
+        {"type": "contains", "text": "extraction.json"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "create-only"},
+        {"type": "contains", "text": "work finalize"}
+      ]
+    },
+    {
+      "prompt": "Clip https://example.com/fails even if fetching or the transcript fails; I want to be able to inspect or resume it later.",
+      "expected_output": "Persists the failed extraction and failure details in Resource work state, reports failure, and publishes no partial Resource. The work remains resumable or explicitly discardable.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "failure"},
+        {"type": "contains", "text": "resume"},
+        {"type": "contains", "text": "discard"},
+        {"type": "contains", "text": "partial Resource"}
+      ]
+    },
+    {
+      "prompt": "The Article template only uses bare variables. Clip https://example.com/bare and preserve the draft transaction.",
+      "expected_output": "Resolves bare variables into draft.md and publishes through the same Resource transaction; it skips /write-checks because no quoted synthesis instruction ran, but never direct-writes the final target.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "bare-variable"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "transactional"},
+        {"type": "not_contains", "text": "directly from the fetched response"}
+      ]
+    },
+    {
+      "prompt": "A configured Article template contains a quoted rewrite instruction. Clip https://example.com/synthesized and run the pre-write checks.",
+      "expected_output": "Stages the synthesized draft and invokes /write-checks with artifact-kind: resource before publication. Resource checks run Style and Humanize only; field resolution, zone placement, and note validate are not invoked.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "artifact-kind: resource"},
+        {"type": "contains", "text": "Style and Humanize only"},
+        {"type": "not_contains", "text": "note validate"}
+      ]
+    },
+    {
+      "prompt": "Clip https://example.com/already-exists where the configured Resource target already exists.",
+      "expected_output": "Stages the candidate but rejects the target collision without replacing the existing file; the work remains inspectable and is not reported as success.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "collision"},
+        {"type": "contains", "text": "without replacement"},
+        {"type": "not_contains", "text": "Clip Saved"}
+      ]
+    },
+    {
+      "prompt": "Resume the interrupted Resource clip for https://example.com/resume, or discard it if the source fingerprint no longer matches.",
+      "expected_output": "Inspects the preserved work, compares fingerprints before resuming, and offers explicit discard for stale work; it never overwrites a changed or frozen target.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "fingerprint"},
+        {"type": "contains", "text": "resume"},
+        {"type": "contains", "text": "discard"},
+        {"type": "contains", "text": "frozen target"}
+      ]
+    },
+    {
+      "prompt": "Clip these independently: https://example.com/one and https://example.com/two. One may fail.",
+      "expected_output": "Creates independent Resource work directories and commit boundaries, so one URL's extraction or publication failure does not affect the other. Reports one result row per URL.",
+      "fixture_vault": "fixtures/vault-configured",
+      "assertions": [
+        {"type": "contains", "text": "independent"},
+        {"type": "contains", "text": "commit boundary"},
+        {"type": "contains", "text": "one URL's failure never"},
+        {"type": "contains", "text": "one result row per URL"}
+      ]
     }
   ]
 }

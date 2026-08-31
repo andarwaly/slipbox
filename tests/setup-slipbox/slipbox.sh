@@ -251,6 +251,19 @@ check_exit "unknown command exits 2" 2 "$SLIPBOX" bogus
 check_exit "evergreen add missing --reason exits 2" 2 "$SLIPBOX" evergreen add --slug x
 
 echo "--- recoverable work lifecycle ---"
+# Resource clipping is required to use the shared transaction boundary rather
+# than writing a fetched response directly to its frozen target.
+RESOURCE_SKILL="$REPO_ROOT/skills/clip-resource/SKILL.md"
+RESOURCE_DOC="$REPO_ROOT/docs/clip-resource.md"
+LIFECYCLE="$REPO_ROOT/skills/using-slipbox/references/work-lifecycle.md"
+for phrase in 'kind: resource' 'activity: clip' 'create-only' 'manifest.json' 'extraction.json' 'draft.md' 'work finalize' 'target collision' 'permanent extraction cache'; do
+  assert_contains "Resource lifecycle names $phrase" "$phrase" "$RESOURCE_SKILL"
+done
+assert_contains "Resource docs describe independent work" 'one `resource`/`clip` work item per URL' "$RESOURCE_DOC"
+assert_contains "Resource lifecycle reference defines extraction staging" "extraction.json" "$LIFECYCLE"
+assert_contains "Resource lifecycle reference forbids permanent extraction cache" "not a permanent extraction cache" "$LIFECYCLE"
+assert_contains "Resource lifecycle reference preserves failed work" "preserve failed state for repair" "$LIFECYCLE"
+
 result=$("$SLIPBOX" work create --kind literature --activity create --source resources/a.md --target literature/a.md)
 check_json "work create returns a ULID-shaped id" 'import re; assert re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", data["work_id"])' <<<"$result"
 work_id=$(printf '%s' "$result" | json_at '["work_id"]')

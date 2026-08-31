@@ -11,7 +11,7 @@ metadata:
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL directly and writes a Resource file that looks like Web Clipper's own output. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `.slipbox/bin/slipbox config get templates.<type>_path`, filename/frontmatter conventions via `.slipbox/bin/slipbox config get filenames.<type>`, and transcript languages via `.slipbox/bin/slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's written.
+For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL and publishes a Resource file that looks like Web Clipper's own output. Each URL runs as independent recoverable Resource work under `/using-slipbox`; extraction and the template-resolved draft are checkpointed before the frozen target is published. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `.slipbox/bin/slipbox config get templates.<type>_path`, filename/frontmatter conventions via `.slipbox/bin/slipbox config get filenames.<type>`, and transcript languages via `.slipbox/bin/slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's published.
 
 ## Prerequisite
 
@@ -29,7 +29,7 @@ Ask for one or more URLs: articles, news stories, social/forum threads, or video
 
 Every URL below reaches a shell command (`defuddle parse`, `firecrawl scrape`), so check each one before it gets there: it must parse as an `http`/`https` URL, and it must contain no shell metacharacters — quotes, backticks, `$`, `;`, `|`, `&`, `<`, `>`, newlines. Reject anything else and say why instead of sanitizing it into something runnable; a URL that needs escaping to be safe isn't the URL the user meant. Pass the checked URL as a single quoted argument, never interpolated into a longer shell string.
 
-For more than one URL, spawn one subagent per URL. Each subagent runs the full fetch/extract/transform/write pipeline (Detect the content type through Write) independently, in parallel, for its own URL only. If no subagent capability exists in this harness, process each URL sequentially instead. Either way, one URL's failure never blocks or corrupts another's — each is fetched, extracted, transformed, and written on its own, and reported on its own in the Report the outcome step's batch table.
+For more than one URL, spawn one subagent per URL. Each subagent runs the full fetch/extract/transform/publish pipeline (Detect the content type through Write) independently, in parallel, for its own URL only. If no subagent capability exists in this harness, process each URL sequentially instead. Either way, one URL's failure never blocks or corrupts another's — each has its own work directory, checkpoints, target, commit boundary, and outcome row.
 
 ### 02 - Detect the content type
 
@@ -65,9 +65,17 @@ Read the template first — its location comes from the `templates.<type>_path` 
 
 ### 05 - Write
 
-If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run `/write-checks` with `artifact-kind: resource` on the synthesized content before writing. Resource mode runs Style and Humanize only and returns the pass/revise signal — it does not resolve fields, place zones, or invoke `note validate`. If this clip used only bare variables, skip this — nothing was synthesized to check.
+Classify whether the resolved template used bare variables or a quoted instruction (see `references/variable-glossary.md`); this controls whether the staged draft needs the Resource-mode `/write-checks` gate below.
 
-Save the file using the filename and frontmatter conventions resolved via `.slipbox/bin/slipbox config get filenames.<type>`. Once written, treat the file as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, redo the clip and write a fresh file rather than patching the old one.
+Start Resource work for this URL with `/using-slipbox`, using `kind: resource` and `activity: clip`; the target is create-only and frozen. Record the detected type, extraction method, metadata, status, and any failure details in the work state. Do not create a permanent extraction cache.
+
+Checkpoint `manifest.json` plus `extraction.json` in the work directory after fetch/extraction, including the source URL and the extracted payload or a structured failure. Resolve the template into `draft.md` and checkpoint it through `/using-slipbox` before publication. A bare-variable draft is still transactional; never write the final Resource directly from the fetched response.
+
+If a quoted instruction (see `references/variable-glossary.md`) was resolved for this clip, run `/write-checks` with `artifact-kind: resource` on the synthesized draft before publication. Resource mode runs Style and Humanize only and returns the pass/revise signal — it does not resolve fields, place zones, or invoke `note validate`. If this clip used only bare variables, skip the checks — nothing was synthesized to check.
+
+Stage one create-only mutation from `draft.md`, with the target's expected starting fingerprint, and publish it with `work finalize` through `/using-slipbox`. A target collision — including a pre-existing file or a target changed during work — fails without replacement. On successful publication, treat the Resource as frozen: this skill does not reopen it to edit, append, or correct it. If the fetch or transform needs a fix, resume or discard the preserved work and start a fresh clip; never patch the frozen target.
+
+If fetch or transform fails, persist the failed extraction and draft state in the Resource work directory and report the failure; do not publish a partial Resource. Work may be resumed or explicitly discarded later. A failed URL never aborts another URL's work.
 
 ### 06 - Report the outcome
 
