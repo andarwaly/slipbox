@@ -207,22 +207,25 @@ boundary or any essential characteristic.
 write — no field resolution needed here.
 
 1. Run a `/write-checks` session with `artifact-kind: note` and `note-type: reference` in checks-only mode (no field list).
-2. Re-read the file from disk immediately before assembling the new draft (state can
-   have changed since the read in "Take the candidate").
-3. Re-read the existing note and staged synthesis map. If the new source only strengthens warrant, keep existing body bytes stable and append the new resource(s) to the `sources` frontmatter array, formatted per the
-   note's existing recorded `type` (list) and `wikilink` flag, to assemble the complete
-   temporary draft. Never overwrite the file wholesale.
-4. If the source materially changes the definition boundary or essential characteristics, preserve the prior synthesis in the map's `agreements`/`conflicts`, propose only required body changes, and stage a bounded replacement under activity `recompose`.
-5. Validate the complete assembled draft with `/write-checks` before writing. This
-   pre-write validation is a hard gate: write only after it passes. Then re-read the
-   saved path and re-validate it with `slipbox note validate`. Repair only mechanical
-   defects; semantic conflicts remain stop-and-ask cases.
-6. Insert a `links` row recording the relationship — this reference's own note is the
-   target, the resource being folded in is the source:
-
-   ```bash
-   .slipbox/bin/slipbox links add --source <this-resource-slug> --target <reference-note-slug> --rel extends
-   ```
+2. Re-read the existing note and staged synthesis map immediately before assembling
+   `draft.md`; if resuming, recompute the current fingerprint for every mutation
+   path, including the Reference target and `links.jsonl`.
+3. For `extend-provenance`, preserve the existing body bytes and aliases, append only
+   the deduplicated Resource to the mapped `sources` array, and write the complete
+   candidate note to `draft.md`. For `recompose`, change only the required bounded
+   body fields and preserve unchanged frontmatter. Never write either draft directly
+   to the vault target.
+4. Validate `draft.md` with `/write-checks`, then stage `mutations.json` containing
+   the artifact replacement (`path`, `replacement_path`, and expected fingerprint)
+   and a `links.jsonl` ledger mutation with its own expected fingerprint and one
+   `extends` event. The two mutations must be finalized together.
+5. Checkpoint the staged draft and map `/using-slipbox`, set the manifest to
+   `ready-to-finalize`, and invoke `work finalize <work_id>` exactly once. Do not
+   call `links add` separately and do not perform a direct target write.
+6. If validation, preflight, or finalization fails, preserve diagnostics and the
+   work directory; resume only after recomputing fingerprints for every mutation
+   path, or leave it `repair-required`. Semantic conflicts remain stop-and-ask
+   cases and no failed operation is reported as published.
 
 ## Done
 

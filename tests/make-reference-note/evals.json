@@ -209,24 +209,30 @@
     },
     {
       "prompt": "make-reference-note extending an existing note when a new grounded source adds warrant only",
-      "expected_output": "Uses activity=extend-provenance, keeps the existing body bytes stable, appends only deduplicated Resource provenance, and records the Resource→Reference edge.",
+      "expected_output": "Uses activity=extend-provenance, keeps the existing body bytes stable, appends only deduplicated Resource provenance, stages the artifact and links.jsonl mutations together with expected fingerprints, and performs one work finalize for the Resource→Reference edge.",
       "assertions": [
         {"type": "contains", "text": "body bytes stable"},
         {"type": "contains", "text": "extend-provenance"},
         {"type": "contains", "text": "Resource→Reference"},
         {"type": "contains", "text": "same list"},
-        {"type": "contains", "text": "expected_fingerprint"}
+        {"type": "contains", "text": "expected_fingerprint"},
+        {"type": "contains", "text": "links.jsonl"},
+        {"type": "contains", "text": "one work finalize"},
+        {"type": "not_contains", "text": "direct target write"},
+        {"type": "not_contains", "text": "separate links add"}
       ]
     },
     {
       "prompt": "make-reference-note extending an existing note when a new source changes the definition boundary",
-      "expected_output": "Uses activity=recompose and replaces only the required bounded body fields while preserving unchanged aliases and provenance.",
+      "expected_output": "Uses activity=recompose, stages draft.md plus artifact and ledger mutations with expected fingerprints, and replaces only the required bounded body fields while preserving unchanged aliases and provenance through the staged transaction.",
       "assertions": [
         {"type": "contains", "text": "activity=recompose"},
         {"type": "contains", "text": "only the required"},
         {"type": "contains", "text": "aliases"},
         {"type": "contains", "text": "draft.md"},
-        {"type": "contains", "text": "work finalize"}
+        {"type": "contains", "text": "work finalize"},
+        {"type": "not_contains", "text": "direct target write"},
+        {"type": "not_contains", "text": "separate links add"}
       ]
     },
     {
@@ -239,10 +245,11 @@
     },
     {
       "prompt": "make-reference-note interrupted after synthesis checkpoint",
-      "expected_output": "Resumes the same work_id after inspecting manifest.json, synthesis-map.json, and draft.md, verifies fingerprints, and continues from the last checkpoint without publishing incomplete content.",
+      "expected_output": "Resumes the same work_id after inspecting manifest.json, synthesis-map.json, and draft.md, recomputes fingerprints for every mutation path including links.jsonl, and continues from the last checkpoint without publishing incomplete content.",
       "assertions": [
         {"type": "contains", "text": "same work_id"},
-        {"type": "contains", "text": "verifies fingerprints"},
+        {"type": "contains", "text": "recomputes fingerprints"},
+        {"type": "contains", "text": "links.jsonl"},
         {"type": "not_contains", "text": "partial artifact"}
       ]
     },
