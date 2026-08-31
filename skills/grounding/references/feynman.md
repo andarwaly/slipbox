@@ -83,7 +83,7 @@ job here, filling it is the user's.
 
 ## Worked example
 
-> **Agent:** What stood out to you from this?
+> **Agent:** In your own words, what does this passage mean?
 > **User:** Something about... how notes need to connect to each other? I
 > think?
 > **Agent:** Try explaining that to someone who's never heard of a

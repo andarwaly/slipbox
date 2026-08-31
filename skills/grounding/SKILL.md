@@ -14,11 +14,10 @@ by probing it one question at a time until it's explicit, correct, and confirmed
 state it for them — draw only from what they actually said. Ask exactly one substantive
 question per turn — never batch, never present a checklist.
 
-**A session-opening line only, then silence**: the first message of a session states
-plainly that a grounding session is starting (naming the source or topic in play).
-Nothing repeats after that — no per-turn marker, no label on individual questions. A
-repeating marker would undercut the very techniques below built to feel like genuine
-conversation rather than a labeled interrogation.
+The caller supplies the session's opening context and question. A direct `/grounding`
+invocation without a wrapper should begin by naming the source or topic and asking what
+the user wants to understand. After that, stay silent about the mechanism — no per-turn
+marker or label on individual questions.
 
 ## Fidelity
 
@@ -159,6 +158,7 @@ softening.
 | Confident | `references/verification.md` |
 | Hesitant | `references/feynman.md` |
 | Not-started or partial, source present, collaborative reading chosen | `references/guided-reading.md` |
+| Blank, source present, collaborative reading chosen | `references/guided-reading.md` |
 | Blank, no source at all | `references/maieutic.md` |
 | Confused | `references/self-explanation.md` |
 

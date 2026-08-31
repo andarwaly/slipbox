@@ -42,7 +42,28 @@
       "expected_output": "Runs guided-reading with one substantive question at a time, choosing among explanation, clarification, comparison, retrieval, or prediction as useful. It calibrates hints to the user's signal and does not require a prediction before every passage.",
       "assertions": [
         {"type": "contains", "text": "calibrat"},
-        {"type": "not_contains", "text": "every passage"}
+        {"type": "contains", "text": "substantive question"},
+        {"type": "contains", "text": "source"},
+        {"type": "not_contains", "text": "predict before every"}
+      ]
+    },
+    {
+      "prompt": "during collaborative reading, the user gives a partial but source-faithful explanation, then gets stuck on one transition",
+      "expected_output": "Chooses one adaptive move, such as clarification or explanation, and asks one substantive question. Any support points back to the source and preserves its attribution, uncertainty, and scope rather than supplying the missing conclusion.",
+      "assertions": [
+        {"type": "contains", "text": "adaptive move"},
+        {"type": "contains", "text": "substantive question"},
+        {"type": "contains", "text": "source"},
+        {"type": "contains", "text": "uncertainty"}
+      ]
+    },
+    {
+      "prompt": "the collaborative guided-reading route has accumulated enough user-provided material to consolidate",
+      "expected_output": "Uses one open Gate for the whole accumulated result, asking what is missing or wrong. It does not confirm each passage or move separately, and it does not present a polished statement before the user has supplied substantive content.",
+      "assertions": [
+        {"type": "contains", "text": "one open Gate"},
+        {"type": "contains", "text": "what is missing or wrong"},
+        {"type": "not_contains", "text": "each passage"}
       ]
     },
     {
