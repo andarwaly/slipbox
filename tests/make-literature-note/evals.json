@@ -141,6 +141,16 @@
       ]
     },
     {
+      "prompt": "A source reports that a clinician recommends morning light, while the source itself does not endorse or quantify that recommendation; write the literature note Source Point.",
+      "expected_output": "Preserves reporting posture and attribution (the source reports the clinician's recommendation), keeps certainty and scope unchanged, and does not rewrite it as the source's own explanatory or causal claim.",
+      "assertions": [
+        {"type": "contains", "text": "reports"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "not_contains", "text": "the source proves"},
+        {"type": "not_contains", "text": "the source recommends"}
+      ]
+    },
+    {
       "prompt": "The conversation drafted a clinical light-therapy claim, parked it for later, and also has one untouched source argument; the user says, 'I think that's everything.'",
       "expected_output": "Keeps the drafted-but-unconfirmed item distinct from the untouched item, names the drafted item specifically, gives the untouched item one nudge, and ends when the user says they are finished. It does not treat either item as Covered or collapse the drafted state into Untouched.",
       "assertions": [

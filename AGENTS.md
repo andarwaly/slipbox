@@ -29,8 +29,8 @@ slipbox/                    ← repo root, this file's location
 │   │                            references/; user-invocable, like grilling
 │   ├── using-slipbox/        ← shared recoverable-work and artifact runtime engine
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
-│   ├── make-literature-note/  ← literature-note wrapper (was ground-the-claim,
-│   │                              was write-literature-note)
+│   ├── make-literature-note/  ← grounds a source into a Core Idea and Source Points
+│   │                              (was ground-the-claim, was write-literature-note)
 │   ├── make-reference-note/   ← Reference-note synthesis wrapper (was ground-term,
 │   │                              was write-reference, was write-reference-note);
 │   │                              never runs /grounding

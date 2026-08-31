@@ -1,7 +1,8 @@
 # Writing a Source Point
 
-See `qew-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
-and which of them ever reach the page (only Evidence and Conclusion do). This file covers
+See `qew-theory.md` first for the internal Question, Evidence, Warrant, and Conclusion
+reasoning used to assess a candidate. Only the confirmed Source Point heading (the emitted
+form of the internal Conclusion) and condensed Evidence reach the page. This file covers
 the note's structure, the Core Idea line, how to review a Source Point before committing it to
 disk, and the formatting mechanics (quotes, Key Concepts wikilinks) that live inside a
 claim entry once it's written.
@@ -38,8 +39,8 @@ the title and before `## Source Points`, the same way a Resource's own `descript
 sits bare under its title. Written once, when the note's first Source Point is written; never
 touched on a second or later Source Point for the same note.
 
-**The `###` heading is the Conclusion, verbatim.** No separate "Conclusion:" bullet
-follows it — that would just duplicate the heading. Evidence is the only other thing
+**The `###` heading is the confirmed Source Point, emitted from the internal Conclusion.**
+No separate "Conclusion:" bullet follows it — that would just duplicate the heading. Evidence is the only other thing
 under the heading: condensed prose, no bullet marker, no hard length cap — governed by
 the vault's own `.slipbox/style-profile.json` the same as any other note content.
 

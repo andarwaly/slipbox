@@ -1,6 +1,6 @@
 # make-literature-note
 
-Ground a clipped source into one or more Claims — the source's own position, restated in
+Ground a clipped source into one or more Source Points — source-owned propositions, restated in
 your own words and checked against the source — writing each as a Source Point in a shared
 literature note for that source.
 
@@ -11,7 +11,7 @@ URL, or a path). Invoked bare with no argument, it infers the source from contex
 just-clipped resource, a pasted URL, an already-open file — and only asks if nothing's
 inferrable.
 
-If the note already has claims from a prior session, it only offers what's left.
+If the note already has Source Points from a prior session, it only offers what's left.
 
 The Literature H1 remains the exact Resource/source title. A configured Literature
 prefix belongs in the generated filename and link target, not in that H1.
@@ -30,7 +30,7 @@ prefix belongs in the generated filename and link target, not in that H1.
    you have one natural conversation about the source. Whenever it organically produces
    something matching a backlog candidate — in whatever reshaped form — it goes through
    a full `/grounding` Gate exactly as always.
-5. **Write each claim, incrementally** — each confirmed claim lands on disk as a
+5. **Write each Source Point, incrementally** — each confirmed Source Point lands on disk as a
    declarative heading with condensed Evidence underneath, the moment it's confirmed.
 6. **Knowing when the session is done** — coverage first, then shape, then the user's own
    reaction. Coverage means checking the backlog against three states (covered / drafted
