@@ -8,6 +8,15 @@ reference (`make-literature-note`'s job). `make-reference-note` pulls those
 already-grounded characterizations back out, reconciles them into one
 definition, presents for confirmation, and writes.
 
+The resulting body is a bounded lookup entry: a clean H1, one concise definition,
+essential characteristics/components, and optional disambiguation only where a common
+confusion materially impairs lookup. It adapts to concepts, frameworks, tools, events,
+and creative works without subtype-specific headings. Provenance stays in configured
+frontmatter: Literature `source` links are resolved to their original Resources,
+verified against the Resource/source map, and deduplicated. The body does not contain a
+source dossier or mandatory `Sources`, mechanism, application, implications, or `Open
+Questions` sections.
+
 ## When to use
 
 Run this whenever a reference is named directly — whether the user thought of
@@ -27,7 +36,9 @@ queue this skill owns.
   one.
 - **Gather the grounded characterizations** — find every literature note whose
   `## Key Concepts` wikilinks to this candidate, and read each one's already-
-  grounded treatment of it. No re-interviewing the user — that's settled
+  grounded treatment of it. Resolve each configured Literature `source` to the
+  original Resource, verify it against the Resource/source map, and deduplicate
+  Resource links. No re-interviewing the user — that's settled
   already, at the claim level. A source that hasn't been through
   `make-literature-note` yet is stopped here and the user is told it needs to go
   through `make-literature-note` first — synthesis continues from whatever

@@ -1,6 +1,29 @@
 {
   "test_cases": [
     {
+      "prompt": "make-reference-note for the concept in fixtures/conceptual-depth-bounded.md",
+      "files": ["fixtures/conceptual-depth-bounded.md"],
+      "expected_output": "Produces a bounded lookup entry with a clean H1, one concise definition, essential characteristics, and optional disambiguation only where useful; resolves provenance to original Resources in frontmatter, uses the exact prefixed basename/link target when configured, and does not add mandatory provenance, mechanism, application, implications, or Open Questions sections.",
+      "assertions": [
+        {"type": "contains", "text": "clean H1"},
+        {"type": "contains", "text": "prefixed basename/link target"},
+        {"type": "contains", "text": "original Resources"},
+        {"type": "contains", "text": "essential characteristics"},
+        {"type": "not_contains", "text": "mandatory Sources"},
+        {"type": "not_contains", "text": "source-by-source"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a named tool, event, and creative work",
+      "expected_output": "Adapts the bounded body to each subject kind without requiring fixed subtype headings or subtype configuration.",
+      "assertions": [
+        {"type": "contains", "text": "tool"},
+        {"type": "contains", "text": "event"},
+        {"type": "contains", "text": "creative work"},
+        {"type": "not_contains", "text": "subtype headings"}
+      ]
+    },
+    {
       "prompt": "make-reference-note \"Zettelkasten Method\" — no Reference note exists yet; two literature notes' Key Concepts already wikilink to it, each with its own grounded characterization from a prior /grounding session",
       "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one merged definition where they agree or add distinct facets, presents it for confirmation, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix.",
       "assertions": [

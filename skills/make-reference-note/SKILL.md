@@ -6,7 +6,7 @@ description: Synthesize an already-grounded Reference note from the literature
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Make-reference-note
@@ -40,16 +40,21 @@ before writing. Apply the `.slipbox/bin/slipbox config get filenames.reference` 
 
 ## Gather the grounded characterizations
 
-Find every literature note whose `## Key Concepts` wikilinks to this candidate (this
+Find every final Literature note whose `## Key Concepts` wikilinks to this candidate (this
 is what `find-connections --references` already surfaced recurrence over — re-derive
 or reuse that same set here). For each one:
 
-- Read the literature note's own grounded treatment of the term — the characterization
+- Read the Literature note's own grounded treatment of the term — the characterization
   the user was already held to via `make-literature-note`'s `/grounding` session for that
   note. Do not re-interview the user about it; it's already settled at the claim
   level.
-- Note where two or more literature notes' characterizations agree, add distinct
-  facets to each other, or appear to conflict.
+- Resolve that note's configured Literature `source` field to the original Resource.
+  Verify the resolution against the Resource and source-map cache when available;
+  report and exclude unresolved or mismatched sources until repaired.
+- Deduplicate resolved Resource paths/links by canonical Resource identity. A Resource
+  is recorded once even when several Literature notes point to it.
+- Note where characterizations agree, add distinct facets, or conflict. Never write a
+  source-by-source dossier.
 
 If a source touching this candidate has not gone through `make-literature-note` (no
 literature note with a grounded Key Concepts wikilink to it exists yet) — stop that
@@ -60,7 +65,16 @@ one.
 
 ## Synthesize and confirm
 
-Reconcile the gathered characterizations into one definition:
+Reconcile the gathered characterizations into one bounded lookup entry. Follow
+`references/bounded-lookup.md`: clean H1, one concise definition, essential
+characteristics/components, and optional disambiguation only when a common confusion
+materially impairs lookup. The body adapts across concepts, frameworks, tools, events,
+and creative works; it has no subtype-specific required headings.
+
+Provenance is frontmatter only. Populate only the configured Reference fields
+(`type`, `created`, `aliases`/`alt_names`, and `sources`); `sources` contains the
+deduplicated original Resource links, never Literature-note links. Do not add body
+`Sources`, mechanism, application, implications, or `Open Questions` sections.
 
 - Where characterizations agree or add distinct facets, merge them into one coherent
   definition rather than listing each source's phrasing separately.
@@ -75,7 +89,8 @@ Reconcile the gathered characterizations into one definition:
   .slipbox/bin/slipbox evergreen add --slug <draft-slug> --reason "<tension description>"
   ```
 
-- Present the synthesized definition to the user for confirmation before writing
+- Present the bounded synthesized definition and resolved Resource provenance to the
+  user for confirmation before writing
   anything to disk. If extending an existing note, the user's confirmation must keep
   the result consistent with what's already recorded — not silently contradict it.
 
@@ -105,6 +120,10 @@ Write fresh:
   --basename "<complete basename>.md" --title "<exact H1>"`; a failed post-write
   check blocks success.
 - Filename collision → stop and ask, never auto-disambiguate.
+
+The generated basename and link target use the exact configured Reference prefix;
+the H1 remains the clean, unprefixed concept name. A per-link display alias is a
+separate concern and must not be used as the frontmatter alias value.
 
 ## Write — extending an existing reference
 
