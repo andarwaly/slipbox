@@ -9,7 +9,7 @@ metadata:
 
 # Find-connections
 
-Bold terms in this file are defined in `GLOSSARY.md`.
+Bold terms in this file are defined in `.slipbox/GLOSSARY.md`.
 At runtime, resolve that glossary from the installed vault path `.slipbox/GLOSSARY.md`;
 the repository `CONTEXT.md` is authoring-only and is not runtime input.
 
@@ -75,10 +75,10 @@ in this order — entity exclusion first, followed by the remaining Admission se
    already-noted entity as broken if the vault splits these across multiple folders
    (e.g. `coworkers/`, `family/`, `authors/`).
    - If yes: this is a surfacing-only entity candidate. `find-connections` never
-     writes people, places, or organizations, real or fictional (per `GLOSSARY.md`).
+     writes people, places, or organizations, real or fictional (per `.slipbox/GLOSSARY.md`).
      Report it the same way as a Reference candidate (recurrence threshold,
      batch-presented), just without ever attempting a write.
-   - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
+   - Entity-check runs first (see `.slipbox/GLOSSARY.md` for the classification-order rationale).
 2. **Admission sequence** (only if not an entity; see `.slipbox/GLOSSARY.md`): stable
    lookup identity, source independence, boundedness, adaptive
    evidence sufficiency, and natural-unit scope. Apply evidence sufficiency after the

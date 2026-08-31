@@ -34,3 +34,8 @@ git diff --check: PASS
   `CONTEXT.md` with the installed `.slipbox/GLOSSARY.md` path.
 - Restored the direct-invocation eval's negative assertion that unresolved handling does
   not create a `work_id`.
+
+## Round 4
+
+- Routed all remaining bare `GLOSSARY.md` references in `find-connections` to the
+  installed runtime path `.slipbox/GLOSSARY.md`.
