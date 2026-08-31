@@ -204,10 +204,10 @@ method's origins, passes this test and lands in `## Mentioned`; a place name men
 once in an aside does not. Neither section decides what the target will become —
 the eventual note type — that classification happens entirely downstream, in
 `find-connections`, once cross-note evidence exists (see [[find-terms-find-connections-merge]]).
-The downstream map is fixed: the entity-check tests people, places, and organizations
-first and keeps those surfacing-only; the reusability test then handles abstract
-Key-Concept candidates and non-entity named works, tools, and events as possible
-Reference notes.
+The downstream map is fixed: entity exclusion tests people, places, and organizations
+first and keeps those surfacing-only; the remaining Admission sequence then handles
+abstract Key-Concept candidates and non-entity named works, tools, and events as
+possible Reference notes.
 
 ```markdown
 - [[<note-filename>|Display Name]]: [what this source says about it, in one line]
@@ -233,16 +233,16 @@ candidate's eventual type is decided downstream, in `find-connections` — never
 At write time, put every concrete named referent (person, place, organization, book or
 creative work, named tool, or event) in `## Mentioned`, flat and unprefixed. Put every
 abstract concept, term, method, or framework in `## Key Concepts` using the
-Reference-note format below. Downstream, the entity-check keeps people, places, and
-organizations surfacing-only; the reusability test decides whether a non-entity
-candidate becomes a Reference note. Get this guess wrong and the link still just sits
+Reference-note format below. Downstream, entity exclusion keeps people, places, and
+organizations surfacing-only; the remaining Admission sequence decides whether a
+non-entity candidate becomes a Reference note. Get this guess wrong and the link still just sits
 broken like any other unresolved candidate — nothing is lost, and the "spot terms and
 entities" batch confirmation is exactly where the user can catch and correct a misread
 before it's written.
 
 **Mentioned format** — flat, unprefixed, no config lookup needed:
 `[[Niklas Luhmann]]`, `[[Wano]]`, `[[Ship30]]` (as a brand/organization — see
-`GLOSSARY.md`'s Admission test entry for when the same string reads as a method
+`GLOSSARY.md`'s Admission sequence entry for when the same string reads as a method
 instead), `[[The Lord of the Rings]]`, `[[Obsidian]]`, or `[[Oktoberfest]]`.
 
 **Reference-note format** — resolving `<note-filename>` correctly here is not just

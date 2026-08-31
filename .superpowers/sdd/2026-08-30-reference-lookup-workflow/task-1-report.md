@@ -16,3 +16,10 @@ python3 -m json.tool tests/make-reference-note/evals.json: PASS
 python3 -m json.tool tests/find-connections/evals.json: PASS
 git diff --check: PASS
 ```
+
+## Round 2
+
+- Updated active `writing-a-source-point.md` and `setup-slipbox/SKILL.md` references
+  from retired admission terminology to the current six-gate Admission sequence.
+- Kept historical plan material unchanged; it documents superseded decisions rather
+  than active runtime guidance.

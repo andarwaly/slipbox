@@ -50,7 +50,7 @@ Check the vault for existing signal before asking the user anything:
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
-- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference`; see `GLOSSARY.md` for the Reference note's admission test).
+- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference`; see `GLOSSARY.md` for the Reference note's Admission sequence).
 - **Filename casing** per note type (kebab-case, Title Case, snake_case, or whatever the vault already does).
 - **Filename/link-target prefixes**: ask once, for all three note types together — "Want a symbol prefix on filenames and link targets, so they're distinguishable at a glance even if they all end up in the same folder? Default: `§` for literature, `※` for reference, `✱` for evergreen. Keep these, pick your own, or skip prefixes entirely?" Record per-type: a string, or `false` for no prefix. Resources never get a prefix — no question asked for that type. H1 headings remain clean and never include the prefix.
 - **Templates**: three note templates (literature, reference, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
