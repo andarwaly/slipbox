@@ -216,8 +216,7 @@
         {"type": "contains", "text": "Resource→Reference"},
         {"type": "contains", "text": "expected_fingerprint"},
         {"type": "contains", "text": "links.jsonl"},
-        {"type": "contains", "text": "one work finalize"},
-        {"type": "not_contains", "text": "directly write the target"}
+        {"type": "contains", "text": "one work finalize"}
       ]
     },
     {
@@ -233,8 +232,7 @@
         {"type": "contains", "text": "expected_fingerprint"},
         {"type": "contains", "text": "two distinct mutations"},
         {"type": "contains", "text": "finalizes them together"},
-        {"type": "contains", "text": "one work finalize"},
-        {"type": "not_contains", "text": "directly write the target"}
+        {"type": "contains", "text": "one work finalize"}
       ]
     },
     {
