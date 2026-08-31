@@ -43,6 +43,16 @@ points at this resource.
 - **A note already exists** — read it in full. Its existing `## Source
   Points` `###` headings are Source Points already confirmed; the backlog below
   must not re-offer them.
+- Before reading or staging any existing note, inspect
+  `.slipbox/config.json` at `migrations.literature_headings`. When its mode is
+  `lazy`, and this note has the exact compatible `## Key Claims` heading, make
+  first access itself a migration: copy the note into the current
+  `/using-slipbox` staged draft, rename only that exact heading to `## Source
+  Points`, validate the staged artifact, and publish it with compare-and-swap
+  against the fingerprint read at access. Do not edit the note in place, and do
+  not scan or rewrite unrelated notes. A changed fingerprint stops recovery;
+  report the conflict and leave the legacy note unchanged. After successful CAS,
+  continue Literature work from the migrated note.
 
 ## Build the source and inquiry maps
 

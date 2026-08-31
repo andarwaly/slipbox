@@ -117,6 +117,21 @@
           }
         }
       }
+    },
+    "migrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "literature_headings": {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "type": "string", "enum": ["selected", "all-compatible", "lazy", "defer"] },
+            "selected": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
     }
   },
   "definitions": {

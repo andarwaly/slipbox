@@ -60,3 +60,27 @@ tests/setup-slipbox/evals.json:58: The user chooses lazy migration ... migrate o
 ```
 
 All commands exited successfully.
+
+## Round 3
+
+- Persisted `migrations.literature_headings.mode` in the config schema, including `lazy` and selected-note paths.
+- Made `make-literature-note` perform lazy migration on first access through a staged `/using-slipbox` draft, validation, and CAS publication; unrelated notes are never scanned or rewritten.
+- Added fixtures and a behavioral eval requiring the accessed note's exact heading rename while the unrelated fixture remains byte-for-byte unchanged.
+
+Verification:
+
+```bash
+python3 -m json.tool skills/setup-slipbox/assets/config.schema.json >/dev/null
+python3 -m json.tool tests/make-literature-note/evals.json >/dev/null
+rg -n "migrations.literature_headings|first access|byte-for-byte unchanged" skills/setup-slipbox/SKILL.md skills/make-literature-note/SKILL.md tests/make-literature-note/evals.json
+git diff --check
+```
+
+Output:
+
+```text
+schema JSON: valid
+literature eval JSON: valid
+lazy policy, first-access CAS migration, and byte-for-byte isolation: present
+git diff --check: clean
+```

@@ -21,6 +21,19 @@
       ]
     },
     {
+      "prompt": "Use files fixtures/lazy-migration-note.md and fixtures/lazy-migration-unrelated.md with config migrations.literature_headings.mode=lazy. Access only lazy-migration-note.md.",
+      "expected_output": "On first access, stages only lazy-migration-note.md, renames its exact ## Key Claims heading to ## Source Points, validates and publishes through /using-slipbox CAS, and leaves lazy-migration-unrelated.md byte-for-byte unchanged.",
+      "files": ["fixtures/lazy-migration-note.md", "fixtures/lazy-migration-unrelated.md"],
+      "assertions": [
+        {"type": "contains", "text": "mode=lazy"},
+        {"type": "contains", "text": "first access"},
+        {"type": "contains", "text": "stages only"},
+        {"type": "contains", "text": "## Source Points"},
+        {"type": "contains", "text": "byte-for-byte unchanged"},
+        {"type": "contains", "text": "CAS"}
+      ]
+    },
+    {
       "prompt": "Start or resume Literature work for a Resource with explicit inquiry context, implied reflection, no stated purpose, and exploratory intent; the Resource is a news report containing an allegation attributed to a secondary source. The user may be Confident, Hesitant, Blank, or Confused, and may treat the Resource as primary or secondary regardless of its type.",
       "expected_output": "Uses /using-slipbox to start or resume recoverable work, loads or builds the source cache, creates a session-scoped inquiry map, and derives the grounding frontier at runtime. Follows one substantive question at a time and dispatches all four reading states (Confident, Hesitant, Blank, Confused) without a universal opener. Keeps primary/secondary posture independent of Resource type and preserves the news allegation's attribution and uncertainty.",
       "assertions": [
