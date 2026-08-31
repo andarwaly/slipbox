@@ -30,8 +30,8 @@ npx skills add andarwaly/slipbox
 
 Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and installs the `slipbox` CLI.
 
-All stateful skill work uses the shared `/using-slipbox` runtime. It gives each
-operation a recoverable `work_id`, checkpoints interrupted work under
+Migrated stateful workflows use the shared `/using-slipbox` runtime. It gives
+each migrated operation a recoverable `work_id`, checkpoints interrupted work under
 `.slipbox/work/`, runs `/write-checks` before publication, and delegates atomic
 filesystem changes, cache handling, link tombstones, and optional Git commits to
 the installed `.slipbox/bin/slipbox` CLI. Work is always local; source-map cache

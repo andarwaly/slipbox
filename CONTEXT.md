@@ -99,8 +99,8 @@ For evergreen notes, atomicity applies to the whole note — an evergreen note i
 
 ## Runtime contract
 
-Stateful operations use `/using-slipbox` as the shared transaction boundary.
-The specialist supplies the semantic artifact decision; the runtime assigns a
+Migrated stateful workflows use `/using-slipbox` as the shared transaction
+boundary. The specialist supplies the semantic artifact decision; the runtime assigns a
 `work_id`, keeps transient work local under `.slipbox/work/`, checkpoints and
 recovers by comparing fingerprints, and invokes `/write-checks` before
 publication. The installed `.slipbox/bin/slipbox` owns schema validation, path
