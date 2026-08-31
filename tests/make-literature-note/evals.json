@@ -1,16 +1,118 @@
 {
   "test_cases": [
     {
+      "prompt": "Resume make-literature-note in an existing vault with a Resource and a Literature note but no cache; the note has legacy Key Claims and selective concepts.",
+      "expected_output": "Builds the source map from the complete Resource first, never from selective Literature content, reconciles Core Idea, Key Claims/Source Points, Key Concepts, Mentioned, and Open Questions to source units with matched, matched-with-qualification-risk, matched-to-multiple-units, unmatched, or source-support-unclear statuses, and does not rewrite semantics automatically.",
+      "assertions": [
+        {"type": "contains", "text": "complete Resource"},
+        {"type": "not_contains", "text": "build the cache from the Literature note"},
+        {"type": "contains", "text": "source units"},
+        {"type": "contains", "text": "source-support-unclear"},
+        {"type": "contains", "text": "does not rewrite"}
+      ]
+    },
+    {
+      "prompt": "A Literature note's Resource is missing while resuming existing work.",
+      "expected_output": "Stops source-first reconciliation, reports the missing Resource as a blocker, and preserves the existing note unchanged.",
+      "assertions": [
+        {"type": "contains", "text": "missing Resource"},
+        {"type": "contains", "text": "blocker"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
+      "prompt": "Use files fixtures/lazy-migration-note.md and fixtures/lazy-migration-unrelated.md with config migrations.literature_headings.mode=lazy. Access only lazy-migration-note.md.",
+      "expected_output": "On first access, stages only lazy-migration-note.md, renames its exact ## Key Claims heading to ## Source Points, validates and publishes through /using-slipbox CAS, and leaves lazy-migration-unrelated.md byte-for-byte unchanged.",
+      "files": ["fixtures/lazy-migration-note.md", "fixtures/lazy-migration-unrelated.md"],
+      "assertions": [
+        {"type": "contains", "text": "mode=lazy"},
+        {"type": "contains", "text": "first access"},
+        {"type": "contains", "text": "stages only"},
+        {"type": "contains", "text": "## Source Points"},
+        {"type": "contains", "text": "byte-for-byte unchanged"},
+        {"type": "contains", "text": "CAS"}
+      ]
+    },
+    {
+      "prompt": "Start or resume Literature work for a Resource with explicit inquiry context, implied reflection, no stated purpose, and exploratory intent; the Resource is a news report containing an allegation attributed to a secondary source. The user may be Confident, Hesitant, Blank, or Confused, and may treat the Resource as primary or secondary regardless of its type.",
+      "expected_output": "Uses /using-slipbox to start or resume recoverable work, loads or builds the source cache, creates a session-scoped inquiry map, and derives the grounding frontier at runtime. Follows one substantive question at a time and dispatches all four reading states (Confident, Hesitant, Blank, Confused) without a universal opener. Keeps primary/secondary posture independent of Resource type and preserves the news allegation's attribution and uncertainty.",
+      "assertions": [
+        {"type": "contains", "text": "Start or resume Literature work"},
+        {"type": "contains", "text": "/using-slipbox"},
+        {"type": "contains", "text": "source cache"},
+        {"type": "contains", "text": "inquiry map"},
+        {"type": "contains", "text": "grounding frontier"},
+        {"type": "contains", "text": "Confident"},
+        {"type": "contains", "text": "Hesitant"},
+        {"type": "contains", "text": "Blank"},
+        {"type": "contains", "text": "Confused"},
+        {"type": "contains", "text": "primary/secondary"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "not_contains", "text": "what did this author argue?"}
+      ]
+    },
+    {
+      "prompt": "Ground one sharp inquiry-central Source Point and several supporting/contextual points, including a consequential ambiguous point, then pause and resume the Literature session.",
+      "expected_output": "Applies the Adaptive Split Gate: inquiry-central work asks the user for a semantic relation before drafting; supporting/contextual work may be agent-drafted; consequential or ambiguous work is verified against the source without forced paraphrase. Checkpoints the inquiry map and staged draft through /using-slipbox, never mutates the final literature path mid-session, and on resume reuses prior comprehension evidence to continue at the next unresolved obligation.",
+      "assertions": [
+        {"type": "contains", "text": "semantic relation"},
+        {"type": "contains", "text": "supporting/contextual"},
+        {"type": "contains", "text": "without forced paraphrase"},
+        {"type": "contains", "text": "checkpoint"},
+        {"type": "contains", "text": "staged draft"},
+        {"type": "contains", "text": "never mutates the final"},
+        {"type": "contains", "text": "reuses prior comprehension evidence"},
+        {"type": "not_contains", "text": "full /grounding Gate for every point"}
+      ]
+    },
+    {
+      "prompt": "A Literature session has Blank or not-started reading with a source. The user first considers reading alone, then chooses to work through the source collaboratively.",
+      "expected_output": "Offers the choice between reading alone and collaboration. If the user reads alone, pauses without dispatching guided reading; if the user chooses collaboration, dispatches guided reading and continues one substantive question at a time.",
+      "assertions": [
+        {"type": "contains", "text": "reading alone"},
+        {"type": "contains", "text": "collaboration"},
+        {"type": "contains", "text": "guided reading"},
+        {"type": "not_contains", "text": "always dispatch guided reading"}
+      ]
+    },
+    {
+      "prompt": "The user identifies a fidelity error in a previously published Source Point and supplies corrected wording while another process may have changed the final note.",
+      "expected_output": "Stages the correction in the explicit <staged-draft> path, validates that staged artifact, and publishes through /using-slipbox with compare-and-swap against the expected final-file fingerprint. A concurrent change stops recovery and never overwrites the final path directly; after successful publication, validates the saved path.",
+      "assertions": [
+        {"type": "contains", "text": "<staged-draft>"},
+        {"type": "contains", "text": "compare-and-swap"},
+        {"type": "contains", "text": "expected final-file fingerprint"},
+        {"type": "contains", "text": "never overwrites"},
+        {"type": "contains", "text": "saved path"}
+      ]
+    },
+    {
+      "prompt": "Build a source map and inquiry map for a conceptual source with several argument moves and uneven user relevance.",
+      "expected_output": "Keeps the reusable source map source-owned and separate from reader inquiry or transcript; references source-unit IDs from the inquiry map; derives a grounding frontier at runtime rather than storing an authoritative queue. Routes high-learning/low-risk work through a user semantic relation before the agent drafts, while low-learning/high-risk work is verified against the source without forcing paraphrase.",
+      "assertions": [
+        {"type": "contains", "text": "source map"},
+        {"type": "contains", "text": "inquiry map"},
+        {"type": "contains", "text": "unit IDs"},
+        {"type": "contains", "text": "transcript"},
+        {"type": "contains", "text": "derived grounding frontier"},
+        {"type": "contains", "text": "semantic relation"},
+        {"type": "contains", "text": "without forced paraphrase"}
+      ]
+    },
+    {
       "prompt": "/make-literature-note from resources/2026-08-08-design-tokens.md, a freshly clipped source with no literature note yet",
-      "expected_output": "Reads the whole source silently and builds a private backlog of candidate claims plus the Core Idea - never presents this list to the user as a menu to pick from. Runs one continuous, natural conversation about the source, holding the user to it. Whenever the conversation organically produces something matching a backlog candidate (in whatever reshaped form), runs it through grounding's own Gate and writes it incrementally - declarative heading plus condensed Evidence, not batched at the end. Ends with a nudge for anything genuinely untouched in the backlog, then a batch pass finding terms/entities.",
+      "expected_output": "Loads or builds source-owned analysis, creates a session-scoped inquiry map, and derives the grounding frontier at runtime without persisting a queue. Runs one continuous conversation with one substantive question at a time. Uses the Adaptive Split Gate: inquiry-central points require semantic reconstruction, while supporting/contextual points may be agent-drafted and source-verified. Stages each point through /using-slipbox and publishes only after final validation.",
       "assertions": [
         {"type": "not_contains", "text": "which do you want grounded"},
-        {"type": "not_contains", "text": "surface-ideas"}
+        {"type": "not_contains", "text": "surface-ideas"},
+        {"type": "contains", "text": "Source Points"},
+        {"type": "not_contains", "text": "Key Claims"},
+        {"type": "not_contains", "text": "what did this author argue?"}
       ]
     },
     {
       "prompt": "make-literature-note on resources/2026-08-08-design-tokens.md, where the literature note already has one confirmed claim from a prior session",
-      "expected_output": "Reads the existing literature note's ### claim headings first, excludes them from the private backlog, and does not re-write the Core Idea line.",
+      "expected_output": "Reads the existing literature note's ### Source Point headings first, excludes covered units from the derived frontier, and does not re-write the Core Idea line.",
       "assertions": [
         {"type": "not_contains", "text": "menu"}
       ]
@@ -45,7 +147,7 @@
     },
     {
       "prompt": "/make-literature-note on fixtures/sun-gating-and-morning-light.md, using fixtures/sun-gating-grounding-transcript.md as the session transcript, where the user notices mid-session that the source never actually settles whether indoor light exposure can substitute for outdoor light on a cloudy day",
-      "expected_output": "Captures the gap as a bullet in a top-level '## Open Questions' section, sibling to '## Key Claims', in plain declarative form naming what the source leaves unclear. Does not invent the open question itself or add one unprompted. If the user then offers their own guess at an answer, nests it as an '*Assumption*' bullet under that question, marked as the user's own guess, never written into a Key Claim.",
+      "expected_output": "Captures the gap as a bullet in a top-level '## Open Questions' section, sibling to '## Source Points', in plain declarative form naming what the source leaves unclear. Does not invent the open question itself or add one unprompted. If the user then offers their own guess at an answer, nests it as an '*Assumption*' bullet under that question, marked as the user's own guess, never written into a Source Point.",
       "assertions": [
         {"type": "contains", "text": "Open Questions"},
         {"type": "not_contains", "text": "Reaction"}
@@ -95,29 +197,29 @@
     },
     {
       "prompt": "/make-literature-note closes after several confirmed claims",
-      "expected_output": "Runs a mandatory complete source-to-note audit checking missing arguments, narrow or broad claims, overlap, and lost qualifications or gray areas; any selected finding returns through grounding and a material change restarts the audit until clean.",
+      "expected_output": "Audits every retained Source Point against its source unit for fidelity, posture, attribution, scope, certainty, and ambiguity. Uses targeted integrity checks rather than an exhaustive universal source-to-note audit; material changes re-audit affected points before staged publication.",
       "assertions": [
-        {"type": "contains", "text": "narrow"},
-        {"type": "contains", "text": "missing arguments"},
-        {"type": "contains", "text": "overlap"},
-        {"type": "contains", "text": "gray areas"},
-        {"type": "contains", "text": "material change"},
-        {"type": "contains", "text": "until the audit is clean"}
+        {"type": "contains", "text": "source unit"},
+        {"type": "contains", "text": "posture"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "contains", "text": "targeted integrity"},
+        {"type": "not_contains", "text": "exhaustive universal"},
+        {"type": "contains", "text": "material change"}
       ]
     },
     {
       "prompt": "The user declines a valid source-audit finding and asks to finish",
-      "expected_output": "Reports the literature note as deliberately partial after the user declined the valid finding, discards the private backlog, and does not persist a backlog unless explicitly requested.",
+      "expected_output": "Reports the literature note as deliberately partial after the user declined the valid finding, discards the session inquiry assessment, and does not persist a grounding frontier unless explicitly requested.",
       "assertions": [
         {"type": "contains", "text": "partial"},
-        {"type": "contains", "text": "private backlog"},
+        {"type": "contains", "text": "inquiry assessment"},
         {"type": "contains", "text": "declined"},
         {"type": "contains", "text": "does not persist"}
       ]
     },
     {
       "prompt": "A confirmed claim introduces a method, a named tool, a book, and an event",
-      "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during the claim write, then performs one mandatory final batch pass before reaction and validation.",
+      "expected_output": "Adds abstract methods/frameworks to Key Concepts and concrete named books, tools, and events to Mentioned during staged point assembly, then performs one final batch pass before reaction and staged-artifact validation.",
       "assertions": [
         {"type": "contains", "text": "final batch"},
         {"type": "contains", "text": "Key Concepts"},
@@ -138,6 +240,20 @@
       ]
     },
     {
+      "prompt": "A source reports that a clinician recommends morning light, while the source itself does not endorse or quantify that recommendation; write the literature note Source Point.",
+      "expected_output": "Preserves reporting posture and attribution (the source reports the clinician's recommendation), keeps certainty and scope unchanged, and does not rewrite it as the source's own explanatory or causal claim.",
+      "assertions": [
+        {"type": "contains", "text": "reports"},
+        {"type": "contains", "text": "attribution"},
+        {"type": "contains", "text": "certainty"},
+        {"type": "contains", "text": "scope"},
+        {"type": "contains", "text": "explanatory or causal"},
+        {"type": "not_contains", "text": "the source proves"},
+        {"type": "not_contains", "text": "the source recommends"},
+        {"type": "not_contains", "text": "causes"}
+      ]
+    },
+    {
       "prompt": "The conversation drafted a clinical light-therapy claim, parked it for later, and also has one untouched source argument; the user says, 'I think that's everything.'",
       "expected_output": "Keeps the drafted-but-unconfirmed item distinct from the untouched item, names the drafted item specifically, gives the untouched item one nudge, and ends when the user says they are finished. It does not treat either item as Covered or collapse the drafted state into Untouched.",
       "assertions": [
@@ -149,13 +265,123 @@
       ]
     },
     {
-      "prompt": "A first Literature claim reveals a tension with the Resource at resources/design-tokens.md, then a reaction is confirmed after the Literature note is saved as Notes/§ Design Tokens.md",
-      "expected_output": "Uses explicit provenance on each evergreen candidate: source with resources/design-tokens.md before the first Literature write, then literature-note with the exact saved path Notes/§ Design Tokens.md for the later reaction/tension. It does not reconstruct either path from configured names.",
+      "prompt": "The source-shaped closeout finds an optional related idea, but the user declines it and asks to finish.",
+      "expected_output": "Treats the optional discovery as a clean boundary, not a partial note; discards the session inquiry assessment and completes the retained note.",
       "assertions": [
-        {"type": "contains", "text": "--origin-kind source"},
-        {"type": "contains", "text": "--origin-path \"resources/design-tokens.md\""},
-        {"type": "contains", "text": "--origin-kind literature-note"},
-        {"type": "contains", "text": "--origin-path \"Notes/§ Design Tokens.md\""}
+        {"type": "contains", "text": "optional"},
+        {"type": "contains", "text": "clean"},
+        {"type": "not_contains", "text": "partial"}
+      ]
+    },
+    {
+      "prompt": "At closeout, a retained Source Point upgrades a hedge and reverses chronology, while another source proposition was never captured.",
+      "expected_output": "Runs a targeted audit for attribution, certainty, scope, chronology, causality, reported-versus-verified status, speaker, analysis-versus-observation, and dispute. Flags the distortion and qualification drift, but does not require an exhaustive universal source-to-note audit of every uncaptured proposition.",
+      "assertions": [
+        {"type": "contains", "text": "chronology"},
+        {"type": "contains", "text": "reported-versus-verified"},
+        {"type": "contains", "text": "analysis-versus-observation"},
+        {"type": "contains", "text": "targeted"},
+        {"type": "not_contains", "text": "exhaustive universal"}
+      ]
+    },
+    {
+      "prompt": "The final Core Idea was drafted silently at the first claim; at closeout the user reconstructs the source's throughline, then responds to the current Core Idea wording.",
+      "expected_output": "Uses the user's reconstruction as the active-learning moment, then verifies the current Core Idea through an open confirmation question and rewrites it only if the reconstruction differs.",
+      "assertions": [
+        {"type": "contains", "text": "what do you think is the main idea"},
+        {"type": "contains", "text": "how would you put it now"},
+        {"type": "not_contains", "text": "can you confirm"}
+      ]
+    },
+    {
+      "prompt": "A literature note closes with Core Idea, three retained Source Points, one Open Question, and one discussed claim parked for later.",
+      "expected_output": "Gives a compact structural closeout listing the Core Idea, all three retained Source Point headings, the Open Question, the unresolved parked item, and the saved path; shows the full note only on request.",
+      "assertions": [
+        {"type": "contains", "text": "compact structural closeout"},
+        {"type": "contains", "text": "every retained"},
+        {"type": "contains", "text": "saved path"},
+        {"type": "not_contains", "text": "full note"}
+      ]
+    },
+    {
+      "prompt": "A factual source-grounding session reaches closeout with no user reflection or opinion.",
+      "expected_output": "Omits the reaction prompt for the factual session and proceeds to final validation without asking what the user thinks of the article.",
+      "assertions": [
+        {"type": "contains", "text": "factual session"},
+        {"type": "contains", "text": "omits"},
+        {"type": "not_contains", "text": "what do you think of this article"}
+      ]
+    },
+    {
+      "prompt": "During the final concepts batch, the user adds a relevant named tool that was not surfaced in the retained-point support.",
+      "expected_output": "Accepts the explicit user addition into Mentioned, while keeping the candidate union bounded to retained-point support, source-present inquiry relevance, and explicit additions; it does not scan unrelated source-map candidates.",
+      "assertions": [
+        {"type": "contains", "text": "explicit user additions"},
+        {"type": "contains", "text": "Mentioned"},
+        {"type": "contains", "text": "does not scan unrelated"}
+      ]
+    },
+    {
+      "prompt": "End-to-end fixture: a short essay with one clear thesis and two supporting reasons is passed to /make-literature-note.",
+      "files": ["fixtures/short-essay.md"],
+      "expected_output": "Reads the complete Resource, asks the user to reconstruct the thesis and its relation to the reasons, records the confirmed thesis as the Core Idea and the supported reasons as Source Points, then stages and validates the Literature note before publication.",
+      "assertions": [{"type":"contains","text":"complete Resource"},{"type":"contains","text":"Core Idea"},{"type":"contains","text":"Source Points"},{"type":"contains","text":"validates"}]
+    },
+    {
+      "prompt": "End-to-end fixture: a Wikipedia-like explanation defines a concept, gives historical context, and notes a limitation; ground it with /make-literature-note.",
+      "files": ["fixtures/wikipedia-like-explanation.md"],
+      "expected_output": "Separates definition, context, and limitation into source units, preserves explanatory scope and qualification, and uses the Adaptive Split Gate so inquiry-central work is reconstructed by the user while context is source-verified.",
+      "assertions": [{"type":"contains","text":"source units"},{"type":"contains","text":"limitation"},{"type":"contains","text":"qualification"},{"type":"contains","text":"Adaptive Split Gate"}]
+    },
+    {
+      "prompt": "End-to-end fixture: breaking news reports an allegation attributed to a former contractor, includes that contractor's denial, and leaves verification pending.",
+      "files": ["fixtures/breaking-news-allegation.md"],
+      "expected_output": "Preserves attribution, denial, uncertainty, chronology, and reported-versus-verified status, and never rewrites the allegation as an established fact.",
+      "assertions": [{"type":"contains","text":"attribution"},{"type":"contains","text":"denial"},{"type":"contains","text":"uncertainty"},{"type":"contains","text":"reported-versus-verified"}]
+    },
+    {
+      "prompt": "End-to-end fixture: an explanatory lecture walks through a mechanism, then gives a practical example and a caveat; the user chooses collaborative reading.",
+      "files": ["fixtures/explanatory-lecture.md"],
+      "expected_output": "Dispatches guided reading only after the collaborative choice, asks one substantive question at a time, and consolidates the mechanism, example, and caveat through one open Gate before staging Source Points.",
+      "assertions": [{"type":"contains","text":"guided reading"},{"type":"contains","text":"one substantive question"},{"type":"contains","text":"one open Gate"},{"type":"contains","text":"Source Points"}]
+    },
+    {
+      "prompt": "End-to-end fixture: a mixed investigation combines direct observations, a paraphrased expert interpretation, competing hypotheses, and unresolved evidence.",
+      "files": ["fixtures/mixed-investigation.md"],
+      "expected_output": "Maps observations, attributed interpretation, hypotheses, and unresolved evidence separately; preserves speaker, analysis-versus-observation, dispute, and certainty; and records unresolved gaps as Open Questions.",
+      "assertions": [{"type":"contains","text":"direct observations"},{"type":"contains","text":"analysis-versus-observation"},{"type":"contains","text":"Open Questions"},{"type":"contains","text":"dispute"}]
+    },
+    {
+      "prompt": "End-to-end fixture: resume a partially read source after an interrupted Literature session with a checkpointed inquiry map and staged Source Point.",
+      "files": ["fixtures/partial-reading-resume.md", "fixtures/partial-reading-checkpoint.json"],
+      "expected_output": "Uses /using-slipbox to verify fingerprints, reuses prior comprehension evidence and the staged draft, skips resolved obligations, and resumes at the next unresolved thinking obligation without repeating the interview.",
+      "assertions": [{"type":"contains","text":"/using-slipbox"},{"type":"contains","text":"verify fingerprints"},{"type":"contains","text":"reuses prior comprehension evidence"},{"type":"not_contains","text":"repeating the interview"}]
+    },
+    {
+      "prompt": "End-to-end fixture: resume an existing legacy Literature note with ## Key Claims and no source cache, while the Resource is available and migration policy is defer.",
+      "files": ["fixtures/legacy-literature-resource.md", "fixtures/legacy-literature-note.md"],
+      "expected_output": "Reads the complete Resource first, builds source-owned analysis, reconciles legacy content privately, leaves the final note unchanged under defer, and reports source-support-unclear items without rewriting semantics automatically.",
+      "assertions": [{"type":"contains","text":"complete Resource first"},{"type":"contains","text":"source-owned analysis"},{"type":"contains","text":"unchanged"},{"type":"contains","text":"source-support-unclear"}]
+    },
+    {
+      "prompt": "End-to-end fixture: close a grounded Literature note whose confirmed Source Point introduces a relevant named framework that the user wants to develop immediately as a Reference note.",
+      "files": ["fixtures/immediate-reference-handoff.md"],
+      "expected_output": "Completes Literature closeout first, adds the framework to Key Concepts, offers the context-aware Reference handoff only after the Literature artifact is validated and saved, and passes grounded source identity forward without rerunning Literature work.",
+      "assertions": [{"type":"contains","text":"Literature closeout first"},{"type":"contains","text":"Key Concepts"},{"type":"contains","text":"Reference handoff"},{"type":"contains","text":"validated and saved"}]
+    },
+    {
+      "prompt": "Immediately hand off a newly clipped Resource to Literature, then to Reference, while another clip runs at the same time.",
+      "expected_output": "Keeps the Resource clip, Literature note, and Reference synthesis as three distinct work_ids with explicit source identity and commit boundaries; the second URL receives its own Resource work and cannot share or overwrite the first operation's state.",
+      "assertions": [{"type":"contains","text":"three distinct work_ids"},{"type":"contains","text":"commit boundaries"},{"type":"contains","text":"second URL"},{"type":"not_contains","text":"same work_id"}]
+    },
+    {
+      "prompt": "A first Literature Source Point reveals a tension with resources/design-tokens.md, then a reaction is retained after the note is saved as Notes/§ Design Tokens.md",
+      "expected_output": "Records the first Evergreen candidate with origin_kind source and the exact Resource path, then the later reaction with origin_kind literature-note and the exact saved Literature path; neither path is reconstructed from config.",
+      "assertions": [
+        {"type": "contains", "text": "origin_kind source"},
+        {"type": "contains", "text": "resources/design-tokens.md"},
+        {"type": "contains", "text": "origin_kind literature-note"},
+        {"type": "contains", "text": "Notes/§ Design Tokens.md"}
       ]
     }
   ]

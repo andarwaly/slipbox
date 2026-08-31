@@ -6,7 +6,7 @@
 
 Skills for a Zettelkasten-inspired, conversational note-taking pipeline: clip a source, surface discussable ideas from it, discuss one into a literature note, optionally spin off a reference note, optionally connect notes into an evergreen note.
 
-Domain vocabulary (Resource, Literature note, Reference note, Person/Location/Organization, Evergreen note, Claim, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
+Domain vocabulary (Resource, Literature note, Reference note, Person/Location/Organization, Evergreen note, Source Point, Core Idea, Take, Atomicity) is defined in [`CONTEXT.md`](CONTEXT.md) — read it before touching any skill's `SKILL.md`, and don't restate its definitions here.
 
 ## Structure
 
@@ -14,7 +14,7 @@ Domain vocabulary (Resource, Literature note, Reference note, Person/Location/Or
 slipbox/                    ← repo root, this file's location
 ├── AGENTS.md                ← this file
 ├── CLAUDE.md                 ← symlink to AGENTS.md
-├── CONTEXT.md                ← domain glossary — the note/resource types, Claim vs. Take
+├── CONTEXT.md                ← domain glossary — the note/resource types, Source Point/Core Idea/Take
 ├── .agents/
 │   ├── dox-framework.md     ← doc-maintenance rules (read first)
 │   └── index.md              ← index of every AGENTS.md in this repo
@@ -27,9 +27,10 @@ slipbox/                    ← repo root, this file's location
 │   │                            (missing links + sparked ideas) — explicit mode flag
 │   ├── grounding/            ← interview engine, ten named techniques in
 │   │                            references/; user-invocable, like grilling
+│   ├── using-slipbox/        ← shared recoverable-work and artifact runtime engine
 │   ├── ground-me/             ← bare passthrough wrapper, no note-writing
-│   ├── make-literature-note/  ← literature-note wrapper (was ground-the-claim,
-│   │                              was write-literature-note)
+│   ├── make-literature-note/  ← grounds a source into a Core Idea and Source Points
+│   │                              (was ground-the-claim, was write-literature-note)
 │   ├── make-reference-note/   ← Reference-note synthesis wrapper (was ground-term,
 │   │                              was write-reference, was write-reference-note);
 │   │                              never runs /grounding
@@ -47,8 +48,8 @@ slipbox/                    ← repo root, this file's location
 ## Workflow
 
 - **Skill format**: follow the [agentskills.io](https://agentskills.io) spec — a directory with `SKILL.md` (`name`, `description` frontmatter; optional `license`, `metadata`, and `scripts/`/`references/`/`assets/` subdirs). Frontmatter extensions (e.g. `disable-model-invocation`) are fine anywhere; an unrecognized key degrades gracefully. Heading/prose style (no numbered step-headings, etc.) is governed workspace-wide by the root `AGENTS.md`'s "Skill-writing conventions" section — not restated here.
-- **Cross-skill references**: `/grounding` and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's two composable "engine" skills, built to be invoked as a sub-procedure *from inside* another skill's own flow: "Run a `/grounding` session," "Run a `/write-checks` session." Every other skill (`find-connections`, `make-literature-note`, `make-reference-note`, `make-evergreen-note`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows the way `grounding`/`write-checks` are.
-  - The `disable-model-invocation` flag marks "runs only when the user explicitly asks," not "is an engine skill." Five skills carry it — `clip-resource`, `find-connections`, `ground-me`, `setup-slipbox`, `make-reference-note` — each a leaf action meant to run only on explicit user request, never the model's own suggestion. `grounding` and `write-checks` structurally cannot carry the flag, since the family's architecture depends on other skills freely invoking them mid-procedure. `make-literature-note`/`make-evergreen-note` correctly lack it too.
+- **Cross-skill references**: `/using-slipbox`, `/grounding`, and `/write-checks` are always slash-prefixed, everywhere either is mentioned — they're the family's composable engine skills, built to be invoked as a sub-procedure from inside another skill's own flow. Every other skill (`find-connections`, `make-literature-note`, `make-reference-note`, `make-evergreen-note`, `clip-resource`, `setup-slipbox`) is referenced bare, backtick-only, never slash-prefixed, when one skill's `SKILL.md` mentions another — that's a peer/sibling skill being named for context, not a call into its procedure. Keep this distinction when adding a new skill: slash form only if the new skill is itself meant to be composed into others' flows like these engines.
+  - The `disable-model-invocation` flag marks "runs only when the user explicitly asks," not "is an engine skill." Five skills carry it — `clip-resource`, `find-connections`, `ground-me`, `setup-slipbox`, `make-reference-note` — each a leaf action meant to run only on explicit user request, never the model's own suggestion. `using-slipbox`, `grounding`, and `write-checks` structurally cannot carry the flag, since the family's architecture depends on other skills freely invoking them mid-procedure. `make-literature-note`/`make-evergreen-note` correctly lack it too.
 - **Docs**: every skill gets a human-facing page at `docs/{{skill-name}}.md`.
 - **Distribution**: published to a public GitHub repo. Users install with `npx skills add andarwaly/slipbox` (or a specific skill within it).
 - **Writing a skill or a change to one**: two phases, don't skip the second.

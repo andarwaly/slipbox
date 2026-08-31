@@ -10,8 +10,8 @@ A vault typically moves through these skills in this order, though any skill can
 
 - `setup-slipbox` — one-time onboarding. Discovers vault conventions, writing style, and clip preferences; installs the `slipbox` CLI and writes every file listed below. Re-run only to change conventions.
 - `clip-resource` — fetches a URL and writes a frozen Resource. The starting point for anything pulled in from outside the vault.
-- `make-literature-note` — grounds a clipped Resource into one or more Claims, written as Key Claims in a shared literature note for that source.
-- `make-reference-note` — synthesizes a Reference note from the literature notes that already wikilink to it. Never runs `/grounding` itself; grounding already happened upstream, at the claim level.
+- `make-literature-note` — grounds a clipped Resource into one or more Source Points, written in a shared literature note for that source.
+- `make-reference-note` — synthesizes a Reference note from the literature notes that already wikilink to it. Never runs `/grounding` itself; grounding already happened upstream, at the Source Point level.
 - `find-connections` — scans existing notes, in one of two modes. `--references` surfaces recurring Reference or Mentioned candidates; people, places, and organizations remain surfacing-only, while reusable non-entities can be acted on with `make-reference-note`. `--evergreen` surfaces missing links and sparked ideas, writing mechanical links directly and routing sparked ideas to the evergreen backlog.
 - `make-evergreen-note` — grounds a hunch, or a backlog entry, into a Take: the user's own synthesized position, checked against existing notes it connects, written as an evergreen note.
 - `grounding` and `ground-me` — the bare interview engine and its passthrough wrapper. Composable into any of the skills above, and directly invocable on their own for ad-hoc grounding with no note-type commitment.
@@ -25,12 +25,17 @@ A vault typically moves through these skills in this order, though any skill can
 
 ## `.slipbox/` folder structure
 
-- `config.json` — vault conventions: paths, filename casing, note-type prefixes, frontmatter field mappings, clip settings, and template paths. Every other skill reads this before writing anything.
+- `config.json` — vault conventions: paths, filename/link-target casing and prefixes, frontmatter field mappings, clip settings, template paths, Git policy, and source-map cache persistence. `git.mode` is `off`, `ask`, or `auto`; `git.commit_style.mode` is `detected` or `fallback`; no Git-detection boolean is stored. Work manifests capture per-path Git baselines, and `work commit` uses an isolated index with exact published-path allowlisting. `cache.source_maps.persistence` is `local` or `tracked`. Every other skill reads this before writing anything.
+- Note filenames and link targets use the exact configured per-type prefix; Literature, Reference, and Evergreen H1 headings remain clean/unprefixed, and any `|` display alias is clean. Resources have no prefix.
 - `bin/slipbox` — the CLI binary. Always invoked by its full path, `.slipbox/bin/slipbox`, never bare `slipbox`.
 - `evergreen/` — the persistent backlog of pending evergreen candidates, read and written through `slipbox evergreen add/find/update`.
-- `links.jsonl` — the mechanical link ledger between notes, read and written through `slipbox links add/find`.
+- `links.jsonl` — the append-only mechanical link event ledger between notes, read and written through `slipbox links add/remove/find`. Legacy rows without `op` are treated as adds; removals are tombstones.
+- `work/` — recoverable transient setup/runtime work; always local and never tracked.
+- `cache/source-maps/` — source-map cache entries, local or tracked according to `config.json`.
 - `style-profile.json` — the user's stated note-shape and editing preferences, interviewed once by `setup-slipbox` and consulted by `write-checks`.
 - `humanize-checklist.json` — the humanizer workflow snapshot `write-checks` runs against a draft before it's saved.
+
+Setup migration inventory reports compatible, missing, incompatible, older-compatible, unresolved-source, and orphaned cache entries. Build scopes are independently authorized: missing + incompatible, a chosen scope, refresh all, or defer. Cache migration authorization is separate from note-format migration authorization.
 - `GLOSSARY.md` — the term reference below.
 - `AGENTS.md` — this file.
 
@@ -56,14 +61,10 @@ Skills may retain the exact commands they execute, but defer shared semantics,
 status meanings, and lifecycle rules to this section rather than duplicating
 that explanation.
 
-Candidates may carry immutable queue-entry provenance. Capture it when adding:
-
-```bash
-.slipbox/bin/slipbox evergreen add --slug literature-reaction \
-  --reason "The source assumes coordination is cheap" \
-  --origin-kind literature-note \
-  --origin-path "Notes/§ Coordination.md"
-```
+Candidates may carry immutable queue-entry provenance. When recording an Evergreen
+candidate `/using-slipbox`, supply the verbatim proposition and reason, set
+`origin_kind` (for example, `literature-note`), and include the exact observed
+vault-relative path in `origin_paths` (for example, `Notes/§ Coordination.md`).
 
 The five kinds are `source`, `literature-note`, `note-connection`, `standalone`,
 and `unknown`. Paths may repeat, are vault-relative, and must exist at capture

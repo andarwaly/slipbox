@@ -1,6 +1,107 @@
 {
   "test_cases": [
     {
+      "prompt": "An existing vault has a Resource and a Literature note but no source-map cache. The note contains Core Idea, Source Points, Key Concepts, Mentioned, and Open Questions.",
+      "expected_output": "Reads the complete Resource first, builds a source-owned cache from it rather than from selective Literature content, then reconciles each existing section to source units with private statuses matched, matched-with-qualification-risk, matched-to-multiple-units, unmatched, or source-support-unclear. It does not rewrite note semantics.",
+      "assertions": [
+        {"type": "contains", "text": "complete Resource"},
+        {"type": "contains", "text": "source-owned"},
+        {"type": "contains", "text": "selective Literature"},
+        {"type": "contains", "text": "matched-with-qualification-risk"},
+        {"type": "contains", "text": "does not rewrite"}
+      ]
+    },
+    {
+      "prompt": "An existing Literature note points to a missing Resource.",
+      "expected_output": "Reports that the missing Resource blocks source-first cache construction and reconciliation, and leaves the note unchanged for repair.",
+      "assertions": [
+        {"type": "contains", "text": "blocks"},
+        {"type": "contains", "text": "missing Resource"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
+      "prompt": "Existing notes use the exact ## Key Claims heading in compatible structures, while another note has an unusual structure. Choose migration for selected notes only.",
+      "expected_output": "Separately asks for cache work and heading migration, offers selected/all/defer choices, renames only exact compatible Key Claims headings when selected, skips the unusual structure with a reason, and keeps later Reference migration independent.",
+      "assertions": [
+        {"type": "contains", "text": "Key Claims"},
+        {"type": "contains", "text": "Source Points"},
+        {"type": "contains", "text": "selected"},
+        {"type": "contains", "text": "unusual"},
+        {"type": "contains", "text": "separately"},
+        {"type": "contains", "text": "Reference"}
+      ]
+    },
+    {
+      "prompt": "The cache inventory has compatible, older-compatible, and incompatible entries. Choose to build only a selected scope of notes.",
+      "expected_output": "Reports the three cache compatibility states separately, then keeps the selected cache-build scope distinct from heading migration authorization.",
+      "assertions": [
+        {"type": "contains", "text": "compatible"},
+        {"type": "contains", "text": "older-compatible"},
+        {"type": "contains", "text": "incompatible"},
+        {"type": "contains", "text": "selected scope"},
+        {"type": "contains", "text": "heading migration"}
+      ]
+    },
+    {
+      "prompt": "The vault has missing and incompatible source maps. The user chooses all compatible legacy Literature notes for exact-heading migration.",
+      "expected_output": "Offers build missing + incompatible as the recommended cache scope, then separately migrates all compatible notes by renaming exact ## Key Claims to ## Source Points; no unrelated headings are changed.",
+      "assertions": [
+        {"type": "contains", "text": "build missing + incompatible"},
+        {"type": "contains", "text": "all compatible"},
+        {"type": "contains", "text": "## Key Claims"},
+        {"type": "contains", "text": "## Source Points"},
+        {"type": "not_contains", "text": "rename every heading"}
+      ]
+    },
+    {
+      "prompt": "The user chooses lazy migration for legacy Literature notes, meaning migrate on first access rather than immediately.",
+      "expected_output": "Records literal lazy migration as a deferred, on-first-access choice, leaves existing notes unchanged now, and keeps cache building and later Reference migration separately authorized.",
+      "assertions": [
+        {"type": "contains", "text": "lazy"},
+        {"type": "contains", "text": "first access"},
+        {"type": "contains", "text": "unchanged"},
+        {"type": "contains", "text": "separately"},
+        {"type": "contains", "text": "Reference"}
+      ]
+    },
+    {
+      "prompt": "The user defers both cache construction and legacy heading migration, and does not authorize a Reference migration.",
+      "expected_output": "Leaves existing caches and notes untouched, records defer for cache and note-format migration independently, and does not perform any later Reference migration.",
+      "assertions": [
+        {"type": "contains", "text": "defer"},
+        {"type": "contains", "text": "untouched"},
+        {"type": "contains", "text": "independently"},
+        {"type": "not_contains", "text": "migrate Reference"}
+      ]
+    },
+    {
+      "prompt": "Set up slipbox in a repository and keep source maps local.",
+      "expected_output": "Asks separately for Git mode (off, ask recommended, or auto) and cache persistence (local by default), creates .slipbox/work/ and .slipbox/cache/source-maps/, and keeps H1 headings clean when filename/link-target prefixes are enabled.",
+      "assertions": [
+        {"type": "contains", "text": "ask"},
+        {"type": "contains", "text": "source-maps"},
+        {"type": "contains", "text": "H1"}
+      ]
+    },
+    {
+      "prompt": "Setup found 2 compatible, 1 missing, 3 incompatible, 1 older-compatible, 1 unresolved-source, and 4 orphaned cache entries.",
+      "expected_output": "Reports each cache category count, offers build missing + incompatible, a chosen scope, refresh all, or defer, and asks separately before any note-format migration.",
+      "assertions": [
+        {"type": "contains", "text": "compatible"},
+        {"type": "contains", "text": "missing"},
+        {"type": "contains", "text": "incompatible"},
+        {"type": "contains", "text": "older-compatible"},
+        {"type": "contains", "text": "unresolved-source"},
+        {"type": "contains", "text": "orphaned"},
+        {"type": "contains", "text": "build missing + incompatible"},
+        {"type": "contains", "text": "chosen scope"},
+        {"type": "contains", "text": "refresh all"},
+        {"type": "contains", "text": "defer"},
+        {"type": "contains", "text": "note-format"}
+      ]
+    },
+    {
       "prompt": "Set up slipbox in my vault for the first time.",
       "expected_output": "Runs the explore step, walks through Section A conventions one item at a time proposing defaults (including a combined question on which note types to resolve field_map for now versus defer). When drafting a missing Video resource template, it proposes the deterministic YouTube `cover: \"https://i.ytimg.com/vi/{{video_id}}/maxresdefault.jpg\"` property, while keeping `cover:` out of Article, News, and Social templates because no generic image variable is verified. It then interviews the user for the stated note-preferences profile, copies the humanizer workflow snapshot, installs the slipbox CLI and initializes its evergreen directory and links log, and shows a draft config.json for approval before writing.",
       "assertions": [
@@ -32,6 +133,44 @@
       "assertions": [
         {"type": "contains", "text": "sources"}
       ]
+    },
+    {
+      "prompt": "Set up the runtime for Resource, Literature, Reference, Evergreen, and migration work, with local work and tracked source maps.",
+      "expected_output": "Creates the runtime directories and writes configuration for all supported work kinds. .slipbox/work remains local and untracked even when cache.source_maps.persistence is tracked; cache migration is authorized independently from note-format migration.",
+      "assertions": [
+        {"type": "contains", "text": "resource"},
+        {"type": "contains", "text": "literature"},
+        {"type": "contains", "text": "reference"},
+        {"type": "contains", "text": "evergreen"},
+        {"type": "contains", "text": "migration"},
+        {"type": "contains", "text": "untracked"},
+        {"type": "contains", "text": "tracked"}
+      ]
+    },
+    {
+      "prompt": "Re-run setup in a vault with legacy Reference notes: one has a prefixed H1 and Literature plus Resource in sources, one has an unresolved Literature source, and the ledger contains a Literature→Reference edge.",
+      "expected_output": "Runs a read-only mechanical audit reporting prefixed H1, legacy fields, duplicates, unresolved provenance, configured zone/type drift, and the wrong ledger edge. Offers Reference migration all/selected/lazy/defer independently; repairs only resolvable notes with clean H1, deduplicated original Resource provenance, append-only tombstones, and corrected Resource→Reference edges, while skipping unresolved structures.",
+      "assertions": [
+        {"type": "contains", "text": "mechanical audit"},
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "all"},
+        {"type": "contains", "text": "selected"},
+        {"type": "contains", "text": "lazy"},
+        {"type": "contains", "text": "defer"},
+        {"type": "contains", "text": "tombstone"},
+        {"type": "contains", "text": "Resource→Reference"},
+        {"type": "not_contains", "text": "silently"}
+      ]
+    },
+    {
+      "prompt": "Set up a repository with Git policy ask, then rerun in a pre-dirty worktree and choose local source-map cache persistence.",
+      "expected_output": "Keeps recoverable work local and untracked, stores source maps locally, records Git ask without committing during setup, and downgrades finalization safely when the worktree was already dirty instead of staging unrelated user changes.",
+      "assertions": [{"type":"contains","text":"local"},{"type":"contains","text":"untracked"},{"type":"contains","text":"ask"},{"type":"contains","text":"pre-dirty"},{"type":"contains","text":"downgrade"}]
+    },
+    {
+      "prompt": "Migrate a batch containing compatible, older-compatible, incompatible, unresolved-source, and orphaned source-map entries.",
+      "expected_output": "Reports each cache category separately, offers a selected or all-compatible migration scope, leaves unresolved and orphaned entries untouched, and keeps cache migration authorization independent from Literature heading and Reference note migration.",
+      "assertions": [{"type":"contains","text":"older-compatible"},{"type":"contains","text":"incompatible"},{"type":"contains","text":"unresolved"},{"type":"contains","text":"orphaned"},{"type":"contains","text":"independent from"}]
     }
   ]
 }

@@ -3,7 +3,7 @@
 AI makes human understanding, judgment, and taste more important as production gets
 cheaper, because the cost of deciding what should exist doesn't fall along with it.
 
-## Key Claims
+## Source Points
 
 ### Claim 1: AI makes human understanding, judgment, and taste more important
 Question: Does cheaper AI production reduce the value of human judgment?

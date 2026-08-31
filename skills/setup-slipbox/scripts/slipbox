@@ -25,6 +25,7 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
 LINKS_FILE="$SELF_DIR/links.jsonl"
 CONFIG="$SELF_DIR/config.json"
+CACHE_DIR="$SELF_DIR/cache/source-maps"
 
 # ---- helpers ----
 # json_escape <string> — minimal JSON string-body escaping, so an error message
@@ -143,8 +144,9 @@ reject_unknown_flags() {
 # py — runs a Python body (on stdin) with the shared prelude prepended.
 py_prelude() {
   cat <<'EOF'
-import glob, json, os, re, sys, tempfile
+import glob, hashlib, json, os, re, secrets, shutil, sys, tempfile, time, fcntl, subprocess
 from datetime import datetime, timezone
+from pathlib import Path
 
 USAGE_EXIT = 2
 RUNTIME_EXIT = 1
@@ -170,6 +172,32 @@ sys.excepthook = _report_unhandled
 
 def now_stamp():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def normalize_link_event(row):
+    source = row.get("source_slug", row.get("source_id"))
+    target = row.get("target_slug", row.get("target_id"))
+    rel = row.get("rel_type")
+    op = row.get("op", "add")
+    if op not in ("add", "remove"):
+        raise ValueError("op must be add or remove")
+    if not isinstance(source, str) or source == "" or not isinstance(target, str) or target == "" or not isinstance(rel, str) or rel == "":
+        raise KeyError("source_slug, target_slug, and rel_type")
+    if rel not in ("cites", "extends"):
+        raise ValueError("rel_type must be cites or extends")
+    return {"op": op, "source_slug": source, "target_slug": target, "rel_type": rel}
+
+
+def fold_link_events(rows):
+    active = {}
+    for event in rows:
+        key = (event["source_slug"], event["target_slug"], event["rel_type"])
+        if event["op"] == "remove":
+            active.pop(key, None)
+        else:
+            active.pop(key, None)
+            active[key] = {"source_slug": key[0], "target_slug": key[1], "rel_type": key[2]}
+    return list(active.values())
 
 
 def read_text(path, label):
@@ -321,6 +349,276 @@ def walk_dotted(node, parts, dotted):
             fail(f"unknown path: {dotted}", USAGE_EXIT)
         node = node[part]
     return node
+
+
+WORK_KINDS = {"resource", "literature", "reference", "evergreen", "migration"}
+WORK_STATUSES = {"active", "blocked", "failed", "ready-to-finalize", "published", "commit-failed", "repair-required"}
+_ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+
+
+def new_work_id(now_ms=None, random_bytes=None) -> str:
+    """Return a sortable, 26-character Crockford-Base32 work identifier."""
+    if now_ms is None:
+        now_ms = int(time.time() * 1000)
+    if not isinstance(now_ms, int) or now_ms < 0 or now_ms >= (1 << 48):
+        raise ValueError("now_ms must be a non-negative 48-bit integer")
+    if random_bytes is None:
+        random_bytes = secrets.token_bytes(10)
+    if not isinstance(random_bytes, (bytes, bytearray)) or len(random_bytes) != 10:
+        raise ValueError("random_bytes must contain exactly 10 bytes")
+    value = (now_ms << 80) | int.from_bytes(random_bytes, "big")
+    chars = []
+    for shift in range(125, -1, -5):
+        chars.append(_ULID_ALPHABET[(value >> shift) & 31])
+    return "".join(chars)
+
+
+def load_work(work_root: Path, work_id: str) -> tuple[Path, dict]:
+    if not re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", work_id):
+        fail(f"invalid work id: {work_id}", USAGE_EXIT)
+    work_dir = work_root / work_id
+    manifest_path = work_dir / "manifest.json"
+    if not manifest_path.is_file():
+        fail(f"work not found: {work_id}")
+    manifest = load_json(str(manifest_path), "work manifest")
+    if not isinstance(manifest, dict):
+        fail(f"work manifest at {manifest_path} must be a JSON object")
+    return work_dir, manifest
+
+
+def save_work_manifest(work_dir: Path, manifest: dict) -> None:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    save_path = work_dir / "manifest.json"
+    atomic_write(str(save_path), json.dumps(manifest, indent=2) + "\n", "work manifest")
+
+
+def file_fingerprint(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
+
+
+def _safe_vault_path(vault_root: Path, value: str, label="path") -> Path:
+    if not isinstance(value, str):
+        fail(f"{label} must be a vault-relative path")
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts or str(path) in {"", "."}:
+        fail(f"{label} must be a vault-relative path")
+    root = vault_root.resolve()
+    candidate = (root / path).resolve(strict=False)
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        fail(f"{label} must stay inside the vault")
+    return candidate
+
+
+def _mutation_fingerprint(path: Path):
+    return file_fingerprint(path)
+
+
+def preflight_mutations(mutations: list[dict], vault_root: Path, work_dir: Path) -> list[dict]:
+    """Validate staged mutations and capture exact bytes before acquiring locks."""
+    if not isinstance(mutations, list) or not mutations:
+        fail("finalize requires a non-empty mutations list")
+    backups = []
+    seen = set()
+    for index, mutation in enumerate(mutations):
+        if not isinstance(mutation, dict): fail(f"mutation {index} must be an object")
+        path_value = mutation.get("path")
+        if not isinstance(path_value, str) or not path_value:
+            fail(f"mutation {index}.path must be a non-empty string")
+        target = _safe_vault_path(vault_root, path_value, f"mutation {index}.path")
+        key = str(target)
+        if key in seen: fail(f"duplicate mutation path: {path_value}")
+        seen.add(key)
+        expected = mutation.get("expected_fingerprint")
+        if expected is None and path_value in {"", "."}: fail(f"mutation {index} has invalid expected fingerprint")
+        if expected is not None and (not isinstance(expected, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expected)):
+            fail(f"mutation {index}.expected_fingerprint must be null or sha256:<64 hex>")
+        actual = _mutation_fingerprint(target)
+        if actual != expected:
+            fail(f"target changed since preflight: {path_value}")
+        replacement = mutation.get("replacement_path")
+        if not isinstance(replacement, str) or not replacement:
+            fail(f"mutation {index}.replacement_path must be a non-empty path")
+        replacement_path = Path(replacement)
+        if replacement_path.is_absolute() or ".." in replacement_path.parts:
+            fail(f"mutation {index}.replacement_path must stay inside work directory")
+        replacement_file = work_dir / replacement_path
+        if not replacement_file.is_file(): fail(f"replacement file not found: {replacement}")
+        kind = mutation.get("kind", "artifact")
+        if kind == "backlog-events":
+            new_path_value = mutation.get("new_path")
+            if not isinstance(new_path_value, str) or not new_path_value:
+                fail("backlog-events mutation requires new_path")
+            new_target = _safe_vault_path(vault_root, new_path_value, "backlog mutation new_path")
+            if new_path_value != path_value and new_target.exists():
+                fail(f"backlog mutation destination already exists: {new_path_value}")
+            if not isinstance(mutation.get("operation"), str) or mutation["operation"] not in {"rename", "update"}:
+                fail("backlog-events mutation operation must be rename or update")
+        if kind in {"ledger-add", "link-add", "ledger-events"}:
+            if path_value != "links.jsonl": fail("ledger mutations must target links.jsonl")
+            try:
+                ledger_lines = replacement_file.read_text(encoding="utf-8").splitlines()
+                if not ledger_lines or any(not line.strip() for line in ledger_lines): raise ValueError("at least one event is required")
+                if kind != "ledger-events":
+                    for key in ("source_slug", "target_slug", "rel_type"):
+                        if not isinstance(mutation.get(key), str) or not mutation[key].strip(): raise ValueError(f"ledger mutation requires {key}")
+                    if mutation["rel_type"] not in {"cites", "extends"}: raise ValueError("ledger mutation rel_type must be cites or extends")
+                for line_index, line in enumerate(ledger_lines):
+                    row = json.loads(line)
+                    if not isinstance(row, dict): raise ValueError("event must be an object")
+                    if set(row) != {"op", "source_slug", "target_slug", "rel_type"}: raise ValueError("event has unknown or missing fields")
+                    canonical = normalize_link_event(row)
+                    if kind == "ledger-events":
+                        if not isinstance(mutation.get("events"), list) or not mutation["events"]:
+                            raise ValueError("ledger-events mutation requires a non-empty events list")
+                        if len(mutation["events"]) != len(ledger_lines):
+                            raise ValueError("events list must match replacement event count")
+                        expected_event = mutation["events"][line_index]
+                        if not isinstance(expected_event, dict) or set(expected_event) != {"op", "source_slug", "target_slug", "rel_type"}:
+                            raise ValueError("events list contains an invalid event")
+                        if canonical != normalize_link_event(expected_event):
+                            raise ValueError("replacement event does not match events list order")
+                    if kind != "ledger-events" and canonical["op"] != "add": raise ValueError("ledger replacement events must be adds")
+                    if kind != "ledger-events" and (canonical["source_slug"] != mutation["source_slug"] or canonical["target_slug"] != mutation["target_slug"] or canonical["rel_type"] != mutation["rel_type"]):
+                        raise ValueError("ledger event does not match mutation identity")
+            except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+                fail(f"invalid ledger replacement: {exc}")
+        replacement_bytes = replacement_file.read_bytes()
+        backups.append({"path": path_value, "existed": target.is_file(), "bytes": target.read_bytes() if target.is_file() else None, "fingerprint": actual, "replacement_bytes": replacement_bytes, "replacement_fingerprint": "sha256:" + hashlib.sha256(replacement_bytes).hexdigest()})
+    return backups
+
+
+def _lock_paths(vault_root, mutations):
+    paths = set()
+    for mutation in mutations:
+        _safe_vault_path(vault_root, mutation["path"])
+        paths.add(vault_root / mutation["path"])
+        if mutation.get("kind") == "backlog-events":
+            _safe_vault_path(vault_root, mutation["new_path"])
+            paths.add(vault_root / mutation["new_path"])
+    return sorted(paths, key=lambda p: str(p))
+
+
+def apply_mutations(mutations: list[dict], backups: list[dict], vault_root: Path, work_dir: Path) -> list[int]:
+    applied = []
+    fail_at = os.environ.get("SLIPBOX_TEST_FAIL_MUTATION")
+    for index, mutation in enumerate(mutations):
+        if fail_at and fail_at.isdigit() and int(fail_at) == index:
+            error = OSError("simulated mutation failure")
+            error.applied = applied
+            raise error
+        target = _safe_vault_path(vault_root, mutation["path"])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        replacement = work_dir / mutation["replacement_path"]
+        replacement_bytes = backups[index]["replacement_bytes"]
+        if mutation.get("kind") in {"ledger-add", "link-add", "ledger-events"}:
+            with target.open("ab") as handle: handle.write(replacement_bytes)
+            applied.append(index)
+            try: replacement.unlink()
+            except OSError as exc:
+                error = exc; error.applied = applied; raise error
+        elif mutation.get("kind") == "backlog-events":
+            destination = _safe_vault_path(vault_root, mutation["new_path"])
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(replacement, destination)
+            if destination != target:
+                target.unlink()
+            applied.append(index)
+        else:
+            fd, tmp = tempfile.mkstemp(prefix=".slipbox-publish-", dir=str(target.parent))
+            with os.fdopen(fd, "wb") as handle: handle.write(replacement_bytes)
+            os.replace(tmp, target)
+            applied.append(index)
+            try: replacement.unlink()
+            except FileNotFoundError: pass
+    return applied
+
+
+def compensate(mutations: list[dict], backups: list[dict], applied: list[int], vault_root: Path, work_dir: Path) -> list[str]:
+    errors = []
+    if os.environ.get("SLIPBOX_TEST_FAIL_COMPENSATION") == "1":
+        return ["simulated compensation failure"]
+    for index in reversed(applied):
+        mutation, backup = mutations[index], backups[index]
+        try:
+            target = _safe_vault_path(vault_root, mutation["path"])
+            if mutation.get("kind") in {"ledger-add", "link-add", "ledger-events"}:
+                ledger = vault_root / "links.jsonl"
+                events = mutation.get("events") or [{"op": "add", "source_slug": mutation["source_slug"], "target_slug": mutation["target_slug"], "rel_type": mutation["rel_type"]}]
+                with ledger.open("a", encoding="utf-8") as handle:
+                    for event in reversed(events):
+                        try:
+                            canonical = normalize_link_event(event)
+                        except (KeyError, ValueError, TypeError) as exc:
+                            raise ValueError(f"invalid compensation event: {exc}")
+                        inverse = {"op": "remove" if canonical["op"] == "add" else "add", "source_slug": canonical["source_slug"], "target_slug": canonical["target_slug"], "rel_type": canonical["rel_type"]}
+                        handle.write(json.dumps(inverse, separators=(",", ":")) + "\n")
+            elif mutation.get("kind") == "backlog-events":
+                destination = _safe_vault_path(vault_root, mutation["new_path"])
+                if destination != target and destination.exists(): destination.unlink()
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(backup["bytes"] or b"")
+            elif backup["existed"]:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                fd, tmp = tempfile.mkstemp(prefix=".slipbox-rollback-", dir=str(target.parent))
+                with os.fdopen(fd, "wb") as handle: handle.write(backup["bytes"])
+                os.replace(tmp, target)
+            elif target.exists():
+                target.unlink()
+        except Exception as exc:
+            errors.append(f"{mutation['path']}: {exc}")
+    return errors
+
+
+CACHE_TOP_LEVEL = {"schema_version", "map_contract_version", "producer_version", "source", "contract", "posture", "source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates", "created_at", "updated_at"}
+CACHE_REQUIRED = CACHE_TOP_LEVEL
+CACHE_SCHEMA_VERSION = "1"
+CACHE_MAP_CONTRACT_VERSION = "1"
+CACHE_PRODUCER_VERSION = "1"
+
+
+def validate_cache_map(data, label="source-map cache"):
+    if not isinstance(data, dict):
+        fail(f"{label} must be a JSON object")
+    unknown = set(data) - CACHE_TOP_LEVEL
+    missing = CACHE_REQUIRED - set(data)
+    if unknown:
+        fail(f"{label} has unknown top-level keys: {', '.join(sorted(unknown))}")
+    if missing:
+        fail(f"{label} is missing required top-level sections: {', '.join(sorted(missing))}")
+    for key in ("schema_version", "map_contract_version", "producer_version", "created_at", "updated_at"):
+        if not isinstance(data[key], str) or not data[key].strip():
+            fail(f"{label}.{key} must be a non-empty string")
+    if not isinstance(data["source"], dict): fail(f"{label}.source must be an object")
+    source = data["source"]
+    if "fingerprint" in source and "sha256" in source and source["fingerprint"] != source["sha256"]:
+        fail(f"{label}.source has conflicting fingerprint and sha256 aliases")
+    fingerprint = source.get("fingerprint") or source.get("sha256")
+    if not isinstance(fingerprint, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", fingerprint):
+        fail(f"{label}.source.fingerprint must be a sha256:<64 hex> value")
+    paths = source.get("known_paths", [])
+    if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths):
+        fail(f"{label}.source.known_paths must be an array of strings")
+    for path in paths:
+        path_obj = Path(path)
+        if path_obj.is_absolute() or ".." in path_obj.parts:
+            fail(f"{label}.source.known_paths must contain vault-relative paths")
+    for key in ("contract", "posture"):
+        if not isinstance(data[key], dict): fail(f"{label}.{key} must be an object")
+    for key in ("source_spine", "source_units", "relations", "core_idea_candidates", "integrity_flags", "concept_candidates", "referent_candidates"):
+        if not isinstance(data[key], list): fail(f"{label}.{key} must be an array")
+    for unit in data["source_units"]:
+        if not isinstance(unit, dict): fail(f"{label}.source_units entries must be objects")
+        if any(key not in {"id", "text", "title", "epistemic_status", "confidence", "evidence"} for key in unit):
+            fail(f"{label}.source_units contains unknown fields")
+    return fingerprint
 EOF
 }
 py() { { py_prelude; cat; } | python3 -; }
@@ -334,18 +632,542 @@ Usage:
   slipbox evergreen find   [--status S]
   slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
   slipbox links add        --source S --target T --rel cites|extends
+  slipbox links remove     --source S --target T --rel cites|extends
   slipbox links find       [--source S] [--target T] [--rel cites|extends]
   slipbox config get       [<dotted.path>]
   slipbox config set       <dotted.path> <value>
   slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
   slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
   slipbox humanize check   <file> [--language LANG]
+  slipbox work create|list|inspect|update|resume|discard [options]
+  slipbox cache status|inspect|store|remove [options]
   slipbox --help | --version
 
 Output is JSON by default (--format table optional on find/get commands).
 Exit 2 on usage errors, exit 1 on runtime failures; either prints a JSON
 {"error": "..."} object on stderr.
 EOF
+}
+
+print_cache_help() {
+  cat <<'EOF'
+Usage:
+  slipbox cache status [--format table]
+  slipbox cache inspect <sha256|RESOURCE_PATH> [--format table]
+  slipbox cache store --source RESOURCE_PATH [--file MAP_JSON]
+  slipbox cache remove <sha256|RESOURCE_PATH> [--yes] [--no-input]
+EOF
+}
+
+cmd_cache_store() {
+  local source="" file="" payload=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --source|--resource) [ $# -ge 2 ] || usage_err "flag $1 needs a value"; source="$2"; shift 2 ;;
+      --file|--input) [ $# -ge 2 ] || usage_err "flag $1 needs a value"; file="$2"; shift 2 ;;
+      --help|-h) print_cache_help; exit 0 ;;
+      *) usage_err "unknown cache store argument: $1" ;;
+    esac
+  done
+  [ -n "$source" ] || usage_err "cache store requires --source"
+  case "$source" in /*|../*|*/../*|*/./*|.|..) usage_err "cache source must be a vault-relative path" ;; esac
+  if [ -n "$file" ]; then [ -f "$file" ] || runtime_err "file not found: $file"; payload=$(<"$file") || runtime_err "cannot read cache map: $file"; else payload=$(cat); fi
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ROOT="$CACHE_DIR" VAULT_ROOT="$vault_root" SOURCE_PATH="$source" MAP_JSON="$payload" py <<'CACHEPY'
+root = Path(os.environ["CACHE_ROOT"])
+source_path = Path(os.environ["VAULT_ROOT"]) / os.environ["SOURCE_PATH"]
+if not source_path.is_file(): fail(f"resource not found: {os.environ['SOURCE_PATH']}")
+try:
+    data = json.loads(os.environ.get("MAP_JSON", ""))
+except json.JSONDecodeError as err:
+    fail(f"source-map cache input is not valid JSON (line {err.lineno}, column {err.colno}): {err.msg}")
+fingerprint = validate_cache_map(data)
+actual = file_fingerprint(source_path)
+if fingerprint != actual: fail(f"source fingerprint mismatch: cache has {fingerprint}, resource is {actual}")
+if os.environ["SOURCE_PATH"] not in data["source"]["known_paths"]:
+    data["source"]["known_paths"].append(os.environ["SOURCE_PATH"])
+name = fingerprint.split(":", 1)[1] + ".json"
+root.mkdir(parents=True, exist_ok=True)
+atomic_write(str(root / name), json.dumps(data, indent=2) + "\n", "source-map cache")
+print(json.dumps({"status":"stored", "fingerprint":fingerprint, "path":str(root / name)}, indent=2))
+CACHEPY
+}
+
+cache_fingerprint_arg() {
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ARG="$1" VAULT_ROOT="$vault_root" py <<'CACHEPY'
+arg = os.environ["CACHE_ARG"]
+if re.fullmatch(r"[0-9a-f]{64}", arg): print("sha256:" + arg)
+elif re.fullmatch(r"sha256:[0-9a-f]{64}", arg): print(arg)
+else:
+    if Path(arg).is_absolute() or ".." in Path(arg).parts:
+        fail("resource path must be vault-relative", USAGE_EXIT)
+    value = file_fingerprint(Path(os.environ["VAULT_ROOT"]) / arg)
+    if value is None: fail(f"resource not found: {arg}")
+    print(value)
+CACHEPY
+}
+
+cmd_cache_inspect() {
+  [ $# -ge 1 ] || usage_err "cache inspect requires SHA256 or RESOURCE_PATH"
+  local arg="$1"; shift; local format="json"
+  while [ $# -gt 0 ]; do case "$1" in --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache inspect argument: $1" ;; esac; done
+  resolve_format --format "$format"; local fp; fp=$(cache_fingerprint_arg "$arg")
+  CACHE_ROOT="$CACHE_DIR" FINGERPRINT="$fp" FORMAT="$FORMAT" py <<'CACHEPY'
+path = Path(os.environ["CACHE_ROOT"]) / (os.environ["FINGERPRINT"].split(":",1)[1] + ".json")
+if not path.is_file(): fail(f"cache not found for {os.environ['FINGERPRINT']}")
+data = load_json(str(path), "source-map cache"); validate_cache_map(data)
+print(json.dumps(data, indent=2) if os.environ["FORMAT"] != "table" else "\n".join(f"{k}\t{v}" for k,v in data.items()))
+CACHEPY
+}
+
+cmd_cache_remove() {
+  [ $# -ge 1 ] || usage_err "cache remove requires SHA256 or RESOURCE_PATH"
+  local arg="$1"; shift; local yes=0 no_input=0
+  while [ $# -gt 0 ]; do case "$1" in --yes) yes=1; shift ;; --no-input) no_input=1; shift ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache remove argument: $1" ;; esac; done
+  [ "$yes" = 1 ] || { [ "$no_input" = 1 ] && usage_err "cache remove requires --yes in non-interactive mode"; [ -t 0 ] || usage_err "cache remove requires --yes in non-interactive mode"; }
+  local fp; fp=$(cache_fingerprint_arg "$arg")
+  CACHE_ROOT="$CACHE_DIR" FINGERPRINT="$fp" YES="$yes" py <<'CACHEPY'
+path = Path(os.environ["CACHE_ROOT"]) / (os.environ["FINGERPRINT"].split(":",1)[1] + ".json")
+if not path.is_file(): fail(f"cache not found for {os.environ['FINGERPRINT']}")
+if os.environ.get("YES") != "1" and input("Remove this cache? [y/N] ").strip().lower() not in {"y","yes"}: print(json.dumps({"removed":False})); sys.exit(0)
+path.unlink(); print(json.dumps({"status":"removed", "fingerprint":os.environ["FINGERPRINT"]}, indent=2))
+CACHEPY
+}
+
+cmd_cache_status() {
+  local format="json"
+  while [ $# -gt 0 ]; do case "$1" in --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;; --help|-h) print_cache_help; exit 0 ;; *) usage_err "unknown cache status argument: $1" ;; esac; done
+  resolve_format --format "$format"
+  local vault_root="$SELF_DIR"; [ "$(basename "$SELF_DIR")" = ".slipbox" ] && vault_root="$(dirname "$SELF_DIR")"
+  CACHE_ROOT="$CACHE_DIR" VAULT_ROOT="$vault_root" FORMAT="$FORMAT" py <<'CACHEPY'
+root = Path(os.environ["CACHE_ROOT"]); vault = Path(os.environ["VAULT_ROOT"]); rows=[]; cached=set()
+def version(v):
+    try: return tuple(int(x) for x in v.split("."))
+    except (ValueError, AttributeError): return None
+if root.is_dir():
+  for path in sorted(root.glob("*.json")):
+    fp = "sha256:" + path.stem
+    if re.fullmatch(r"[0-9a-f]{64}", path.stem): cached.add("sha256:" + path.stem)
+    try:
+      data=load_json(str(path), "source-map cache"); fp=validate_cache_map(data)
+      if path.stem != fp.split(":", 1)[1]:
+          raise ValueError("cache filename does not match embedded source fingerprint")
+      cached.add(fp)
+      versions=[version(data[k]) for k in ("schema_version","map_contract_version","producer_version")]
+      current = [version(CACHE_SCHEMA_VERSION), version(CACHE_MAP_CONTRACT_VERSION), version(CACHE_PRODUCER_VERSION)]
+      if any(v is None or v[0] != c[0] or v > c for v, c in zip(versions, current)): state="incompatible"
+      elif any(v < c for v, c in zip(versions, current)): state="older-compatible"
+      else:
+        paths=data["source"].get("known_paths", []); existing=[p for p in paths if (vault / p).is_file()]
+        state="compatible" if existing and any(file_fingerprint(vault / p) == fp for p in existing) else ("unresolved-source" if paths else "orphaned")
+    except SystemExit:
+      state="incompatible"
+      fp = "sha256:" + path.stem
+    except Exception:
+      state="incompatible"
+    rows.append({"fingerprint":fp, "state":state, "path":str(path)})
+# Missing is reported for frozen Resources without a cache entry.
+config_path = vault / "config.json"
+try:
+    config = load_json(str(config_path), "config")
+    resource_dir = config.get("paths", {}).get("resources", "resources")
+except SystemExit:
+    resource_dir = "resources"
+base = _safe_vault_path(vault, resource_dir, "configured Resource path")
+for base in (base,):
+  if base.is_dir():
+    for resource in sorted(p for p in base.rglob("*") if p.is_file()):
+      fp=file_fingerprint(resource)
+      if fp not in cached: rows.append({"fingerprint":fp, "state":"missing", "path":str(resource)})
+emit_rows(rows, os.environ.get("FORMAT", "json"))
+CACHEPY
+}
+
+print_work_help() {
+  cat <<'EOF'
+Usage:
+  slipbox work create  --kind KIND --activity ACTIVITY [--source PATH] [--target PATH] [--affected-path PATH]...
+  slipbox work list    [--status STATUS] [--format table]
+  slipbox work inspect WORK_ID [--format table]
+  slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY] [--source PATH] [--target PATH] [--affected-path PATH]...
+  slipbox work resume  WORK_ID
+  slipbox work finalize WORK_ID
+  slipbox work commit WORK_ID [--yes|--leave-uncommitted]
+  slipbox work discard WORK_ID [--yes] [--no-input]
+EOF
+}
+
+# ---- recoverable work lifecycle ----
+work_path() { printf '%s/work' "$SELF_DIR"; }
+cmd_work_create() {
+  local kind="" activity="" source="" target="" affected=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --kind) [ $# -ge 2 ] || usage_err "flag --kind needs a value"; kind="$2"; shift 2 ;;
+      --activity) [ $# -ge 2 ] || usage_err "flag --activity needs a value"; activity="$2"; shift 2 ;;
+      --source) [ $# -ge 2 ] || usage_err "flag --source needs a value"; source="$2"; shift 2 ;;
+      --target) [ $# -ge 2 ] || usage_err "flag --target needs a value"; target="$2"; shift 2 ;;
+      --affected-path) [ $# -ge 2 ] || usage_err "flag --affected-path needs a value"; affected="${affected}${affected:+$'\n'}$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work create argument: $1" ;;
+    esac
+  done
+  [ -n "$kind" ] || usage_err "work create requires --kind"
+  [ -n "$activity" ] || usage_err "work create requires --activity"
+  WORK_ROOT="$(work_path)" KIND="$kind" ACTIVITY="$activity" SOURCE="$source" TARGET="$target" AFFECTED="$affected" py <<'PYEOF'
+work_root = Path(os.environ["WORK_ROOT"])
+kind, activity = os.environ["KIND"], os.environ["ACTIVITY"]
+if kind not in WORK_KINDS:
+    fail("--kind must be one of resource, literature, reference, evergreen, migration", USAGE_EXIT)
+source, target = os.environ.get("SOURCE", ""), os.environ.get("TARGET", "")
+if not activity.strip():
+    fail("--activity must not be empty", USAGE_EXIT)
+work_id = new_work_id()
+created = now_stamp()
+vault_root = Path(os.environ["WORK_ROOT"]).parent
+affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
+for label, path in (("--source", source), ("--target", target)):
+    if path: _safe_vault_path(vault_root, path, label)
+for path in affected:
+    _safe_vault_path(vault_root, path, "--affected-path")
+source_fp = file_fingerprint(_safe_vault_path(vault_root, source, "--source")) if source else None
+target_fp = file_fingerprint(_safe_vault_path(vault_root, target, "--target")) if target else None
+for path in (source, target):
+    if path and path not in affected: affected.append(path)
+def git_root_and_baselines(paths):
+    try:
+        root = subprocess.check_output(["git", "-C", str(vault_root), "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None, {}
+    baselines = {}
+    for path in paths:
+        target_path = (vault_root / path).resolve()
+        rel = os.path.relpath(str(target_path), root)
+        status = subprocess.run(["git", "-C", root, "status", "--porcelain=v1", "--", rel], text=True, capture_output=True).stdout.rstrip("\n")
+        blob_result = subprocess.run(["git", "-C", root, "rev-parse", "HEAD:" + rel], text=True, capture_output=True)
+        baselines[path] = {"status": status, "blob": blob_result.stdout.strip() or None, "worktree": file_fingerprint(target_path)}
+    return root, baselines
+git_root, git_baselines = git_root_and_baselines(affected)
+manifest = {"work_id": work_id, "kind": kind, "activity": activity, "status": "active", "created_at": created, "updated_at": created, "source_identity": source or None, "target_identity": target or None, "source_starting_fingerprint": source_fp, "target_starting_fingerprint": target_fp, "affected_paths": affected, "source": {"identity": source or None, "starting_fingerprint": source_fp}, "target": {"identity": target or None, "starting_fingerprint": target_fp}, "git_baselines": git_baselines}
+manifest["affected_starting_fingerprints"] = {path: file_fingerprint(_safe_vault_path(vault_root, path)) for path in affected}
+save_work_manifest(work_root / work_id, manifest)
+print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_list() {
+  local status="" format="json"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --status) [ $# -ge 2 ] || usage_err "flag --status needs a value"; status="$2"; shift 2 ;;
+      --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work list argument: $1" ;;
+    esac
+  done
+  resolve_format --format "$format"
+  WORK_ROOT="$(work_path)" STATUS_FILTER="$status" FORMAT="$FORMAT" py <<'PYEOF'
+status_filter = os.environ.get("STATUS_FILTER", "")
+if status_filter and status_filter not in WORK_STATUSES:
+    fail("--status must be one of active, blocked, failed, ready-to-finalize, commit-failed, repair-required", USAGE_EXIT)
+rows = []
+root = Path(os.environ["WORK_ROOT"])
+if root.is_dir():
+    for manifest_path in sorted(root.glob("*/manifest.json")):
+        manifest = load_json(str(manifest_path), "work manifest")
+        if not status_filter or manifest.get("status") == status_filter: rows.append(manifest)
+emit_rows(rows, os.environ.get("FORMAT", "json"))
+PYEOF
+}
+
+cmd_work_inspect() {
+  [ $# -ge 1 ] || usage_err "work inspect requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  local work_id="$1"; shift; local format="json"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --format) [ $# -ge 2 ] || usage_err "flag --format needs a value"; format="$2"; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work inspect argument: $1" ;;
+    esac
+  done
+  resolve_format --format "$format"
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" FORMAT="$FORMAT" py <<'PYEOF'
+_, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+if os.environ.get("FORMAT", "json") == "table": emit_rows([manifest], "table")
+else: print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_update() {
+  [ $# -ge 1 ] || usage_err "work update requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  local work_id="$1"; shift; local status="" activity="" source="" target="" affected="" has=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --status) [ $# -ge 2 ] || usage_err "flag --status needs a value"; status="$2"; has=1; shift 2 ;;
+      --activity) [ $# -ge 2 ] || usage_err "flag --activity needs a value"; activity="$2"; has=1; shift 2 ;;
+      --source) [ $# -ge 2 ] || usage_err "flag --source needs a value"; source="$2"; has=1; shift 2 ;;
+      --target) [ $# -ge 2 ] || usage_err "flag --target needs a value"; target="$2"; has=1; shift 2 ;;
+      --affected-path) [ $# -ge 2 ] || usage_err "flag --affected-path needs a value"; affected="${affected}${affected:+$'\n'}$2"; has=1; shift 2 ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work update argument: $1" ;;
+    esac
+  done
+  [ "$has" = 1 ] || usage_err "work update requires at least one field"
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" STATUS="$status" ACTIVITY="$activity" SOURCE="$source" TARGET="$target" AFFECTED="$affected" py <<'PYEOF'
+work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+status = os.environ.get("STATUS", "")
+if status and status not in WORK_STATUSES: fail("--status must be one of active, blocked, failed, ready-to-finalize, commit-failed, repair-required", USAGE_EXIT)
+if status: manifest["status"] = status
+if os.environ.get("ACTIVITY", ""): manifest["activity"] = os.environ["ACTIVITY"]
+changed_identities = set()
+for field in ("source", "target"):
+    value = os.environ.get(field.upper(), "")
+    if value:
+        _safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}")
+        previous_identity = manifest.get(field + "_identity")
+        identity_changed = previous_identity != value
+        if identity_changed:
+            changed_identities.add(value)
+        manifest[field + "_identity"] = value
+        if identity_changed or not manifest.get(field + "_starting_fingerprint"):
+            manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}"))
+        manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
+paths = list(manifest.get("affected_paths", []))
+vault_root = Path(os.environ["WORK_ROOT"]).parent
+for path in os.environ.get("AFFECTED", "").splitlines():
+    if path:
+        _safe_vault_path(vault_root, path, "--affected-path")
+        if path not in paths: paths.append(path)
+for identity in (manifest.get("source_identity"), manifest.get("target_identity")):
+    if identity:
+        _safe_vault_path(vault_root, identity)
+        if identity not in paths: paths.append(identity)
+fingerprints = dict(manifest.get("affected_starting_fingerprints", {}))
+for path in paths:
+    _safe_vault_path(vault_root, path)
+    if path not in fingerprints or path in changed_identities:
+        fingerprints[path] = file_fingerprint(_safe_vault_path(vault_root, path))
+manifest["affected_starting_fingerprints"] = fingerprints
+manifest["affected_paths"] = paths
+manifest["updated_at"] = now_stamp()
+save_work_manifest(work_dir, manifest)
+print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_resume() {
+  [ $# -ge 1 ] || usage_err "work resume requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  [ $# -le 1 ] || usage_err "work resume takes exactly WORK_ID"
+  WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
+work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
+def current(identity):
+    return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / identity) if identity else None
+source, target = manifest.get("source_identity"), manifest.get("target_identity")
+expected_affected = manifest.get("affected_starting_fingerprints", {})
+affected_matches = all(current(path) == fingerprint for path, fingerprint in expected_affected.items())
+matches = current(source) == manifest.get("source_starting_fingerprint") and current(target) == manifest.get("target_starting_fingerprint") and affected_matches
+if not matches:
+    manifest["status"] = "blocked"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest)
+state = dict(manifest); state["fingerprints_match"] = matches; state["resumable"] = matches
+print(json.dumps(state, indent=2))
+PYEOF
+}
+
+cmd_work_finalize() {
+  [ $# -ge 1 ] || usage_err "work finalize requires WORK_ID"
+  [ $# -le 1 ] || usage_err "work finalize takes exactly WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if manifest.get("status") != "ready-to-finalize":
+    fail("work finalize requires status ready-to-finalize")
+vault = root.parent
+staged = manifest.get("mutations")
+if staged is None:
+    staged_path = work_dir / "mutations.json"
+    if staged_path.is_file(): staged = load_json(str(staged_path), "staged mutations")
+if staged is None:
+    staged = manifest.get("staged_mutations")
+if staged is None: fail("work finalize requires staged mutations")
+if not isinstance(staged, list): fail("staged mutations must be an array")
+# Resource publication is create-only: an existing target is a collision even
+# when its bytes still match the starting fingerprint. Other work kinds may
+# intentionally replace an existing target, so scope this guard to Resources.
+if manifest.get("kind") == "resource":
+    for mutation in staged:
+        if isinstance(mutation, dict) and isinstance(mutation.get("path"), str):
+            target = _safe_vault_path(vault, mutation["path"], "resource target")
+            if target.exists():
+                fail(f"resource target collision: {mutation['path']} already exists")
+# All validation and compare-and-swap checks happen before any lock is taken.
+backups = preflight_mutations(staged, vault, work_dir)
+lock_root = root / ".locks"; lock_root.mkdir(parents=True, exist_ok=True)
+locks = []
+try:
+    for target in _lock_paths(vault, staged):
+        lock = lock_root / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock")
+        handle = lock.open("a+")
+        try: fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            handle.close(); fail(f"path is locked: {target}")
+        handle.seek(0); handle.truncate(); handle.write(json.dumps({"pid": os.getpid(), "created_at": time.time(), "path": str(target)})); handle.flush()
+        locks.append(handle)
+    for mutation, backup in zip(staged, backups):
+        if _mutation_fingerprint(_safe_vault_path(vault, mutation["path"])) != backup["fingerprint"]:
+            fail(f"target changed while waiting for lock: {mutation['path']}")
+        if mutation.get("kind") == "backlog-events" and mutation.get("new_path") != mutation.get("path") and _safe_vault_path(vault, mutation["new_path"]).exists():
+            fail(f"backlog mutation destination changed while waiting for lock: {mutation['new_path']}")
+    applied = []
+    try:
+        applied = apply_mutations(staged, backups, vault, work_dir)
+    except (Exception, SystemExit) as exc:
+        applied = getattr(exc, "applied", applied)
+        errors = compensate(staged, backups, applied, vault, work_dir)
+        manifest["updated_at"] = now_stamp()
+        manifest["status"] = "repair-required" if errors else "failed"
+        manifest["finalize_error"] = str(exc)
+        if errors: manifest["repair_errors"] = errors
+        save_work_manifest(work_dir, manifest)
+        fail("publication requires repair: " + "; ".join(errors) if errors else "publication failed and was rolled back")
+    published_paths = []
+    for mutation in staged:
+        for path_value in (mutation.get("path"), mutation.get("new_path") if mutation.get("kind") == "backlog-events" else None):
+            if isinstance(path_value, str) and path_value not in published_paths:
+                published_paths.append(path_value)
+    manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); manifest["published_paths"] = published_paths
+    try:
+        if os.environ.get("SLIPBOX_TEST_FAIL_MANIFEST_SAVE") == "1":
+            os.environ["SLIPBOX_TEST_FAIL_MANIFEST_SAVE"] = "0"
+            raise OSError("simulated manifest persistence failure")
+        save_work_manifest(work_dir, manifest)
+    except (Exception, SystemExit) as exc:
+        manifest["status"] = "repair-required"; manifest["finalize_error"] = f"published but manifest persistence failed: {exc}"; manifest["repair_errors"] = ["manifest.json does not confirm publication"]
+        try: save_work_manifest(work_dir, manifest)
+        except (Exception, SystemExit): pass
+        fail("publication completed but manifest requires repair")
+    print(json.dumps(manifest, indent=2))
+finally:
+    for lock in reversed(locks):
+        try: fcntl.flock(lock.fileno(), fcntl.LOCK_UN); lock.close()
+        except OSError: pass
+PYEOF
+}
+
+cmd_work_commit() {
+  [ $# -ge 1 ] || usage_err "work commit requires WORK_ID"
+  [ $# -le 2 ] || usage_err "work commit takes WORK_ID and one option"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  local work_id="$1"; shift; local yes=0 leave=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --yes) yes=1; shift ;;
+      --leave-uncommitted) leave=1; shift ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work commit argument: $1" ;;
+    esac
+  done
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" LEAVE="$leave" INTERACTIVE="$( [ -t 0 ] && echo 1 || echo 0 )" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if manifest.get("status") not in {"published", "commit-failed"}:
+    fail("work commit requires status published or commit-failed")
+if manifest.get("git_commit_status") == "committed":
+    print(json.dumps(manifest, indent=2)); raise SystemExit
+if os.environ.get("LEAVE") == "1":
+    manifest["status"] = "published"; manifest["git_commit_status"] = "left-uncommitted"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+vault = root.parent
+try:
+    repo = subprocess.check_output(["git", "-C", str(vault), "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).strip()
+except (OSError, subprocess.CalledProcessError):
+    manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+config = {}
+try: config = load_json(str(vault / "config.json"), "config")
+except SystemExit: config = {}
+git_config = config.get("git", {}) if isinstance(config, dict) else {}
+mode = git_config.get("mode", "ask")
+if mode == "off":
+    manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+if mode == "ask" and os.environ.get("YES") != "1":
+    if os.environ.get("INTERACTIVE") == "1":
+        print("Commit this work? [y/N] ", end="", file=sys.stderr, flush=True)
+        if input().strip().lower() not in {"y", "yes"}:
+            print(json.dumps({"status":"confirmation-required", "work_id":manifest["work_id"]})); raise SystemExit
+    else:
+        print(json.dumps({"status":"confirmation-required", "work_id":manifest["work_id"]})); raise SystemExit
+paths = list(manifest.get("published_paths", []))
+if not paths:
+    mutations = manifest.get("mutations") or ([] if not (work_dir / "mutations.json").is_file() else load_json(str(work_dir / "mutations.json"), "staged mutations"))
+    paths = [m.get("path") for m in mutations if isinstance(m, dict) and isinstance(m.get("path"), str)]
+cache_persistence = config.get("cache", {}).get("source_maps", {}).get("persistence") if isinstance(config.get("cache", {}), dict) else None
+if cache_persistence != "tracked":
+    paths = [p for p in paths if not p.startswith("cache/source-maps/")]
+baselines = manifest.get("git_baselines", {})
+safe_paths = [p for p in paths if not baselines.get(p, {}).get("status")]
+downgraded = [p for p in paths if p not in safe_paths]
+if downgraded: manifest["git_safety_downgrade"] = {"affected_paths": downgraded, "reason": "path was dirty before work started"}
+if not safe_paths:
+    manifest["git_commit_status"] = "left-uncommitted"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
+before = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+index = work_dir / "git-index"
+message = manifest.get("subject") or manifest.get("commit_subject")
+if not message:
+    if git_config.get("commit_style", {}).get("mode") == "detected":
+        latest = subprocess.run(["git", "-C", repo, "log", "-1", "--pretty=%s"], text=True, capture_output=True).stdout.strip()
+        message = latest.split(":", 1)[0] + ": update slipbox" if latest and ":" in latest else "Update slipbox"
+    else: message = "Update slipbox"
+if git_config.get("activity_trailers", True):
+    message += "\n\nSlipbox-Activity: " + str(manifest.get("kind", "work")) + "." + str(manifest.get("activity", "update")) + "\nSlipbox-Work-ID: " + str(manifest["work_id"])
+try:
+    env = os.environ.copy(); env["GIT_INDEX_FILE"] = str(index)
+    subprocess.run(["git", "-C", repo, "read-tree", before], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    rels = [os.path.relpath(str((vault / p).resolve()), repo) for p in safe_paths]
+    subprocess.run(["git", "-C", repo, "add", "--"] + rels, check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+    current = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+    if os.environ.get("SLIPBOX_TEST_HEAD_MOVE") == "1":
+        raise RuntimeError("HEAD moved concurrently during commit preparation")
+    if current != before:
+        raise RuntimeError("HEAD moved concurrently during commit preparation")
+    subprocess.run(["git", "-C", repo, "commit", "-m", message], check=True, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+except (OSError, subprocess.CalledProcessError, RuntimeError) as exc:
+    detail = (getattr(exc, "stderr", None) or str(exc)).strip()
+    manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = detail; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: " + detail)
+finally:
+    try: index.unlink()
+    except OSError: pass
+after = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], text=True).strip()
+parent = subprocess.run(["git", "-C", repo, "rev-parse", "HEAD^"], text=True, capture_output=True).stdout.strip()
+if parent != before:
+    manifest["status"] = "commit-failed"; manifest["git_commit_status"] = "failed"; manifest["commit_error"] = "HEAD moved concurrently during commit"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); fail("git commit failed: HEAD moved concurrently")
+manifest["status"] = "published"; manifest["git_commit_status"] = "committed"; manifest["commit"] = {"id": after, "parent": before, "paths": safe_paths, "subject": message.split("\n", 1)[0]}; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2))
+PYEOF
+}
+
+cmd_work_discard() {
+  [ $# -ge 1 ] || usage_err "work discard requires WORK_ID"
+  [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }
+  local work_id="$1"; shift; local yes=0 no_input=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --yes) yes=1; shift ;;
+      --no-input) no_input=1; shift ;;
+      --help|-h) print_work_help; exit 0 ;;
+      *) usage_err "unknown work discard argument: $1" ;;
+    esac
+  done
+  WORK_ROOT="$(work_path)" WORK_ID="$work_id" YES="$yes" NO_INPUT="$no_input" py <<'PYEOF'
+root = Path(os.environ["WORK_ROOT"])
+work_dir, manifest = load_work(root, os.environ["WORK_ID"])
+if os.environ.get("YES") != "1":
+    if os.environ.get("NO_INPUT") == "1" or not sys.stdin.isatty(): fail("work discard requires --yes in non-interactive mode", USAGE_EXIT)
+    print("Discard this work? [y/N] ", end="", file=sys.stderr, flush=True)
+    answer = input()
+    if answer.strip().lower() not in {"y", "yes"}: print(json.dumps({"work_id": manifest["work_id"], "discarded": False})); sys.exit(0)
+shutil.rmtree(work_dir)
+print(json.dumps({"work_id": manifest["work_id"], "discarded": True}, indent=2))
+PYEOF
 }
 
 # ---- note (whole-artifact validation) ----
@@ -562,6 +1384,9 @@ else:
             error("markdown-structure", "note body must contain exactly one level-one heading")
         elif expected_title and h1[0] != expected_title:
             error("title", f"H1 does not match expected title {expected_title!r}")
+        configured_prefix = config.get("prefixes", {}).get(note_type)
+        if len(h1) == 1 and isinstance(configured_prefix, str) and configured_prefix and h1[0].startswith(configured_prefix + " "):
+            error("h1-prefix", f"H1 must be clean and must not begin with configured prefix {configured_prefix!r}")
         if body and not body.startswith("# "):
             error("markdown-structure", "the H1 must be the first Markdown block")
         formatting = style.get("formatting", {}) if isinstance(style, dict) else {}
@@ -928,8 +1753,9 @@ cmd_links_add() {
   LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
 links_file = os.environ["LINKS_FILE"]
 row = {
-    "source_id": os.environ["SOURCE"],
-    "target_id": os.environ["TARGET"],
+    "op": "add",
+    "source_slug": os.environ["SOURCE"],
+    "target_slug": os.environ["TARGET"],
     "rel_type": os.environ["REL"],
     "created_at": now_stamp(),
 }
@@ -940,7 +1766,53 @@ try:
         os.fsync(f.fileno())
 except OSError as err:
     fail(f"cannot append to links log at {links_file}: {err.strerror or err}")
-print(json.dumps({"status": "ok", **row}))
+print(json.dumps({"status": "ok", **row, "source_id": row["source_slug"], "target_id": row["target_slug"]}))
+PYEOF
+}
+
+cmd_links_remove() {
+  require_links_dir
+  reject_unknown_flags "source target rel" "$@"
+  local source target rel
+  source=$(flag source "$@")
+  target=$(flag target "$@")
+  rel=$(flag rel "$@")
+  [ -n "$source" ] || usage_err "links remove requires --source"
+  [ -n "$target" ] || usage_err "links remove requires --target"
+  require_rel "$rel" required
+  LINKS_FILE="$LINKS_FILE" SOURCE="$source" TARGET="$target" REL="$rel" py <<'PYEOF'
+links_file = os.environ["LINKS_FILE"]
+source = os.environ["SOURCE"]
+target = os.environ["TARGET"]
+rel = os.environ["REL"]
+
+events = []
+if os.path.exists(links_file):
+    for lineno, line in enumerate(read_text(links_file, "links log").splitlines(), start=1):
+        if not line.strip(): continue
+        try:
+            raw = json.loads(line)
+            if not isinstance(raw, dict): raise ValueError("not a JSON object")
+            events.append(normalize_link_event(raw))
+        except json.JSONDecodeError as err:
+            fail(f"links log at {links_file} has invalid JSON on line {lineno}: {err.msg}")
+        except (KeyError, ValueError) as err:
+            fail(f"links log at {links_file} line {lineno} is invalid: {err}")
+active = fold_link_events(events)
+present = any((r["source_slug"], r["target_slug"], r["rel_type"]) == (source, target, rel) for r in active)
+row = {"op": "remove", "source_slug": source, "target_slug": target,
+       "rel_type": rel, "created_at": now_stamp()}
+try:
+    with open(links_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+except OSError as err:
+    fail(f"cannot append to links log at {links_file}: {err.strerror or err}")
+if not present:
+    warn(f"link {source} -> {target} ({rel}) was not active")
+print(json.dumps({"status": "removed" if present else "absent", **row,
+                  "source_id": source, "target_id": target}))
 PYEOF
 }
 
@@ -960,6 +1832,7 @@ rel_filter = os.environ.get("REL_FILTER", "")
 fmt = os.environ.get("FORMAT", "json")
 
 rows = []
+events = []
 if os.path.exists(links_file):
     for lineno, line in enumerate(read_text(links_file, "links log").splitlines(), start=1):
         line = line.strip()
@@ -968,20 +1841,23 @@ if os.path.exists(links_file):
         try:
             row = json.loads(line)
         except json.JSONDecodeError as err:
-            # A corrupt log means the result set is incomplete in a way the
-            # caller can't detect from the output — fail instead of filtering
-            # the bad line out and returning a plausible-looking subset.
             fail(f"links log at {links_file} has invalid JSON on line {lineno}: {err.msg}")
         if not isinstance(row, dict):
             fail(f"links log at {links_file} line {lineno} is not a JSON object")
-        if source_filter and row.get("source_id") != source_filter:
-            continue
-        if target_filter and row.get("target_id") != target_filter:
-            continue
-        if rel_filter and row.get("rel_type") != rel_filter:
-            continue
-        rows.append(row)
+        try:
+            event = normalize_link_event(row)
+        except (KeyError, ValueError) as err:
+            fail(f"links log at {links_file} line {lineno} is invalid: {err}")
+        events.append(event)
 
+active = fold_link_events(events)
+for event in active:
+    if source_filter and event["source_slug"] != source_filter: continue
+    if target_filter and event["target_slug"] != target_filter: continue
+    if rel_filter and event["rel_type"] != rel_filter: continue
+    rows.append({"source_id": event["source_slug"], "target_id": event["target_slug"],
+                 "source_slug": event["source_slug"], "target_slug": event["target_slug"],
+                 "rel_type": event["rel_type"]})
 emit_rows(rows, fmt)
 PYEOF
 }
@@ -1191,10 +2067,12 @@ case "$1" in
   --help|-h) print_help; exit 0 ;;
   --version|-v) echo "slipbox $CLI_VERSION"; exit 0 ;;
   evergreen) shift; dispatch evergreen "find add update" "$@" ;;
-  links) shift; dispatch links "add find" "$@" ;;
+  links) shift; dispatch links "add remove find" "$@" ;;
   config) shift; dispatch config "get set" "$@" ;;
   humanize) shift; dispatch humanize "check" "$@" ;;
   filename) shift; dispatch filename "format" "$@" ;;
   note) shift; dispatch note "validate" "$@" ;;
+  work) shift; [ $# -ge 1 ] || usage_err "work requires an action: create, list, inspect, update, resume, finalize, commit, discard"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_work_help; exit 0; }; dispatch work "create list inspect update resume finalize commit discard" "$@" ;;
+  cache) shift; [ $# -ge 1 ] || usage_err "cache requires an action: status, inspect, store, remove"; [ "$1" = "--help" ] || [ "$1" = "-h" ] && { print_cache_help; exit 0; }; dispatch cache "status inspect store remove" "$@" ;;
   *) usage_err "unknown command: $1" ;;
 esac

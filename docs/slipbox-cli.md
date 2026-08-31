@@ -11,12 +11,25 @@ slipbox evergreen add    --slug SLUG --reason "..." [--origin-kind KIND] [--orig
 slipbox evergreen find   [--status S]
 slipbox evergreen update <slug> [--status S] [--note-path P] [--slug NEW] [--iteration N]
 slipbox links add        --source S --target T --rel cites|extends
+slipbox links remove     --source S --target T --rel cites|extends
 slipbox links find       [--source S] [--target T] [--rel cites|extends]
 slipbox config get       [<dotted.path>]
 slipbox config set       <dotted.path> <value>
 slipbox filename format  --type TYPE --title TITLE [--preserve NAME]... [--uncertain NAME]...
 slipbox note validate    --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]
 slipbox humanize check   <file> [--language LANG]
+slipbox work create  --kind KIND --activity ACTIVITY [--source PATH] [--target PATH]
+slipbox work list    [--status STATUS] [--format table]
+slipbox work inspect WORK_ID [--format table]
+slipbox work update  WORK_ID [--status STATUS] [--activity ACTIVITY]
+slipbox work resume  WORK_ID
+slipbox work finalize WORK_ID
+slipbox work commit WORK_ID [--yes|--leave-uncommitted]
+slipbox work discard WORK_ID [--yes] [--no-input]
+slipbox cache status [--format table]
+slipbox cache inspect SHA256_OR_RESOURCE_PATH [--format table]
+slipbox cache store --source RESOURCE_PATH [--file MAP_JSON]
+slipbox cache remove SHA256_OR_RESOURCE_PATH [--yes] [--no-input]
 slipbox --help | --version
 ```
 
@@ -26,6 +39,12 @@ per candidate under `.slipbox/evergreen/`, written by `make-literature-note`, `m
 `find-connections` and read back by `make-evergreen-note`. `links` is an append-only JSONL
 log of typed edges (`cites`, `extends`) — separate from, and in addition to, the
 `[[wikilink]]`s a note's own prose uses for Obsidian's backlink pane.
+
+`links remove` appends a tombstone and never rewrites prior events. `links find` folds
+legacy rows (which default to add), explicit add events, and removals in file order;
+remove→add therefore restores the edge. Removing an already-inactive edge succeeds with
+a warning, which lets transaction compensation remain idempotent. A malformed event
+fails with its JSONL line number.
 
 ## `note validate`
 
@@ -72,6 +91,41 @@ Every failure prints one JSON object on stderr — `{"error": "..."}`, message-e
 A survivable problem — one that doesn't invalidate the result — prints `{"warning": "..."}` on stderr and still exits `0`. Two cases exist: `evergreen find` skipping a file whose frontmatter won't parse, and `humanize check` meeting a signal type it doesn't implement (that signal is reported as `"skipped": "unsupported_type"` in the result, never counted as zero hits). A corrupt `links.jsonl`, by contrast, fails outright — a silently filtered edge would leave the caller a plausible-looking but incomplete result set with no way to notice.
 
 An unrecognized flag, a misspelled one, a stray positional argument, a flag given without a value, a non-integer `--iteration`, and a `--format` other than `json`/`table` are all usage errors. None of them is ignored: `evergreen find --stat to-discuss` exits `2` rather than quietly dropping the filter and returning every row.
+
+## `work`
+
+Recoverable work is isolated in `.slipbox/work/<work_id>/manifest.json`. `work create`
+records the kind (`resource`, `literature`, `reference`, `evergreen`, or `migration`),
+activity, UTC timestamps, source/target identities and SHA-256 starting fingerprints,
+and affected paths. Work IDs are sortable 26-character Crockford-Base32 identifiers.
+The manifest is inspectable with `work inspect` and enumerable with `work list`; both
+default to JSON, while `--format table` is an explicit opt-in.
+
+`work update` checkpoints status (`active`, `blocked`, `failed`, `ready-to-finalize`,
+`published`, `commit-failed`, or `repair-required`) and metadata. `work resume` compares the
+recorded source and target fingerprints with their current files and returns a
+`resumable` state; a mismatch marks the work `blocked`. It does not resume a
+conversation. `work discard` deletes only the selected work directory and requires
+`--yes` for non-interactive callers (use `--no-input` to make that requirement
+explicit). Work is never deleted by age.
+
+`work finalize WORK_ID` publishes staged mutations from `manifest.json`'s
+`mutations` array (or `mutations.json` in the work directory). Each mutation names a
+vault-relative target, its expected SHA-256 fingerprint (`null` for a new file), and
+a replacement file relative to the work directory. All inputs and compare-and-swap
+checks run before sorted per-path locks are acquired. A collision or concurrent
+change therefore cannot silently overwrite a target. Partial publication is restored
+from byte backups and marked `failed`; compensation failure is marked
+`repair-required` with diagnostics. Link additions use append-only tombstones during
+compensation rather than rewriting ledger history.
+
+`work commit WORK_ID` finalizes Git separately from publication. It detects the repository
+at runtime, seeds a temporary index from `HEAD`, stages only successful published paths,
+runs normal hooks, and leaves the user's real index unchanged. Pre-dirty affected paths are
+excluded and recorded as a safety downgrade. `git.mode` supports `off`, `ask`, and `auto`;
+`--yes` confirms an ask-mode commit and `--leave-uncommitted` closes work without a commit.
+Failures preserve published files and mark the work `commit-failed`. Enabled trailers are
+`Slipbox-Activity: <kind>.<activity>` and `Slipbox-Work-ID: <work-id>`.
 
 ## Atomicity
 

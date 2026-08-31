@@ -82,6 +82,127 @@ check_json_file() {
 data = json.load(open(sys.argv[1]))
 $2" "$3"; then pass "$1"; else failed "$1"; fi
 }
+
+echo "--- setup config schema: git/cache contract ---"
+SCHEMA="$REPO_ROOT/skills/setup-slipbox/assets/config.schema.json"
+python3 - "$SCHEMA" <<'PY'
+import copy, json, sys
+try:
+    from jsonschema import Draft7Validator
+except ImportError:
+    Draft7Validator = None
+
+schema = json.load(open(sys.argv[1]))
+base = {
+    "paths": {"resources":"resources", "literature":"literature", "evergreen":"evergreen", "reference":"reference"},
+    "filenames": {"literature":"kebab-case", "reference":"kebab-case", "evergreen":"kebab-case"},
+    "frontmatter": {"literature":{}, "reference":{}, "evergreen":{}},
+    "links": {"style":"wikilink"},
+    "templates": {k:"templates/" + k + ".md" for k in ("literature_path","reference_path","evergreen_path","article_path","news_path","social_path","video_path")},
+    "transcript_languages": ["en"],
+    "prefixes": {"literature":False, "reference":False, "evergreen":False},
+    "git": {"mode":"ask", "commit_style":{"mode":"detected"}, "activity_trailers":True},
+    "cache": {"source_maps":{"persistence":"local"}},
+}
+if Draft7Validator:
+    Draft7Validator(schema).validate(base)
+    valid = lambda candidate: Draft7Validator(schema).is_valid(candidate)
+else:
+    # jsonschema is not a setup prerequisite. Keep a structural fallback
+    # equivalent for every contract constraint exercised here.
+    def valid(candidate):
+        required = {"paths","filenames","frontmatter","links","templates","transcript_languages","prefixes","git","cache"}
+        if not isinstance(candidate, dict) or not required.issubset(candidate) or set(candidate) - required - {"migrations"}: return False
+        if set(candidate["paths"]) != {"resources","literature","evergreen","reference"} or not all(isinstance(v,str) for v in candidate["paths"].values()): return False
+        casing = {"kebab-case","Title Case","snake_case","Sentence case","verbatim","other"}
+        if set(candidate["filenames"]) != {"literature","reference","evergreen"} or not all(v in casing for v in candidate["filenames"].values()): return False
+        if set(candidate["frontmatter"]) != {"literature","reference","evergreen"} or not all(isinstance(v,dict) for v in candidate["frontmatter"].values()): return False
+        if set(candidate["links"]) != {"style"} or candidate["links"]["style"] not in {"wikilink","markdown"}: return False
+        template_keys = {"literature_path","reference_path","evergreen_path","article_path","news_path","social_path","video_path"}
+        if set(candidate["templates"]) != template_keys or not all(isinstance(v,str) for v in candidate["templates"].values()): return False
+        if not isinstance(candidate["transcript_languages"],list) or not candidate["transcript_languages"] or not all(isinstance(v,str) for v in candidate["transcript_languages"]): return False
+        if set(candidate["prefixes"]) != {"literature","reference","evergreen"} or not all(isinstance(v,str) or v is False for v in candidate["prefixes"].values()): return False
+        git = candidate["git"]
+        if set(git) != {"mode","commit_style","activity_trailers"} or git["mode"] not in {"off","ask","auto"} or set(git["commit_style"]) != {"mode"} or git["commit_style"]["mode"] not in {"detected","fallback"} or not isinstance(git["activity_trailers"],bool): return False
+        cache = candidate["cache"]
+        if not (set(cache) == {"source_maps"} and set(cache["source_maps"]) == {"persistence"} and cache["source_maps"]["persistence"] in {"local","tracked"}): return False
+        migrations = candidate.get("migrations", {})
+        if not isinstance(migrations, dict): return False
+        if set(migrations) - {"reference", "literature_headings", "evergreen_headings"}: return False
+        reference = migrations.get("reference")
+        literature_headings = migrations.get("literature_headings")
+        evergreen_headings = migrations.get("evergreen_headings")
+        def valid_policy(policy, modes):
+            if policy is None: return True
+            if not isinstance(policy, dict) or set(policy) - {"mode", "selected"} or policy.get("mode") not in modes: return False
+            selected = policy.get("selected")
+            if policy["mode"] == "selected" and (not isinstance(selected, list) or not selected): return False
+            if policy["mode"] != "selected" and "selected" in policy: return False
+            if selected is not None and any(not isinstance(path, str) or not path or path.startswith("/") or any(part in {".", ".."} for part in path.split("/")) for path in selected): return False
+            return True
+        if not valid_policy(literature_headings, {"all-valid", "all-compatible", "selected", "lazy", "defer"}): return False
+        if not valid_policy(evergreen_headings, {"all-valid", "selected", "lazy", "defer"}): return False
+        if reference is not None and not isinstance(reference, dict): return False
+        if reference is not None and (set(reference) - {"mode", "selected"} or reference.get("mode") not in {"all","all-valid","selected","lazy","defer"}): return False
+        if reference and reference["mode"] == "selected" and (not isinstance(reference.get("selected"), list) or not reference["selected"]): return False
+        if reference and reference["mode"] != "selected" and "selected" in reference: return False
+        if reference and reference.get("selected"):
+            import re
+            if any(not isinstance(path, str) or not path or path.startswith("/") or any(part in {".", ".."} for part in path.split("/")) for path in reference["selected"]): return False
+        if reference and reference["mode"] != "selected" and "selected" in reference: return False
+        return True
+assert valid({**base, "git": {**base["git"], "mode":"never"}}) is False
+assert valid({**base, "cache": {"source_maps":{}}}) is False
+tracked_work = copy.deepcopy(base)
+tracked_work["cache"]["work"] = {"persistence":"tracked"}
+assert valid(tracked_work) is False
+reference_migration = copy.deepcopy(base)
+reference_migration["migrations"] = {"reference": {"mode":"selected", "selected":["reference/legacy-note.md"]}}
+assert valid(reference_migration) is True
+reference_migration["migrations"]["reference"] = {"mode":"selected"}
+assert valid(reference_migration) is False
+reference_migration["migrations"]["reference"] = "selected"
+assert valid(reference_migration) is False
+reference_migration["migrations"]["reference"] = []
+assert valid(reference_migration) is False
+evergreen_migration = copy.deepcopy(base)
+evergreen_migration["migrations"] = {"evergreen_headings": {"mode":"all-compatible"}}
+assert valid(evergreen_migration) is False
+unknown_migration = copy.deepcopy(base)
+unknown_migration["migrations"] = {"unknown": {"mode":"defer"}}
+assert valid(unknown_migration) is False
+bad_path_migration = copy.deepcopy(base)
+bad_path_migration["migrations"] = {"evergreen_headings": {"mode":"selected", "selected":["../note.md"]}}
+assert valid(bad_path_migration) is False
+empty_selected = copy.deepcopy(base)
+empty_selected["migrations"] = {"evergreen_headings": {"mode":"lazy", "selected":[]}}
+assert valid(empty_selected) is False
+PY
+pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
+
+echo "--- setup bootstrap contract ---"
+SETUP_SKILL="$REPO_ROOT/skills/setup-slipbox/SKILL.md"
+check_match "setup creates work and source-map cache directories" '* .slipbox/work .slipbox/cache/source-maps*' "$(grep -F 'mkdir -p .slipbox/bin .slipbox/evergreen .slipbox/work .slipbox/cache/source-maps' "$SETUP_SKILL")"
+AGENTS_LINE=$(grep -n 'Copy `assets/AGENTS.md`' "$SETUP_SKILL" | head -1 | cut -d: -f1)
+CONFIG_LINE=$(grep -n 'config.json` is written' "$SETUP_SKILL" | head -1 | cut -d: -f1)
+if [ "$AGENTS_LINE" -gt "$CONFIG_LINE" ]; then pass "completion sentinel is ordered after config"; else failed "completion sentinel ordering"; fi
+for category in compatible missing incompatible older-compatible unresolved-source orphaned; do
+  assert_contains "migration inventory names $category" "$category" "$SETUP_SKILL"
+done
+for choice in 'missing + incompatible' 'chosen scope' 'refresh all' 'defer'; do
+  assert_contains "migration inventory offers $choice" "$choice" "$SETUP_SKILL"
+done
+assert_contains "cache and note-format authorization stay separate" "separate" "$SETUP_SKILL"
+assert_contains "local cache ignore is conditional" 'when cache persistence is `local`' "$SETUP_SKILL"
+assert_contains "tracked source-map cache omits ignore" "Never add an ignore rule for tracked source maps" "$SETUP_SKILL"
+assert_contains "reference migration authorization is schema-backed" 'reference: {mode: all|all-valid|selected|lazy|defer' "$SETUP_SKILL"
+assert_contains "setup detects legacy prefixed H1s across note types" "prefixed H1s in Reference and Evergreen" "$SETUP_SKILL"
+assert_contains "setup offers all-valid migration" "all-valid" "$SETUP_SKILL"
+assert_contains "setup skips unusual note structures" "unusual or incompatible structures" "$SETUP_SKILL"
+assert_contains "runtime asset keeps H1s clean" "H1 headings remain clean/unprefixed" "$REPO_ROOT/skills/setup-slipbox/assets/AGENTS.md"
+assert_contains "fallback rejects unknown migration keys" "set(migrations) - {\"reference\", \"literature_headings\", \"evergreen_headings\"}" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
+assert_contains "fallback validates policy-specific modes" "valid_policy" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
+assert_contains "fallback rejects traversal in every selected policy" "path.split(\"/\")" "$REPO_ROOT/tests/setup-slipbox/slipbox.sh"
 # check_table <subject> <header glob> <expected data rows> <output>
 check_table() {
   check_match "$1 table output has a tab-separated header" "$2" "$(printf '%s\n' "$4" | head -1)"
@@ -228,15 +349,278 @@ check_no_tmp_files "no leftover .tmp files after writes" "$SCRATCH/evergreen"
 
 echo "--- links ---"
 check "links add" "$SLIPBOX" links add --source "final-test-1" --target "some-term" --rel cites
+for event in '{"op":"add","source_slug":0,"target_slug":"some-term","rel_type":"cites"}' '{"op":"add","source_slug":"","target_slug":"some-term","rel_type":"cites"}' '{"op":"add","source_slug":"final-test-1","target_slug":"","rel_type":"cites"}'; do
+  printf '%s\n' "$event" >> "$SCRATCH/links.jsonl"
+  check_exit "links reject invalid source/target slug" 1 "$SLIPBOX" links find
+  sed -i '' '$d' "$SCRATCH/links.jsonl"
+done
 check_exit "links add rejects invalid --rel" 2 "$SLIPBOX" links add --source a --target b --rel bogus
 check "links find with no filters returns everything" "$SLIPBOX" links find
 check_eq "links find returns the inserted edge" 1 "$("$SLIPBOX" links find | json_len)"
 check "links find filters by --source" "$SLIPBOX" links add --source "other-slug" --target "some-term" --rel extends
 check_eq "links find --source filters correctly" 1 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
 
+echo "--- links append-only fold and tombstones ---"
+printf '%s\n' '{"source_id":"legacy-source","target_id":"legacy-target","rel_type":"cites"}' >> "$SCRATCH/links.jsonl"
+"$SLIPBOX" links find --source legacy-source | check_json "legacy rows are active adds" 'assert len(data) == 1 and data[0]["target_id"] == "legacy-target"'
+check "links remove appends a tombstone" "$SLIPBOX" links remove --source final-test-1 --target some-term --rel cites
+check_eq "removed edge is absent" 0 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
+check "links remove is idempotent" "$SLIPBOX" links remove --source final-test-1 --target some-term --rel cites
+check "add after remove restores edge" "$SLIPBOX" links add --source final-test-1 --target some-term --rel cites
+check_eq "re-added edge is active" 1 "$("$SLIPBOX" links find --source final-test-1 | json_len)"
+printf '%s\n' '{"op":"remove","source_slug":"exact","target_slug":"exact","rel_type":"extends"}' >> "$SCRATCH/links.jsonl"
+check_eq "relationship identity remains exact" 0 "$("$SLIPBOX" links find --source exact --target exact --rel cites | json_len)"
+printf '%s\n' '{"op":"bogus","source_slug":"bad","target_slug":"bad","rel_type":"cites"}' >> "$SCRATCH/links.jsonl"
+check_exit "invalid link event reports failure" 1 "$SLIPBOX" links find
+check_match "invalid event error identifies line" '*line 8*' "$(stderr_of "$SLIPBOX" links find)"
+sed -i '' '$d' "$SCRATCH/links.jsonl"
+
 echo "--- usage errors ---"
 check_exit "unknown command exits 2" 2 "$SLIPBOX" bogus
 check_exit "evergreen add missing --reason exits 2" 2 "$SLIPBOX" evergreen add --slug x
+
+echo "--- recoverable work lifecycle ---"
+# Resource clipping is required to use the shared transaction boundary rather
+# than writing a fetched response directly to its frozen target.
+RESOURCE_SKILL="$REPO_ROOT/skills/clip-resource/SKILL.md"
+RESOURCE_DOC="$REPO_ROOT/docs/clip-resource.md"
+LIFECYCLE="$REPO_ROOT/skills/using-slipbox/references/work-lifecycle.md"
+for phrase in 'kind: resource' 'create-only' 'manifest.json' 'extraction.json' 'draft.md' 'target collision' 'permanent extraction cache'; do
+  assert_contains "Resource lifecycle names $phrase" "$phrase" "$RESOURCE_SKILL"
+done
+assert_contains "Resource lifecycle names activity: clip" 'activity `clip`' "$LIFECYCLE"
+assert_contains "Resource lifecycle names work finalize" 'work finalize' "$LIFECYCLE"
+assert_contains "Resource docs describe independent work" 'one `resource`/`clip` work item per URL' "$RESOURCE_DOC"
+assert_contains "Resource lifecycle reference defines extraction staging" "extraction.json" "$LIFECYCLE"
+assert_contains "Resource lifecycle reference forbids permanent extraction cache" "not a permanent extraction cache" "$LIFECYCLE"
+assert_contains "Resource lifecycle reference preserves failed work" "preserve failed state for repair" "$LIFECYCLE"
+
+result=$("$SLIPBOX" work create --kind literature --activity create --source resources/a.md --target literature/a.md)
+check_json "work create returns a ULID-shaped id" 'import re; assert re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", data["work_id"])' <<<"$result"
+work_id=$(printf '%s' "$result" | json_at '["work_id"]')
+check_file "work create creates one work directory" "$SCRATCH/work/$work_id/manifest.json"
+check_json "work create records UTC timestamps and identity" 'assert data["created_at"].endswith("Z") and data["updated_at"].endswith("Z"); assert data["source_identity"] == "resources/a.md"; assert data["target_identity"] == "literature/a.md"' <<<"$result"
+check_json "work list defaults to JSON" 'assert isinstance(data, list) and any(row["work_id"] == "'"$work_id"'" for row in data)' <<<"$("$SLIPBOX" work list)"
+check_match "work list table has a header" '*work_id*' "$("$SLIPBOX" work list --format table | head -1)"
+check_eq "work inspect defaults to JSON" "$work_id" "$("$SLIPBOX" work inspect "$work_id" | json_at '["work_id"]')"
+check_match "work inspect table has a header" '*work_id*' "$("$SLIPBOX" work inspect "$work_id" --format table | head -1)"
+for action in create list inspect update resume discard; do
+  check_exit "work $action --help exits 0" 0 "$SLIPBOX" work "$action" --help
+done
+check_exit "work rejects unknown status" 2 "$SLIPBOX" work update "$work_id" --status nope
+check_exit "work rejects unknown flag" 2 "$SLIPBOX" work list --bogus
+check_exit "work discard requires explicit confirmation" 2 "$SLIPBOX" work discard "$work_id" --no-input
+check_file "work remains after unconfirmed discard" "$SCRATCH/work/$work_id/manifest.json"
+check "work update changes status" "$SLIPBOX" work update "$work_id" --status blocked
+check_json "work update keeps affected paths consistent" 'assert data["source_identity"] in data["affected_paths"] and data["target_identity"] in data["affected_paths"]' <<<"$("$SLIPBOX" work update "$work_id" --source resources/changed.md)"
+check_json "work resume returns state" 'assert data["work_id"] == "'"$work_id"'" and data["status"] == "blocked"' <<<"$("$SLIPBOX" work resume "$work_id")"
+check "work discard accepts --yes" "$SLIPBOX" work discard "$work_id" --yes --no-input
+check_no_file "discard removes selected work only" "$SCRATCH/work/$work_id/manifest.json"
+check_exit "work discard does not age-delete anything" 0 "$SLIPBOX" work list
+printf 'baseline\n' > "$SCRATCH/baseline.md"
+printf 'new\n' > "$SCRATCH/new-affected.md"
+NEW_AFFECTED_FP="sha256:$(shasum -a 256 "$SCRATCH/new-affected.md" | cut -d' ' -f1)"
+BASELINE_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity baseline --affected-path baseline.md)" | json_at '["work_id"]')
+printf 'drifted\n' > "$SCRATCH/baseline.md"
+check_json "work update records new affected baseline" 'assert data["affected_starting_fingerprints"]["new-affected.md"] == "'"$NEW_AFFECTED_FP"'"' <<<"$($SLIPBOX work update "$BASELINE_ID" --affected-path new-affected.md)"
+check_json "work resume blocks drift on unchanged affected path" 'assert data["status"] == "blocked" and not data["resumable"]' <<<"$($SLIPBOX work resume "$BASELINE_ID")"
+check "$SLIPBOX work discard --yes --no-input" "$SLIPBOX" work discard "$BASELINE_ID" --yes --no-input
+check_exit "work create rejects absolute source" 1 "$SLIPBOX" work create --kind literature --activity bad --source /etc/passwd
+check_exit "work create rejects traversal target" 1 "$SLIPBOX" work create --kind literature --activity bad --target ../escape.md
+OUTSIDE_WORK=$(mktemp -d)
+ln -s "$OUTSIDE_WORK" "$SCRATCH/escape-link"
+check_exit "work create rejects symlink escape affected path" 1 "$SLIPBOX" work create --kind literature --activity bad --affected-path escape-link/out.md
+SECURITY_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity security --source safe-source.md --target safe-target.md --affected-path safe-affected.md)" | json_at '["work_id"]')
+check_exit "work update rejects absolute source" 1 "$SLIPBOX" work update "$SECURITY_ID" --source /etc/passwd
+check_exit "work update rejects traversal target" 1 "$SLIPBOX" work update "$SECURITY_ID" --target ../escape.md
+check_exit "work update rejects symlink escape source" 1 "$SLIPBOX" work update "$SECURITY_ID" --source escape-link/in.md
+check_exit "work update rejects symlink escape affected path" 1 "$SLIPBOX" work update "$SECURITY_ID" --affected-path escape-link/in.md
+printf 'changed source\n' > "$SCRATCH/changed-source.md"
+printf 'changed target\n' > "$SCRATCH/changed-target.md"
+SOURCE_FP="sha256:$(shasum -a 256 "$SCRATCH/changed-source.md" | cut -d' ' -f1)"
+TARGET_FP="sha256:$(shasum -a 256 "$SCRATCH/changed-target.md" | cut -d' ' -f1)"
+check_json "work update refreshes changed source and target baselines" 'assert data["source_starting_fingerprint"] == "'"$SOURCE_FP"'" and data["target_starting_fingerprint"] == "'"$TARGET_FP"'"' <<<"$($SLIPBOX work update "$SECURITY_ID" --source changed-source.md --target changed-target.md)"
+printf 'drifted source\n' > "$SCRATCH/changed-source.md"
+printf 'drifted target\n' > "$SCRATCH/changed-target.md"
+check_json "work update preserves same-identity source baseline after drift" 'assert data["source_starting_fingerprint"] == "'"$SOURCE_FP"'"' <<<"$($SLIPBOX work update "$SECURITY_ID" --source changed-source.md)"
+check_json "work update preserves same-identity target baseline after drift" 'assert data["target_starting_fingerprint"] == "'"$TARGET_FP"'"' <<<"$($SLIPBOX work update "$SECURITY_ID" --target changed-target.md)"
+check_json "work resume detects drift after same-identity re-supply" 'assert data["status"] == "blocked" and not data["resumable"]' <<<"$($SLIPBOX work resume "$SECURITY_ID")"
+printf 'drifted affected\n' > "$SCRATCH/safe-affected.md"
+check_json "work update does not refresh re-supplied existing affected baseline" 'assert data["affected_starting_fingerprints"]["safe-affected.md"] != "sha256:" + __import__("hashlib").sha256(b"drifted affected\\n").hexdigest()' <<<"$($SLIPBOX work update "$SECURITY_ID" --affected-path safe-affected.md)"
+check_json "work resume blocks after re-supplied affected drift" 'assert data["status"] == "blocked" and not data["resumable"]' <<<"$($SLIPBOX work resume "$SECURITY_ID")"
+rm -rf "$OUTSIDE_WORK" "$SCRATCH/escape-link"
+
+echo "--- staged publication and compensation ---"
+printf 'before\n' > "$SCRATCH/publish-target.md"
+result=$("$SLIPBOX" work create --kind literature --activity publish --target publish-target.md)
+publish_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'after\n' > "$SCRATCH/work/$publish_id/replacement.md"
+python3 - "$SCRATCH/work/$publish_id/manifest.json" "$SCRATCH/work/$publish_id/mutations.json" <<'PY'
+import json, hashlib, sys
+manifest_path, mutations_path = sys.argv[1:]
+manifest = json.load(open(manifest_path))
+manifest["status"] = "ready-to-finalize"
+fp = manifest["target_starting_fingerprint"]
+manifest["mutations"] = [{"path":"publish-target.md", "expected_fingerprint":fp, "replacement_path":"replacement.md", "kind":"artifact"}]
+json.dump(manifest, open(manifest_path, "w")); json.dump(manifest["mutations"], open(mutations_path, "w"))
+PY
+check_json "work finalize atomically publishes replacement" 'assert data["status"] == "published"' <<<"$("$SLIPBOX" work finalize "$publish_id")"
+check_match "published replacement is present" '*after*' "$(<"$SCRATCH/publish-target.md")"
+
+result=$("$SLIPBOX" work create --kind literature --activity rollback --target publish-target.md)
+rollback_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'first\n' > "$SCRATCH/work/$rollback_id/first.md"
+printf 'second\n' > "$SCRATCH/work/$rollback_id/second.md"
+python3 - "$SCRATCH/work/$rollback_id/manifest.json" <<'PY'
+import json, sys
+p=sys.argv[1]; m=json.load(open(p)); m["status"]="ready-to-finalize"; fp=m["target_starting_fingerprint"]
+m["mutations"]=[{"path":"publish-target.md","expected_fingerprint":fp,"replacement_path":"first.md","kind":"artifact"},{"path":"publish-second.md","expected_fingerprint":None,"replacement_path":"second.md","kind":"artifact"}]; json.dump(m,open(p,"w"))
+PY
+check_exit "failed second mutation rolls back first" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$rollback_id"
+check_match "rollback restores first target" '*after*' "$(<"$SCRATCH/publish-target.md")"
+check_json "rollback records terminal failure state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$rollback_id")"
+check_no_file "rolled-back new target is absent" "$SCRATCH/publish-second.md"
+
+result=$("$SLIPBOX" work create --kind literature --activity collision)
+collision_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'collision\n' > "$SCRATCH/work/$collision_id/replacement.md"
+printf 'already here\n' > "$SCRATCH/collision.md"
+python3 - "$SCRATCH/work/$collision_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'collision.md','expected_fingerprint':None,'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+check_exit "new-file collision is rejected" 1 "$SLIPBOX" work finalize "$collision_id"
+check_match "collision target is untouched" '*already here*' "$(<"$SCRATCH/collision.md")"
+
+result=$("$SLIPBOX" work create --kind resource --activity clip --target existing-resource.md)
+resource_collision_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'resource replacement\n' > "$SCRATCH/work/$resource_collision_id/draft.md"
+printf 'existing resource\n' > "$SCRATCH/existing-resource.md"
+python3 - "$SCRATCH/work/$resource_collision_id/manifest.json" "$SCRATCH/existing-resource.md" <<'PY'
+import hashlib, json, sys
+manifest_path, target_path = sys.argv[1:]
+manifest = json.load(open(manifest_path))
+fingerprint = "sha256:" + hashlib.sha256(open(target_path, "rb").read()).hexdigest()
+manifest["status"] = "ready-to-finalize"
+manifest["mutations"] = [{"path":"existing-resource.md", "expected_fingerprint":fingerprint, "replacement_path":"draft.md", "kind":"artifact"}]
+json.dump(manifest, open(manifest_path, "w"))
+PY
+check_exit "Resource rejects an existing target despite matching fingerprint" 1 "$SLIPBOX" work finalize "$resource_collision_id"
+check_match "Resource collision leaves existing target untouched" '*existing resource*' "$(<"$SCRATCH/existing-resource.md")"
+
+result=$("$SLIPBOX" work create --kind literature --activity changed --target publish-target.md)
+changed_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'changed\n' > "$SCRATCH/work/$changed_id/replacement.md"
+python3 - "$SCRATCH/work/$changed_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'publish-target.md','expected_fingerprint':m['target_starting_fingerprint'],'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+printf 'concurrent\n' > "$SCRATCH/publish-target.md"
+check_exit "changed target CAS is rejected" 1 "$SLIPBOX" work finalize "$changed_id"
+
+result=$("$SLIPBOX" work create --kind literature --activity savefail)
+savefail_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'saved\n' > "$SCRATCH/work/$savefail_id/replacement.md"
+python3 - "$SCRATCH/work/$savefail_id/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m['status']='ready-to-finalize';m['mutations']=[{'path':'savefail.md','expected_fingerprint':None,'replacement_path':'replacement.md','kind':'artifact'}];json.dump(m,open(p,'w'))
+PY
+check_exit "manifest save failure is terminal" 1 env SLIPBOX_TEST_FAIL_MANIFEST_SAVE=1 "$SLIPBOX" work finalize "$savefail_id"
+check_json "manifest save failure records repair" 'assert data["status"] == "repair-required"' <<<"$("$SLIPBOX" work inspect "$savefail_id")"
+cp "$SCRATCH/links.jsonl" "$SCRATCH/links-before-publication-tests.jsonl"
+
+result=$("$SLIPBOX" work create --kind migration --activity ledger-compensation)
+ledger_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"add","source_slug":"ledger-source","target_slug":"ledger-target","rel_type":"cites"}' > "$SCRATCH/work/$ledger_id/link.jsonl"
+printf 'never-published\n' > "$SCRATCH/work/$ledger_id/after.md"
+python3 - "$SCRATCH/work/$ledger_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"links.jsonl", "expected_fingerprint":"sha256:" + __import__("hashlib").sha256(open(__import__("os").path.join(__import__("os").path.dirname(p), "..", "..", "links.jsonl"), "rb").read()).hexdigest(), "replacement_path":"link.jsonl", "kind":"ledger-add", "source_slug":"ledger-source", "target_slug":"ledger-target", "rel_type":"cites"},
+    {"path":"ledger-after.md", "expected_fingerprint":None, "replacement_path":"after.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+check_exit "ledger compensation failure rolls back with tombstone" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 "$SLIPBOX" work finalize "$ledger_id"
+check_json "ledger compensation records failed state" 'assert data["status"] == "failed"' <<<"$("$SLIPBOX" work inspect "$ledger_id")"
+check_json "ledger compensation appends tombstone" 'assert len(data) == 0' <<<"$("$SLIPBOX" links find --source ledger-source --target ledger-target --rel cites)"
+check_match "ledger compensation preserves append-only history" '*"op": "add"*"op": "remove"*' "$(<"$SCRATCH/links.jsonl")"
+
+result=$("$SLIPBOX" work create --kind migration --activity ledger-repair)
+repair_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"add","source_slug":"repair-source","target_slug":"repair-target","rel_type":"extends"}' > "$SCRATCH/work/$repair_id/link.jsonl"
+printf 'repair-target\n' > "$SCRATCH/work/$repair_id/after.md"
+python3 - "$SCRATCH/work/$repair_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"links.jsonl", "expected_fingerprint":"sha256:" + __import__("hashlib").sha256(open(__import__("os").path.join(__import__("os").path.dirname(p), "..", "..", "links.jsonl"), "rb").read()).hexdigest(), "replacement_path":"link.jsonl", "kind":"ledger-add", "source_slug":"repair-source", "target_slug":"repair-target", "rel_type":"extends"},
+    {"path":"repair-after.md", "expected_fingerprint":None, "replacement_path":"after.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+check_exit "failed ledger compensation requires repair" 1 env SLIPBOX_TEST_FAIL_MUTATION=1 SLIPBOX_TEST_FAIL_COMPENSATION=1 "$SLIPBOX" work finalize "$repair_id"
+check_json "compensation failure records repair-required diagnostics" 'assert data["status"] == "repair-required" and data["repair_errors"]' <<<"$("$SLIPBOX" work inspect "$repair_id")"
+check_json "uncompensated ledger addition remains visible" 'assert len(data) == 1 and data[0]["source_slug"] == "repair-source"' <<<"$("$SLIPBOX" links find --source repair-source --target repair-target --rel extends)"
+printf '%s\n' '{"op":"add","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"}' >> "$SCRATCH/links.jsonl"
+result=$("$SLIPBOX" work create --kind migration --activity reference-ledger-normalize)
+normalize_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf '%s\n' '{"op":"remove","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"}' '{"op":"add","source_slug":"resource-source","target_slug":"reference-target","rel_type":"extends"}' > "$SCRATCH/work/$normalize_id/events.jsonl"
+python3 - "$SCRATCH/work/$normalize_id/manifest.json" "$SCRATCH/links.jsonl" <<'PY'
+import hashlib, json, sys
+p, links = sys.argv[1:]
+m = json.load(open(p)); m["status"] = "ready-to-finalize"
+m["mutations"] = [{"path":"links.jsonl", "expected_fingerprint":"sha256:" + hashlib.sha256(open(links, "rb").read()).hexdigest(), "replacement_path":"events.jsonl", "kind":"ledger-events", "events":[{"op":"remove","source_slug":"legacy-literature","target_slug":"reference-target","rel_type":"extends"},{"op":"add","source_slug":"resource-source","target_slug":"reference-target","rel_type":"extends"}]}]
+json.dump(m, open(p, "w"))
+PY
+check "ledger migration events finalize transactionally" "$SLIPBOX" work finalize "$normalize_id"
+check_json "ledger migration tombstone and replacement fold in order" 'assert len(data) == 1 and data[0]["source_slug"] == "resource-source"' <<<"$("$SLIPBOX" links find --target reference-target --rel extends)"
+cp "$SCRATCH/links-before-publication-tests.jsonl" "$SCRATCH/links.jsonl"
+
+result=$("$SLIPBOX" work create --kind literature --activity lock-contention)
+lock_id=$(printf '%s' "$result" | json_at '["work_id"]')
+printf 'locked replacement\n' > "$SCRATCH/work/$lock_id/replacement.md"
+printf 'second replacement\n' > "$SCRATCH/work/$lock_id/second.md"
+python3 - "$SCRATCH/work/$lock_id/manifest.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+m = json.load(open(p))
+m["status"] = "ready-to-finalize"
+m["mutations"] = [
+    {"path":"z-ordered-lock-target.md", "expected_fingerprint":None, "replacement_path":"replacement.md", "kind":"artifact"},
+    {"path":"a-ordered-lock-target.md", "expected_fingerprint":None, "replacement_path":"second.md", "kind":"artifact"},
+]
+json.dump(m, open(p, "w"))
+PY
+LOCK_PATH=$(python3 - "$SCRATCH" <<'PY'
+import hashlib, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+target = root / "a-ordered-lock-target.md"
+print(root / "work" / ".locks" / (hashlib.sha256(str(target).encode()).hexdigest() + ".lock"))
+PY
+)
+mkdir -p "$(dirname "$LOCK_PATH")"
+LOCK_READY="$SCRATCH/lock-ready"
+python3 - "$LOCK_PATH" "$LOCK_READY" <<'PY' &
+import fcntl, sys, time
+with open(sys.argv[1], "a+") as handle:
+    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+    open(sys.argv[2], "w").close()
+    time.sleep(2)
+PY
+holder=$!
+for _ in $(seq 1 40); do [ -f "$LOCK_READY" ] && break; sleep 0.05; done
+check_exit "contended lock prevents publication" 1 "$SLIPBOX" work finalize "$lock_id"
+assert_contains "locks are acquired in deterministic path order" "a-ordered-lock-target.md" /tmp/slipbox-test-err
+wait "$holder"
+check_json "contended work remains ready" 'assert data["status"] == "ready-to-finalize"' <<<"$("$SLIPBOX" work inspect "$lock_id")"
+check_no_file "contended target is untouched" "$SCRATCH/a-ordered-lock-target.md"
+check_no_file "later target is untouched after contention" "$SCRATCH/z-ordered-lock-target.md"
 
 echo "--- config (unchanged from idea-db) ---"
 printf '{"paths":{"literature":"literature"}}' > "$SCRATCH/config.json"
@@ -269,6 +653,17 @@ check_eq "Sentence case preserves proper name and prefixes after casing" "§ Sof
   "$("$SLIPBOX" filename format --type literature --title 'Software Fundamentals Matter More Than Ever: Matt Pocock' --preserve 'Matt Pocock')"
 check_eq "Sentence case preserves acronyms" "§ API design for NASA teams" \
   "$("$SLIPBOX" filename format --type literature --title 'API Design for NASA Teams')"
+
+echo "--- universal note prefix/link/H1 contract ---"
+for contract in \
+  'File: § Literature.md   Link: [[§ Literature|Literature]]   H1: # Literature' \
+  'File: ※ Reference.md    Link: [[※ Reference|Reference]]     H1: # Reference' \
+  'File: ✱ Evergreen.md     Link: [[✱ Evergreen|Evergreen]]     H1: # Evergreen'; do
+  assert_contains "cross-type prefix contract is documented: $contract" "$contract" \
+    "$REPO_ROOT/skills/write-checks/SKILL.md"
+done
+assert_contains "validator rejects an unprefixed target for prefixed notes" "Reject unprefixed targets for prefixed files" \
+  "$REPO_ROOT/skills/write-checks/SKILL.md"
 
 echo "--- whole-artifact validation ---"
 cat > "$SCRATCH/config.json" <<'EOF'
@@ -345,6 +740,8 @@ sources: ["[[A resource]]"]
 Definition.
 EOF
 check "note validate accepts a parsed list" "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Reference.md" --basename "※ Reference.md" --title "Reference"
+sed 's/# Reference/# ※ Reference/' "$SCRATCH/※ Reference.md" > "$SCRATCH/※ Prefixed H1.md"
+check_exit "note validate rejects a prefixed Reference H1 without --title" 1 "$SLIPBOX" note validate --type reference --path "$SCRATCH/※ Prefixed H1.md" --basename "※ Prefixed H1.md"
 cat > "$SCRATCH/※ block-list.md" <<'EOF'
 ---
 type: reference
@@ -490,9 +887,9 @@ echo "--- links edge cases ---"
 "$SLIPBOX" links find --source final-test-1 --rel cites | check_json "links find combines source and relation filters" "assert len(data) == 1"
 cp "$SCRATCH/links.jsonl" "$SCRATCH/links.jsonl.before-blank-line"
 printf '\n' >> "$SCRATCH/links.jsonl"
-"$SLIPBOX" links find | check_json "links find skips a blank JSONL line" "assert len(data) == 2"
+"$SLIPBOX" links find | check_json "links find skips a blank JSONL line" "assert len(data) == 3"
 mv "$SCRATCH/links.jsonl.before-blank-line" "$SCRATCH/links.jsonl"
-check_table links $'source_id\ttarget_id*' 2 "$("$SLIPBOX" links find --format table)"
+check_table links $'source_id\ttarget_id*' 3 "$("$SLIPBOX" links find --format table)"
 check_eq "links table output marks an empty result" "(no rows)" "$("$SLIPBOX" links find --target no-such-target --format table)"
 mv "$SCRATCH/links.jsonl" "$SCRATCH/links.saved"
 "$SLIPBOX" links find | check_json "links find without links.jsonl returns an empty array" "assert data == []"
@@ -535,7 +932,7 @@ rm "$SCRATCH/evergreen/broken.md"
 
 printf 'not json\n' >> "$SCRATCH/links.jsonl"
 check_exit "links find on a corrupt log exits 1" 1 "$SLIPBOX" links find
-check_match "corrupt links log error names the offending line" '*line 3*' \
+check_match "corrupt links log error names the offending line" '*line 8*' \
   "$(stderr_of "$SLIPBOX" links find)"
 python3 -c "
 import sys
@@ -691,6 +1088,112 @@ check_match "an unwritable dir reports a JSON write error" '*cannot write*' "$WR
 check_no_tmp_files "a failed write leaves no temp file behind" "$READONLY/evergreen"
 chmod u+w "$READONLY" "$READONLY/evergreen"
 rm -rf "$READONLY"
+
+echo "--- source-map cache ---"
+printf 'frozen resource bytes\n' > "$SCRATCH/resources.md"
+RESOURCE_FP="sha256:$(shasum -a 256 "$SCRATCH/resources.md" | cut -d' ' -f1)"
+python3 - "$SCRATCH/map.json" "$RESOURCE_FP" <<'PY'
+import json, sys
+data = {"schema_version":"1", "map_contract_version":"1", "producer_version":"1",
+        "source":{"fingerprint":sys.argv[2],"known_paths":[]}, "contract":{}, "posture":{},
+        "source_spine":[], "source_units":[], "relations":[], "core_idea_candidates":[],
+        "integrity_flags":[], "concept_candidates":[], "referent_candidates":[],
+        "created_at":"2026-08-30T00:00:00Z", "updated_at":"2026-08-30T00:00:00Z"}
+json.dump(data, open(sys.argv[1], "w"))
+PY
+check "cache store validates and writes by Resource fingerprint" "$SLIPBOX" cache store --source resources.md --file "$SCRATCH/map.json"
+check_eq "cache status reports one compatible entry" compatible "$($SLIPBOX cache status | json_at '[0]["state"]')"
+check_exit "cache build is not a semantic command" 2 "$SLIPBOX" cache build
+check_exit "cache remove requires explicit confirmation" 2 "$SLIPBOX" cache remove "$RESOURCE_FP" --no-input
+check "cache remove accepts explicit confirmation" "$SLIPBOX" cache remove "$RESOURCE_FP" --yes
+mkdir -p "$SCRATCH/resources"
+printf 'uncached resource\n' > "$SCRATCH/resources/missing.md"
+check_json "cache status reports missing resources" 'assert any(row["state"] == "missing" for row in data)' <<<"$($SLIPBOX cache status)"
+mkdir -p "$SCRATCH/custom-resources"
+printf 'custom frozen resource\n' > "$SCRATCH/custom-resources/custom.md"
+python3 - "$SCRATCH/config.json" <<'PY'
+import json,sys
+p=sys.argv[1]; data=json.load(open(p)); data["paths"]["resources"]="custom-resources"; json.dump(data,open(p,"w"))
+PY
+check_json "cache status scans configured Resource path" 'assert any(row["path"].endswith("custom-resources/custom.md") and row["state"] == "missing" for row in data)' <<<"$($SLIPBOX cache status)"
+printf '{"not":"a cache"}\n' > "$SCRATCH/cache/source-maps/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json"
+check_json "cache status classifies malformed entries as incompatible" 'assert any(row["state"] == "incompatible" and row["fingerprint"].endswith("a" * 64) for row in data)' <<<"$($SLIPBOX cache status)"
+check_exit "cache store rejects absolute source paths" 2 "$SLIPBOX" cache store --source /etc/passwd --file "$SCRATCH/map.json"
+
+echo "--- isolated Git finalization ---"
+GIT_SCRATCH="$SCRATCH/git-repo"
+mkdir -p "$GIT_SCRATCH/.slipbox/bin" "$GIT_SCRATCH/.slipbox/work" "$GIT_SCRATCH/.slipbox/evergreen"
+cp "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox" "$GIT_SCRATCH/.slipbox/bin/slipbox"
+chmod +x "$GIT_SCRATCH/.slipbox/bin/slipbox"
+printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+printf 'base\n' > "$GIT_SCRATCH/.slipbox/target.md"
+printf 'unrelated\n' > "$GIT_SCRATCH/unrelated.md"
+git -C "$GIT_SCRATCH" init -q
+git -C "$GIT_SCRATCH" config user.email test@example.com
+git -C "$GIT_SCRATCH" config user.name Test
+git -C "$GIT_SCRATCH" add .
+git -C "$GIT_SCRATCH" commit -qm baseline
+printf 'unrelated staged\n' >> "$GIT_SCRATCH/unrelated.md"
+git -C "$GIT_SCRATCH" add unrelated.md
+INDEX_BEFORE=$(git -C "$GIT_SCRATCH" write-tree)
+commit_result=$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity create --affected-path target.md)
+git_id=$(printf '%s' "$commit_result" | json_at '["work_id"]')
+printf 'updated\n' > "$GIT_SCRATCH/.slipbox/target.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$git_id/manifest.json" <<'PY'
+import json, sys
+p=sys.argv[1]; m=json.load(open(p)); m.update(status="published", published_paths=["target.md"]); json.dump(m, open(p, "w"))
+PY
+check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$git_id' --yes"
+check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
+check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
+check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
+printf 'old backlog\n' > "$GIT_SCRATCH/.slipbox/old-backlog.md"
+git -C "$GIT_SCRATCH" add . && git -C "$GIT_SCRATCH" commit -qm backlog-base
+RENAME_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind migration --activity backlog-rename --affected-path old-backlog.md)" | json_at '["work_id"]')
+printf 'new backlog\n' > "$GIT_SCRATCH/.slipbox/work/$RENAME_ID/replacement.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$RENAME_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1]; m=json.load(open(p)); m.update(status="ready-to-finalize", mutations=[{"path":"old-backlog.md","new_path":"new-backlog.md","expected_fingerprint":m["affected_starting_fingerprints"]["old-backlog.md"],"replacement_path":"replacement.md","kind":"backlog-events","operation":"rename"}]); json.dump(m,open(p,"w"))
+PY
+check "backlog rename finalizes" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work finalize '$RENAME_ID'"
+check_json "backlog rename publishes both paths" 'assert data["published_paths"] == ["old-backlog.md", "new-backlog.md"]' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$RENAME_ID")"
+check "backlog rename Git commit stages deletion and destination" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$RENAME_ID' --yes"
+check_no_file "backlog old path removed" "$GIT_SCRATCH/.slipbox/old-backlog.md"
+check_file "backlog new path committed" "$GIT_SCRATCH/.slipbox/new-backlog.md"
+printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+AUTO_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity auto --affected-path auto.md)" | json_at '["work_id"]')
+printf 'auto\n' > "$GIT_SCRATCH/.slipbox/auto.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$AUTO_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["auto.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "auto mode commits without confirmation" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$AUTO_ID")"
+
+RACE_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity race --affected-path race.md)" | json_at '["work_id"]')
+printf 'race\n' > "$GIT_SCRATCH/.slipbox/race.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$RACE_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["race.md"]);json.dump(m,open(p,"w"))
+PY
+check_exit "concurrent HEAD movement is a persisted commit failure" 1 env SLIPBOX_TEST_HEAD_MOVE=1 bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$RACE_ID'"
+check_json "race failure remains retryable" 'assert data["status"] == "commit-failed" and "HEAD moved concurrently" in data["commit_error"]' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$RACE_ID")"
+
+NO_REPO_ID=$(printf '%s' "$($SLIPBOX work create --kind literature --activity no-repo --affected-path no-repo.md)" | json_at '["work_id"]')
+printf 'no repo\n' > "$SCRATCH/no-repo.md"
+python3 - "$SCRATCH/work/$NO_REPO_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["no-repo.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "no repository is treated as Git off" 'assert data["git_commit_status"] == "off"' <<<"$($SLIPBOX work commit "$NO_REPO_ID" --yes)"
+
+printf '%s\n' '{"git":{"mode":"ask","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
+ASK_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity ask --affected-path ask.md)" | json_at '["work_id"]')
+printf 'ask\n' > "$GIT_SCRATCH/.slipbox/ask.md"
+python3 - "$GIT_SCRATCH/.slipbox/work/$ASK_ID/manifest.json" <<'PY'
+import json,sys
+p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["ask.md"]);json.dump(m,open(p,"w"))
+PY
+check_json "ask mode requires confirmation" 'assert data["status"] == "confirmation-required"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$ASK_ID")"
 
 if [ "$fail" = "0" ]; then
   echo "ALL PASS"

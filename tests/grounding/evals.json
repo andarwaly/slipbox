@@ -22,6 +22,51 @@
       ]
     },
     {
+      "prompt": "the source is present but the user says 'I need to finish reading this first'",
+      "expected_output": "Acknowledges that reading first is fine and leaves the user to finish, without presenting a fixed choice card or forcing a prediction routine.",
+      "assertions": [
+        {"type": "not_contains", "text": "walk through this together"},
+        {"type": "not_contains", "text": "fixed choice card"}
+      ]
+    },
+    {
+      "prompt": "a source is present, the user has not started or only partly read it, and their intent is unclear",
+      "expected_output": "Briefly offers the independent path (read or try a first pass alone) and the collaborative guided-reading path, then lets the user choose.",
+      "assertions": [
+        {"type": "contains", "text": "independently"},
+        {"type": "contains", "text": "together"}
+      ]
+    },
+    {
+      "prompt": "the user chooses collaborative reading of a source and gives a partial answer",
+      "expected_output": "Runs guided-reading with one substantive question at a time, choosing among explanation, clarification, comparison, retrieval, or prediction as useful. It calibrates hints to the user's signal and does not require a prediction before every passage.",
+      "assertions": [
+        {"type": "contains", "text": "calibrat"},
+        {"type": "contains", "text": "substantive question"},
+        {"type": "contains", "text": "source"},
+        {"type": "not_contains", "text": "predict before every"}
+      ]
+    },
+    {
+      "prompt": "during collaborative reading, the user gives a partial but source-faithful explanation, then gets stuck on one transition",
+      "expected_output": "Chooses one adaptive move, such as clarification or explanation, and asks one substantive question. Any support points back to the source and preserves its attribution, uncertainty, and scope rather than supplying the missing conclusion.",
+      "assertions": [
+        {"type": "contains", "text": "adaptive move"},
+        {"type": "contains", "text": "substantive question"},
+        {"type": "contains", "text": "source"},
+        {"type": "contains", "text": "uncertainty"}
+      ]
+    },
+    {
+      "prompt": "the collaborative guided-reading route has accumulated enough user-provided material to consolidate",
+      "expected_output": "Uses one open Gate for the whole accumulated result, asking what is missing or wrong. It does not confirm each passage or move separately, and it does not present a polished statement before the user has supplied substantive content.",
+      "assertions": [
+        {"type": "contains", "text": "one open Gate"},
+        {"type": "contains", "text": "what is missing or wrong"},
+        {"type": "not_contains", "text": "each passage"}
+      ]
+    },
+    {
       "prompt": "ground this: [source text about design tokens] — I think, um, design tokens are like... CSS variables? I'm not totally sure though",
       "expected_output": "Reads as a hesitant answer, so it runs feynman.md: asks the user to explain the concept simply, finds where the explanation breaks down or leans on unexplained jargon, points at the specific source passage that fills the gap, and asks for the explanation again — never supplying the missing words itself.",
       "assertions": [
@@ -37,23 +82,33 @@
       ]
     },
     {
-      "prompt": "ground this source, and the user gives no substantive answer at all when asked what stood out",
-      "expected_output": "Reads as blank with a source present. Does not diagnose silently — offers a choice between walking through the source together (discovery-walk.md) or trying to explain what stood out first, and only after that first plain attempt already failed, never upfront.",
+      "prompt": "ground this source, and the user gives no substantive answer to the initial plain-context question",
+      "expected_output": "Reads as blank with a source present. Does not diagnose silently — offers a choice between reading independently and working through the source together, only after that first plain attempt already failed, never upfront.",
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
     },
     {
+      "prompt": "End-to-end Literature fixture: the user is partway through an explanatory lecture, answers confidently about the mechanism, then hesitates on a caveat and asks to continue together.",
+      "files": ["../make-literature-note/fixtures/explanatory-lecture.md"],
+      "expected_output": "Keeps the source as the fidelity boundary, verifies the confident mechanism, switches to a calibrated Feynman-style explanation for the hesitation, and asks one substantive question at a time without supplying the caveat or forcing a prediction.",
+      "assertions": [
+        {"type": "contains", "text": "source"},
+        {"type": "contains", "text": "verif"},
+        {"type": "contains", "text": "calibr"},
+        {"type": "contains", "text": "substantive question"},
+        {"type": "not_contains", "text": "forcing a prediction"}
+      ]
+    },
+    {
       "prompt": "grounding confirms a tension with participating paths Notes/§ A.md and Notes/§ B.md",
-      "expected_output": "Returns the confirmed statement and origin context to its caller, including the exact paths Notes/§ A.md and Notes/§ B.md; grounding itself performs no CLI/database write. A separate no-note hunch context is explicit no-path and uses standalone without --origin-path.",
+      "expected_output": "Returns the confirmed statement and origin context with both exact paths; grounding performs no CLI write. A no-note hunch returns explicit no-path context so the caller can use standalone provenance.",
       "assertions": [
         {"type": "contains", "text": "origin context"},
-        {"type": "contains", "text": "no CLI write"},
-        {"type": "contains", "text": "note-connection"},
-        {"type": "contains", "text": "standalone"},
         {"type": "contains", "text": "Notes/§ A.md"},
         {"type": "contains", "text": "Notes/§ B.md"},
-        {"type": "contains", "text": "no --origin-path"}
+        {"type": "contains", "text": "no CLI write"},
+        {"type": "contains", "text": "standalone"}
       ]
     }
   ]

@@ -1,13 +1,13 @@
 # Question / Evidence / Warrant — internal reasoning, never written to disk
 
-Q/E/W is how the agent thinks about a source before and during grounding — it identifies
-which passages are claim-worthy and checks a Conclusion before it's finalized. This
+Q/E/W is how the agent reasons internally about a source before and during grounding — it identifies
+which passages can support a Source Point and checks an internal Conclusion before it is finalized. This
 file's scope is per-claim reasoning; whole-source reasoning about motivation, tension,
 and argument shape — the piece that feeds Core Idea formation — lives in
 `source-architecture.md` instead, a different grain from what's covered here. None of
-it becomes note content. The note holds only the Core Idea and each claim's declarative
-Conclusion (plus condensed Evidence, kept for later verification — see
-`writing-a-claim.md`). Question and Warrant never appear on the page.
+it becomes note content. The note holds only the Core Idea and each confirmed Source Point's
+declarative heading (the emitted form of the internal Conclusion), plus condensed Evidence, kept for later verification — see
+  `writing-a-source-point.md`). Question and Warrant never appear on the page.
 
 ## Question
 
@@ -21,13 +21,13 @@ decide whether a passage is one claim, part of a bigger one, or not claim-worthy
   addresses.
 - **Bad:** "What is the Zettelkasten Method?" — a topic label. Nothing this broad
   resolves into a single claim; it's an invitation to summarize the whole source under
-  one heading, which breaks the atomicity a Key Claim needs (see `GLOSSARY.md`'s
+  one heading, which breaks the atomicity a Source Point needs (see `GLOSSARY.md`'s
   Atomicity entry).
 
 ## Evidence
 
 What the source said or showed — reported, not yet interpreted. The raw material a
-Conclusion is built from. Written to disk in condensed form (see `writing-a-claim.md`),
+Conclusion is built from. Written to disk in condensed form (see `writing-a-source-point.md`),
 so it's the one part of this trio that does surface on the page.
 
 - **Good:** "Fei says the method came with no instructions beyond the slogan 'Think.
@@ -39,7 +39,7 @@ so it's the one part of this trio that does surface on the page.
   the Conclusion to add.
 
 A quote can stand in for paraphrased Evidence, but only when it earns its place — see
-`writing-a-claim.md` for when and how.
+`writing-a-source-point.md` for when and how.
 
 ## Warrant
 
@@ -72,9 +72,9 @@ forbids.
 ## Conclusion
 
 What the Evidence means, stated as the source's position — not the user's own reaction,
-agreement, or disagreement (a Claim is "an object of understanding, not agreement," per
-`SKILL.md`'s own definition). Written to disk as the claim's declarative heading (see
-`writing-a-claim.md`) — the single sentence a reader's eye lands on.
+agreement, or disagreement. This is internal Q/E/W reasoning; after the Gate, it is emitted
+as the Source Point's declarative heading (see `writing-a-source-point.md`) — the single
+sentence a reader's eye lands on.
 
 - **Good:** "Standard Zettelkasten guidance is too vague to help writers decide what
   counts as an idea, which relationships to create, how to handle those connections, or
@@ -89,5 +89,5 @@ agreement, or disagreement (a Claim is "an object of understanding, not agreemen
   Conclusion and Warrant would say the same thing, the Conclusion hasn't earned its
   place yet.
 
-See `writing-a-claim.md` for the note structure Evidence and Conclusion land in, and the
+See `writing-a-source-point.md` for the note structure Evidence and Conclusion land in, and the
 checklist that tests a finished claim against this theory.

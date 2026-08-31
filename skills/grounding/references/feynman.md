@@ -33,7 +33,7 @@ assumes a simplifiable idea exists; confusion means there's no settled idea
 yet to simplify.
 
 **Don't use this when** nothing at all comes back. That's Blank, not
-Hesitant — see `discovery-walk.md` or `maieutic.md` depending on whether a
+Hesitant — see `guided-reading.md` or `maieutic.md` depending on whether a
 source is present.
 
 ## Concept
@@ -83,7 +83,7 @@ job here, filling it is the user's.
 
 ## Worked example
 
-> **Agent:** What stood out to you from this?
+> **Agent:** In your own words, what does this passage mean?
 > **User:** Something about... how notes need to connect to each other? I
 > think?
 > **Agent:** Try explaining that to someone who's never heard of a

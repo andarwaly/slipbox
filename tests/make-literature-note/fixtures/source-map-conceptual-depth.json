@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "map_contract_version": "1",
+  "producer_version": "1",
+  "source": {
+    "fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "title": "Conceptual Depth in Practice",
+    "type": "article",
+    "known_paths": ["resources/conceptual-depth.md"]
+  },
+  "contract": {
+    "grain": "source-owned semantic map",
+    "progressive_density": true,
+    "excludes": ["user_inquiry", "session_transcript", "chain_of_thought", "reader_synthesis"]
+  },
+  "posture": {
+    "mode": "argument",
+    "commitment": "qualified",
+    "attribution": "source"
+  },
+  "source_spine": [
+    {"id": "move-1", "label": "starting situation", "summary": "The source frames shallow labels as a recurring design problem."},
+    {"id": "move-2", "label": "distinction", "summary": "It separates naming a concept from explaining its mechanism."},
+    {"id": "move-3", "label": "mechanism", "summary": "It shows how mechanism-level explanations travel across examples."},
+    {"id": "move-4", "label": "boundary", "summary": "It qualifies the method when evidence is sparse."}
+  ],
+  "source_units": [
+    {"id": "unit-1", "title": "The problem", "text": "Shallow labels conceal the reasoning a reader needs.", "epistemic_status": "asserted", "confidence": "high", "evidence": ["p1"]},
+    {"id": "unit-2", "title": "The distinction", "text": "Conceptual depth requires a mechanism, not only a name.", "epistemic_status": "argued", "confidence": "high", "evidence": ["p2"]},
+    {"id": "unit-3", "title": "The boundary", "text": "Mechanism explanations need qualification when evidence is thin.", "epistemic_status": "qualified", "confidence": "medium", "evidence": ["p4"]}
+  ],
+  "relations": [
+    {"from": "unit-2", "to": "unit-1", "type": "explains"},
+    {"from": "unit-3", "to": "unit-2", "type": "qualifies"},
+    {"from": "unit-2", "to": "unit-3", "type": "precedes"}
+  ],
+  "core_idea_candidates": [
+    {"text": "Useful conceptual understanding depends on mechanism-level explanation bounded by evidence.", "supporting_units": ["unit-1", "unit-2", "unit-3"], "posture": "qualified"},
+    {"text": "Naming alone is insufficient for transferable understanding.", "supporting_units": ["unit-1", "unit-2"], "posture": "asserted"}
+  ],
+  "integrity_flags": [
+    {"code": "qualification-present", "severity": "info", "unit_ids": ["unit-3"]}
+  ],
+  "concept_candidates": [
+    {"label": "mechanism-level explanation", "unit_ids": ["unit-2", "unit-3"]}
+  ],
+  "referent_candidates": [],
+  "created_at": "2026-08-31T00:00:00Z",
+  "updated_at": "2026-08-31T00:00:00Z"
+}

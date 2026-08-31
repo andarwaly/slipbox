@@ -28,7 +28,26 @@ find-connections (whole-corpus pass, run separately)
 npx skills add andarwaly/slipbox
 ```
 
-Run `/setup-slipbox` once per vault before anything else. It discovers your vault's conventions and writing style, and installs the `slipbox` CLI.
+Run `/setup-slipbox` once per vault before any peer operation. Setup is self-contained: it checks prerequisites, discovers the vault's conventions and writing style, installs the `slipbox` CLI, and creates the runtime state used by every other skill.
+
+`/using-slipbox` is the mandatory shared runtime for peer operations. Skills that create, revise, checkpoint, publish, link, cache, recover, or finalize work must use it rather than writing vault artifacts or invoking the CLI directly.
+
+Migrated stateful workflows use the shared `/using-slipbox` runtime. It gives
+each migrated operation a recoverable `work_id`, checkpoints interrupted work under
+`.slipbox/work/`, runs `/write-checks` before publication, and delegates atomic
+filesystem changes, cache handling, link tombstones, and optional Git commits to
+the installed `.slipbox/bin/slipbox` CLI. Work is always local; source-map cache
+persistence is independently `local` or `tracked`. The runtime supports
+`resource`, `literature`, `reference`, `evergreen`, and `migration` work kinds.
+Specialist workflow migration to this contract is shipped separately; this
+runtime documentation describes the shared interface only.
+
+The Resource, Literature, Reference, and Evergreen workflows are regression-tested end to end across
+concise concepts, named frameworks, tools, events, creative works, insufficient
+coined terms, disputed definitions, warrant-only extensions, bounded
+recomposition, legacy-note recovery, and immediate Literature handoff. These
+cases preserve source posture and uncertainty while exercising the shared
+recoverable-work and publication contract.
 
 ## Skills
 
@@ -36,6 +55,7 @@ Run `/setup-slipbox` once per vault before anything else. It discovers your vaul
 - **[clip-resource](./docs/clip-resource.md)**: fetches a URL and freezes it as a Resource, for anyone without a clipper tool.
 - **[find-connections](./docs/find-connections.md)**: scans literature notes for candidate links, sparked ideas, and Reference/Person/Location/Organization recurrence across your notes.
 - **[grounding](./docs/grounding.md)**: the Socratic-discussion engine underlying the note-writing skills.
+- **[using-slipbox](./docs/using-slipbox.md)**: shared recoverable work, publication, cache, link-ledger, and Git runtime actions.
 - **[ground-me](./docs/ground-me.md)**: a bare grounding session, no note-type commitment, nothing gets written.
 - **[make-literature-note](./docs/make-literature-note.md)**: grounds a clipped source into a literature note, the source's own Claim, in your words.
 - **[make-reference-note](./docs/make-reference-note.md)**: synthesizes a reference note from one or more sources, accumulating knowledge on a single topic across sessions.

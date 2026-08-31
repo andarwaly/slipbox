@@ -1,8 +1,31 @@
 {
   "test_cases": [
     {
+      "prompt": "make-reference-note for the concept in fixtures/conceptual-depth-bounded.md",
+      "files": ["fixtures/conceptual-depth-bounded.md"],
+      "expected_output": "Produces a bounded lookup entry with a clean H1, one concise definition, essential characteristics, and optional disambiguation only where useful; resolves provenance to original Resources in frontmatter, uses the exact prefixed basename/link target when configured, and does not add mandatory provenance, mechanism, application, implications, or Open Questions sections.",
+      "assertions": [
+        {"type": "contains", "text": "clean H1"},
+        {"type": "contains", "text": "prefixed basename/link target"},
+        {"type": "contains", "text": "original Resources"},
+        {"type": "contains", "text": "essential characteristics"},
+        {"type": "not_contains", "text": "mandatory Sources"},
+        {"type": "not_contains", "text": "source-by-source"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a named tool, event, and creative work",
+      "expected_output": "Adapts the bounded body to each subject kind without requiring fixed subtype headings or subtype configuration.",
+      "assertions": [
+        {"type": "contains", "text": "tool"},
+        {"type": "contains", "text": "event"},
+        {"type": "contains", "text": "creative work"},
+        {"type": "not_contains", "text": "subtype headings"}
+      ]
+    },
+    {
       "prompt": "make-reference-note \"Zettelkasten Method\" — no Reference note exists yet; two literature notes' Key Concepts already wikilink to it, each with its own grounded characterization from a prior /grounding session",
-      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one merged definition where they agree or add distinct facets, presents it for confirmation, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix.",
+      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one merged definition where they agree or add distinct facets, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix; consults only if synthesis remains genuinely ambiguous.",
       "assertions": [
         {"type": "contains", "text": "reference"}
       ]
@@ -77,12 +100,296 @@
       ]
     },
     {
-      "prompt": "A deferred conflict is grounded by Literature notes at Notes/§ A.md and Notes/§ B.md",
-      "expected_output": "Logs the deferred conflict with note-connection provenance and repeats both actual participating Literature paths as origin-path flags; it does not use the Reference output path as provenance.",
+      "prompt": "make-reference-note for an authoritative one-source standard with a stable lookup label",
+      "expected_output": "Admits the bounded Reference because entity exclusion, stable lookup identity, source independence, boundedness, adaptive evidence sufficiency, and natural-unit scope pass in that order; one authoritative source is sufficient for this settled standard.",
       "assertions": [
-        {"type": "contains", "text": "--origin-kind note-connection"},
-        {"type": "contains", "text": "--origin-path \"Notes/§ A.md\""},
-        {"type": "contains", "text": "--origin-path \"Notes/§ B.md\""}
+        {"type": "contains", "text": "one authoritative source"},
+        {"type": "contains", "text": "stable lookup identity"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a source-specific coined term with no independent support",
+      "expected_output": "Leaves the candidate unresolved rather than admitting it as a Reference note; source independence is not established.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "independent support"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a contested definition supported by only one source",
+      "expected_output": "Leaves the candidate unresolved until independent support is available; adaptive evidence sufficiency scales with contestability.",
+      "assertions": [
+        {"type": "contains", "text": "independent support"},
+        {"type": "contains", "text": "contested"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a person, location, or organization",
+      "expected_output": "Excludes the entity from Reference admission and keeps it as a surfacing-only Mentioned referent.",
+      "assertions": [
+        {"type": "contains", "text": "surfacing-only"},
+        {"type": "contains", "text": "Mentioned"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a named framework whose functionally dependent substeps appear in the source",
+      "expected_output": "Admits one Reference note for the framework and keeps its substeps inside that natural unit, without separate promoted notes.",
+      "assertions": [
+        {"type": "contains", "text": "one Reference note"},
+        {"type": "contains", "text": "substeps inside"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a candidate that has not passed the lookup admission sequence",
+      "expected_output": "Does not invoke a title-shape heuristic; it reports the failed admission check and stops unresolved.",
+      "assertions": [
+        {"type": "not_contains", "text": "declarative-title"},
+        {"type": "contains", "text": "unresolved"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a settled standard documented by one authoritative primary source",
+      "expected_output": "Returns admitted with the grounded source named as authoritative primary evidence; one source is sufficient for this settled standard and no second source is invented.",
+      "assertions": [
+        {"type": "contains", "text": "admitted"},
+        {"type": "contains", "text": "authoritative primary source"},
+        {"type": "not_contains", "text": "provisional"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a stable bounded concept supported by two independent grounded Literature notes",
+      "expected_output": "Returns admitted and names both independent grounded inputs as sufficient evidence, selects the candidate from the explicit invocation, and proceeds to writing without a second approval.",
+      "assertions": [
+        {"type": "contains", "text": "admitted"},
+        {"type": "contains", "text": "independent"},
+        {"type": "contains", "text": "without a second approval"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a bounded concept cited by two syndicated copies of the same source",
+      "expected_output": "Returns unresolved because the duplicated sources are not independent; reports that another independent support path is needed and writes no provisional Reference artifact.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "not independent"},
+        {"type": "not_contains", "text": "provisional Reference"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a concept whose grounded sources present materially contested definitions",
+      "expected_output": "Returns unresolved, surfaces the competing variants instead of silently selecting one, and identifies independent support or an explicit user resolution as the next requirement.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "contested"},
+        {"type": "contains", "text": "silently"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note \"Private Team Heuristic\" directly, with only one source-specific characterization and no independent support",
+      "expected_output": "Returns unresolved despite the direct user invocation, names source independence as the failed gate, reports the independent support needed, leaves the wikilink untouched, and creates no provisional artifact.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "source independence"},
+        {"type": "contains", "text": "support needed"},
+        {"type": "contains", "text": "wikilink untouched"},
+        {"type": "not_contains", "text": "work_id"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a newly admitted reference",
+      "expected_output": "Starts Reference work with activity=create, stages manifest.json, synthesis-map.json, and draft.md under .slipbox/work, checkpoints the reconciled synthesis selected by the explicit invocation, and publishes transactionally through /using-slipbox without a second approval.",
+      "assertions": [
+        {"type": "contains", "text": "activity=create"},
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "contains", "text": "without a second approval"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "mutations.json"},
+        {"type": "contains", "text": "ready-to-finalize"},
+        {"type": "contains", "text": "work finalize"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note when a new grounded source adds warrant only",
+      "expected_output": "Uses activity=extend-provenance, keeps the existing body bytes stable, appends only deduplicated Resource provenance, stages the artifact and links.jsonl mutations together with expected fingerprints, and performs one work finalize for the Resource→Reference edge.",
+      "assertions": [
+        {"type": "contains", "text": "body bytes stable"},
+        {"type": "contains", "text": "extend-provenance"},
+        {"type": "contains", "text": "Resource→Reference"},
+        {"type": "contains", "text": "expected_fingerprint"},
+        {"type": "contains", "text": "links.jsonl"},
+        {"type": "contains", "text": "one work finalize"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note when a new source changes the definition boundary",
+      "expected_output": "Uses activity=recompose, stages draft.md and mutations.json with two distinct mutations—one Reference artifact and one links.jsonl ledger mutation—each carrying an expected_fingerprint, then finalizes them together with one work finalize while replacing only the required bounded body fields and preserving unchanged aliases and provenance.",
+      "assertions": [
+        {"type": "contains", "text": "activity=recompose"},
+        {"type": "contains", "text": "only the required"},
+        {"type": "contains", "text": "aliases"},
+        {"type": "contains", "text": "draft.md"},
+        {"type": "contains", "text": "mutations.json"},
+        {"type": "contains", "text": "links.jsonl"},
+        {"type": "contains", "text": "expected_fingerprint"},
+        {"type": "contains", "text": "two distinct mutations"},
+        {"type": "contains", "text": "finalizes them together"},
+        {"type": "contains", "text": "one work finalize"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note where grounded sources have conflicting definitions",
+      "expected_output": "Preserves competing definitions in synthesis-map.json, surfaces the conflict, and waits for the user's resolution or explicit decision to flag it; it never silently selects a variant.",
+      "assertions": [
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "contains", "text": "never silently"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note interrupted after synthesis checkpoint",
+      "expected_output": "Resumes the same work_id after inspecting manifest.json, synthesis-map.json, and draft.md, recomputes fingerprints for every mutation path including links.jsonl, and continues from the last checkpoint without publishing incomplete content.",
+      "assertions": [
+        {"type": "contains", "text": "same work_id"},
+        {"type": "contains", "text": "recomputes fingerprints"},
+        {"type": "contains", "text": "links.jsonl"},
+        {"type": "not_contains", "text": "partial artifact"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note invoked directly for a synthesized definition",
+      "expected_output": "Publishes the bounded draft selected by the explicit invocation through the transactional work lifecycle; it proceeds without requesting a second approval and consults the user only to resolve genuine ambiguity.",
+      "assertions": [
+        {"type": "contains", "text": "explicit invocation"},
+        {"type": "contains", "text": "without requesting a second approval"},
+        {"type": "contains", "text": "genuine ambiguity"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note when the existing Reference target changes concurrently during recomposition",
+      "expected_output": "Compare-and-swap detects the changed target, blocks finalization, preserves the resumable work, and does not overwrite the concurrent target change.",
+      "assertions": [
+        {"type": "contains", "text": "blocks finalization"},
+        {"type": "contains", "text": "does not overwrite"},
+        {"type": "contains", "text": "resumable"},
+        {"type": "contains", "text": "expected_fingerprint"}
+      ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note whose sources contains both [[Literature/foo]] and [[Resource/foo]], whose H1 is prefixed, and whose links ledger has a Literature→Reference edge.",
+      "expected_output": "Audits first, then mechanically cleans the H1, deduplicates provenance to the original Resource, appends a tombstone for the obsolete Literature→Reference edge, and records the corrected Resource→Reference edge transactionally. It preserves the configured prefixed basename/link target and does not rewrite body meaning.",
+      "assertions": [
+        {"type": "contains", "text": "deduplicates"},
+        {"type": "contains", "text": "original Resource"},
+        {"type": "contains", "text": "tombstone"},
+        {"type": "contains", "text": "transactionally"},
+        {"type": "not_contains", "text": "Literature/foo"}
+      ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note whose Literature source resolves to no Resource.",
+      "expected_output": "Skips that provenance value, reports the unresolved Resource, leaves the note and ledger unchanged for repair, and does not substitute the Literature path or invent a Resource.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "leaves the note"},
+        {"type": "not_contains", "text": "invent a Resource"}
+      ]
+    },
+    {
+      "prompt": "Migrate a legacy Reference note with a detailed generative essay and a source-by-source dossier, selecting only this note.",
+      "expected_output": "Starts scoped migration work, re-verifies original Literature and Resource inputs, and classifies every removed passage as already preserved source detail, reader-owned Evergreen candidate, unsupported, or unresolved. It surfaces classifications for user approval and never silently deletes or reclassifies material.",
+      "assertions": [
+        {"type": "contains", "text": "already preserved source detail"},
+        {"type": "contains", "text": "reader-owned Evergreen candidate"},
+        {"type": "contains", "text": "unsupported"},
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "user approval"},
+        {"type": "contains", "text": "never silently"}
+      ]
+    },
+    {
+      "prompt": "A legacy note selected for semantic Reference migration is actually a Person note.",
+      "expected_output": "Excludes it from Reference migration as a surfacing-only Mentioned referent and leaves it unchanged.",
+      "assertions": [
+        {"type": "contains", "text": "Person"},
+        {"type": "contains", "text": "Mentioned"},
+        {"type": "contains", "text": "unchanged"}
+      ]
+    },
+    {
+      "prompt": "Semantic Reference migration was interrupted after its synthesis checkpoint.",
+      "expected_output": "Resumes the same migration work_id from manifest.json, synthesis-map.json, and draft.md, recomputes fingerprints for every Literature, Resource, source-map, target, and links.jsonl input, and blocks publication on any changed input while preserving recoverable work.",
+      "assertions": [
+        {"type": "contains", "text": "same migration work_id"},
+        {"type": "contains", "text": "recomputes fingerprints"},
+        {"type": "contains", "text": "blocks publication"},
+        {"type": "contains", "text": "recoverable work"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a concise bounded concept, a named framework, a tool, an event, and a creative work",
+      "expected_output": "Adapts the same bounded lookup shape across all five subject kinds: clean H1, concise definition, essential characteristics where useful, and Resource-only provenance without subtype-specific headings or a source dossier.",
+      "assertions": [
+        {"type": "contains", "text": "bounded lookup"},
+        {"type": "contains", "text": "Resource-only provenance"},
+        {"type": "not_contains", "text": "source dossier"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for an insufficient coined term with no independent support",
+      "expected_output": "Leaves the coined term unresolved at the source-independence gate, reports the independent support needed, leaves the wikilink untouched, and creates no provisional artifact or work_id.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "source-independence"},
+        {"type": "not_contains", "text": "provisional artifact"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for materially disputed definitions with competing grounded variants",
+      "expected_output": "Preserves both variants in synthesis-map.json, surfaces the conflict, and waits for independent support or an explicit user resolution instead of silently selecting a definition.",
+      "assertions": [
+        {"type": "contains", "text": "both variants"},
+        {"type": "contains", "text": "synthesis-map.json"},
+        {"type": "not_contains", "text": "silently selecting"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note where the new grounded source adds warrant only",
+      "expected_output": "Uses extend-provenance, keeps the existing body bytes and aliases stable, appends only a deduplicated Resource, and finalizes the artifact and Resource→Reference ledger edge together with compare-and-swap fingerprints.",
+      "assertions": [
+        {"type": "contains", "text": "body bytes"},
+        {"type": "contains", "text": "deduplicated Resource"},
+        {"type": "contains", "text": "together"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note where the new grounded source changes the definition boundary",
+      "expected_output": "Uses recompose, changes only the bounded body fields required by the new synthesis, preserves aliases and prior provenance, and finalizes the note and links mutation atomically.",
+      "assertions": [
+        {"type": "contains", "text": "recompose"},
+        {"type": "contains", "text": "preserves aliases"},
+        {"type": "contains", "text": "atomically"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note directly for a source that has not yet gone through make-literature-note",
+      "expected_output": "Stops at the Literature-first boundary and hands the source to make-literature-note; it does not synthesize a Reference from ungrounded material.",
+      "assertions": [
+        {"type": "contains", "text": "Literature-first boundary"},
+        {"type": "contains", "text": "make-literature-note"},
+        {"type": "not_contains", "text": "synthesizes from ungrounded material"}
+      ]
+    },
+    {
+      "prompt": "After a Resource becomes a Literature note, make-reference-note immediately from its grounded Source Point while a separate Resource remains in flight.",
+      "expected_output": "Resolves provenance back to the original frozen Resource, starts a distinct Reference work_id after Literature closeout, and never reuses or mutates the other Resource operation's work state.",
+      "assertions": [{"type":"contains","text":"frozen Resource"},{"type":"contains","text":"distinct Reference work_id"},{"type":"contains","text":"Literature closeout"},{"type":"not_contains","text":"overwrites the other Resource"}]
+    },
+    {
+      "prompt": "A deferred Reference conflict is grounded by Literature notes at Notes/§ A.md and Notes/§ B.md",
+      "expected_output": "Records the deferred conflict through /using-slipbox with origin_kind note-connection and both exact input Literature paths in origin_paths.",
+      "assertions": [
+        {"type": "contains", "text": "note-connection"},
+        {"type": "contains", "text": "Notes/§ A.md"},
+        {"type": "contains", "text": "Notes/§ B.md"},
+        {"type": "contains", "text": "input Literature paths"}
       ]
     }
   ]

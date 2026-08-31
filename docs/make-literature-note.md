@@ -1,19 +1,21 @@
 # make-literature-note
 
-Candidate provenance uses `origin_kind: source` with the actual Resource path in `origin_paths` before the first Literature-note write, then `origin_kind: literature-note` with the actual Literature-note path afterward.
+Candidate provenance uses `origin_kind: source` with the actual Resource path before
+the first Literature-note publication, then `origin_kind: literature-note` with the
+actual saved Literature-note path afterward. Both use the exact vault-relative path in
+`origin_paths`.
 
-Ground a clipped source into one or more Claims — the source's own position, restated in
-your own words and checked against the source — writing each as a Key Claim in a shared
+Ground a clipped source into one or more Source Points — source-owned propositions, restated in
+your own words and checked against the source — writing each as a Source Point in a shared
 literature note for that source.
 
 ## When to use
 
-Run this directly on a clipped source: `/make-literature-note from this article` (or a
-URL, or a path). Invoked bare with no argument, it infers the source from context — a
-just-clipped resource, a pasted URL, an already-open file — and only asks if nothing's
-inferrable.
+Start or resume work for the Literature Resource with its source identity `/using-slipbox`. The source may be
+explicit (`/make-literature-note from this article`) or inferred from a just-clipped
+Resource, pasted URL, or open file; ask only when nothing is inferrable.
 
-If the note already has claims from a prior session, it only offers what's left.
+If the note already has Source Points from a prior session, it only offers what's left.
 
 The Literature H1 remains the exact Resource/source title. A configured Literature
 prefix belongs in the generated filename and link target, not in that H1.
@@ -23,38 +25,45 @@ prefix belongs in the generated filename and link target, not in that H1.
 1. **Prerequisite** — requires `.slipbox/AGENTS.md` to exist, confirming `setup-slipbox`
    has run; every `slipbox` CLI call throughout this skill goes through
    `.slipbox/bin/slipbox`, never bare `slipbox`.
-2. **Take the source** — direct capture, checked against existing literature notes'
-   `source` field to see if this source has already been (partially) grounded.
-3. **Surface pass** — reads the source, using Question/Evidence/Warrant internally to
-   identify the Core Idea and a candidate backlog. This backlog is never shown as a
-   menu — it's the agent's own private steering tool for the conversation that follows.
-4. **One continuous conversation** — rather than looping a separate session per claim,
-   you have one natural conversation about the source. Whenever it organically produces
-   something matching a backlog candidate — in whatever reshaped form — it goes through
-   a full `/grounding` Gate exactly as always.
-5. **Write each claim, incrementally** — each confirmed claim lands on disk as a
-   declarative heading with condensed Evidence underneath, the moment it's confirmed.
-6. **Knowing when the session is done** — coverage first, then shape, then the user's own
-   reaction. Coverage means checking the backlog against three states (covered / drafted
-   but unconfirmed / genuinely untouched, each nudged differently, at most once) and,
-   as a judgment call rather than a mandatory step, considering a fresh full re-read of
-   the source to catch what neither the Surface pass nor the conversation caught. Shape
-   means a density-merge pass across the confirmed claims and a re-confirmation of the
-   Core Idea against the session as a whole. Last, the user is asked what they think of
-   the source — routed to the evergreen backlog as a seed for a future Take if they want
-   it recorded, never into the literature note itself. "I think that's everything" always
-   ends the sitting at any point.
-7. **Out-of-band fidelity correction** — at any time, in this session or a later one, the
-   user can point at an already-written Key Claim that misreads the source; a narrowly
-   scoped fix (moves the note closer to the source, nothing else) goes through the same
-   Gate as any other claim, then edits that entry in place — the one case where a
-   written entry is legitimately reopened.
-8. **Spot terms and entities** — once the sitting ends, one batch pass finds terms and
-   load-bearing named entities the claims lean on but `## Key Concepts` doesn't cover yet.
+2. **Load or build source analysis** — Inspect or store source analysis `/using-slipbox` for a reusable source
+   map keyed by the Resource fingerprint; it stays source-owned and separate from inquiry.
+3. **Create inquiry context** — build a session-scoped inquiry map with purpose, reflection,
+   source-unit IDs, comprehension, relevance, risk, and draft state. Derive the grounding
+   frontier at runtime; never store an authoritative queue.
+4. **Follow the inquiry** — ask one substantive question at a time. The Adaptive Split Gate
+   requires semantic reconstruction for inquiry-central work, while supporting/contextual
+   work may be agent-drafted; consequential material is source-verified without forced
+   paraphrase. Confident, Hesitant, Blank, and Confused reading states dispatch normally;
+   Blank or not-started reading first offers reading alone versus collaboration, and only
+   the collaborative choice dispatches guided reading.
+5. **Stage Source Points** — Checkpoint work with the inquiry map and `draft.md`
+   `/using-slipbox`; every final point receives a source audit. Validate the explicit
+   `<staged-draft>` path before publication; the final path is untouched until closeout,
+   then retain the saved-path post-publication validation.
+6. **Knowing when the session is done** — coverage first, then shape. Coverage means
+   checking the backlog against three states (covered / drafted but unconfirmed / genuinely
+   untouched, each nudged differently, at most once) and targeted integrity checks against
+   source units. Shape means a density-merge pass across the confirmed points and a
+   re-confirmation of the Core Idea against the session as a whole. "I think that's
+   everything" always ends the sitting at any point.
+7. **Spot concepts and referents** — after claims, density, and Core Idea stabilize, one
+   bounded batch pass selects the union of (a) support needed by retained points, (b)
+   concepts and referents relevant to the source-present inquiry, and (c) explicit user
+   additions. Put abstract concepts, methods, and frameworks in `## Key Concepts`; put
+   concrete named people, places, organizations, books/creative works, named tools, and
+   events in `## Mentioned`. Do not scan unrelated source-map candidates.
+8. **Close with the user's reaction when applicable** — for interpretive or reflective
+   sessions, offer to route the user's reaction to the evergreen backlog as a seed for a
+   future Take if they want it recorded, never into the literature note itself. Factual
+   sessions omit the reaction prompt.
+9. **Out-of-band fidelity correction** — stage a narrowly scoped fix through
+   `/using-slipbox`, validate it, then publish with compare-and-swap against the expected
+   final-file fingerprint. A concurrent change stops recovery; the final path is never
+   mutated directly.
 
 The finished note, any logged tension, and the file path are reported once the session
 ends (partial coverage is a complete, valid outcome). Three reference files —
-`qew-theory.md`, `source-architecture.md`, `writing-a-claim.md` — cover the internal
+`qew-theory.md`, `source-architecture.md`, `writing-a-source-point.md` — cover the internal
 claim-worthiness reasoning, whole-source reading lenses, and note-writing mechanics
 respectively; see the skill's own `## References` table for exactly when each applies.
 
@@ -70,6 +79,8 @@ npx skills add andarwaly/slipbox
 
 See the [skill source](../skills/make-literature-note/) for the full
 agent-facing instructions.
+
 ## Provenance
 
-Provenance maps to the Resource path before the first note write, and to the Literature note path afterward.
+Before the first note publication, candidate provenance points to the Resource path.
+After publication, reactions and tensions point to the exact Literature-note path.

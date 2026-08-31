@@ -1,8 +1,9 @@
-# Writing a claim
+# Writing a Source Point
 
-See `qew-theory.md` first for what Question, Evidence, Warrant, and Conclusion each are,
-and which of them ever reach the page (only Evidence and Conclusion do). This file covers
-the note's structure, the Core Idea line, how to review a claim before committing it to
+See `qew-theory.md` first for the internal Question, Evidence, Warrant, and Conclusion
+reasoning used to assess a candidate. Only the confirmed Source Point heading (the emitted
+form of the internal Conclusion) and condensed Evidence reach the page. This file covers
+the note's structure, the Core Idea line, how to review a Source Point before committing it to
 disk, and the formatting mechanics (quotes, Key Concepts wikilinks) that live inside a
 claim entry once it's written.
 
@@ -13,16 +14,16 @@ claim entry once it's written.
 
 [Core Idea — bare declarative sentence, no label]
 
-## Key Claims
+## Source Points
 
-### [Conclusion, stated declaratively — this is the claim, and the heading]
+### [Source Point, stated declaratively — this is the source-owned proposition and the heading]
 [Evidence, condensed — no separate "Evidence:" label, just the prose itself]
 
 ## Open Questions
 
 - [plain declarative question naming a gap in the source]
-  - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
+  - *Assumption*: [the user's own guess, marked, never a Source Point]
+  - *Answered*: [[§ Other Literature Note#the-source-point-that-answers-it|Other Literature Note]]
 ```
 
 The H1 preserves the Resource/source title exactly, including when
@@ -34,12 +35,12 @@ character.
 
 **Core Idea** — one sentence stating the source's central argument, everything else in
 the note in service of it. Positional, not labeled: it's always the line directly after
-the title and before `## Key Claims`, the same way a Resource's own `description` field
-sits bare under its title. Written once, when the note's first claim is written; never
-touched on a second or later claim for the same note.
+the title and before `## Source Points`, the same way a Resource's own `description` field
+sits bare under its title. Written once, when the note's first Source Point is written; never
+touched on a second or later Source Point for the same note.
 
-**The `###` heading is the Conclusion, verbatim.** No separate "Conclusion:" bullet
-follows it — that would just duplicate the heading. Evidence is the only other thing
+**The `###` heading is the confirmed Source Point, emitted from the internal Conclusion.**
+No separate "Conclusion:" bullet follows it — that would just duplicate the heading. Evidence is the only other thing
 under the heading: condensed prose, no bullet marker, no hard length cap — governed by
 the vault's own `.slipbox/style-profile.json` the same as any other note content.
 
@@ -84,16 +85,16 @@ Concepts wikilink pointing at a Reference-note candidate.
 
 ## Open Questions
 
-A top-level section, sibling to `## Key Claims` and `## Key Concepts`/`## Mentioned` —
-never nested inside a claim. One bullet per question, plain declarative form, naming
+A top-level section, sibling to `## Source Points` and `## Key Concepts`/`## Mentioned` —
+never nested inside a Source Point. One bullet per question, plain declarative form, naming
 something the source itself leaves unclear, ambiguous, or unanswered:
 
 ```markdown
 ## Open Questions
 
 - [plain declarative question naming a gap in the source]
-  - *Assumption*: [the user's own guess, marked, never a Claim]
-  - *Answered*: [[§ Other Literature Note#the-claim-that-answers-it|Other Literature Note]]
+  - *Assumption*: [the user's own guess, marked, never a Source Point]
+  - *Answered*: [[§ Other Literature Note#the-source-point-that-answers-it|Other Literature Note]]
 ```
 
 See `SKILL.md`'s "Ground the source" section for the policy this format serves — when
@@ -118,11 +119,19 @@ which is `/write-checks`'s job, run separately.
   things: it doesn't belong in this note, or the Core Idea was drawn too narrow — flag
   either read to the user rather than silently resolving it.
 
-**Conclusion** (the heading)
+**Source Point** (the heading)
 - Delete-test: with the Evidence line gone, does the Conclusion still stand alone as a
   complete statement of the source's position?
-- Is it the source's position — no drift into the user's own reaction or synthesis (per
-  `/grounding`'s "never your own opinion" and the literature note's purity rule)?
+- Is it source-owned — no drift into the user's own reaction, evaluation, or synthesis?
+- Is it independently interpretable without material distortion when detached from the
+  Evidence line? Preserve the source's reading context and source posture.
+- Does attribution remain explicit when the source is reporting someone else's claim,
+  and does certainty match the source's wording? Never turn a report into the source's
+  endorsement, or a hedge into a fact.
+- Does the point preserve chronology and causality, distinguish reported from
+  independently verified material, identify the correct speaker, and keep analysis
+  separate from observation? Preserve an explicitly disputed claim as disputed;
+  do not silently resolve the source's disagreement.
 - Warrant self-check (per `qew-theory.md`): can the "why" be stated in one sentence from
   the Evidence? If Conclusion and that one sentence would say the same thing, the
   Conclusion is still restating, not concluding — go back and sharpen it.
@@ -147,17 +156,17 @@ which is `/write-checks`'s job, run separately.
 - Traceable to the source, nothing added that isn't there?
 
 **The claim as a whole**
-- Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Key
-  Claim, is there exactly one clear thing being cited — not a bundle of several source
+- Citability test (`GLOSSARY.md`'s atomicity rule): if another note cited this Source
+  Point, is there exactly one clear thing being cited — not a bundle of several source
   points under one heading? (The shared-Warrant merge test in `qew-theory.md` should
   already have caught this at the Surface pass — this is the final check, not the first.)
 - List-as-one-claim rule: when several claims on the table trace back to one
   source-authored list (a bulleted or enumerated set the source itself presented as a
   unit), default to one claim citing the list as a whole rather than one claim per item
-  — the items fold into Evidence instead of each spawning its own Key Claim heading. A
+  — the items fold into Evidence instead of each spawning its own Source Point heading. A
   source's numbered list of five recommendations becomes one Conclusion ("the source
   recommends five practices for X") with the five items condensed into the Evidence
-  line beneath it, not five separate Key Claims.
+  line beneath it, not five separate Source Points.
 - Everything this claim leans on present in Key Concepts, each with a correctly
   resolved wikilink (see Key Concepts wikilinks below)?
 
@@ -195,10 +204,10 @@ method's origins, passes this test and lands in `## Mentioned`; a place name men
 once in an aside does not. Neither section decides what the target will become —
 the eventual note type — that classification happens entirely downstream, in
 `find-connections`, once cross-note evidence exists (see [[find-terms-find-connections-merge]]).
-The downstream map is fixed: the entity-check tests people, places, and organizations
-first and keeps those surfacing-only; the reusability test then handles abstract
-Key-Concept candidates and non-entity named works, tools, and events as possible
-Reference notes.
+The downstream map is fixed: entity exclusion tests people, places, and organizations
+first and keeps those surfacing-only; the remaining Admission sequence then handles
+abstract Key-Concept candidates and non-entity named works, tools, and events as
+possible Reference notes.
 
 ```markdown
 - [[<note-filename>|Display Name]]: [what this source says about it, in one line]
@@ -211,8 +220,11 @@ the subject of the sentence, not a clause nested inside a description of the ent
 
 Both sections are load-bearing and incremental — update the applicable section
 for every confirmed claim before continuing. A mandatory final batch pass runs
-after claims, density, and Core Idea stabilize; it catches load-bearing entries
-that were not surfaced during individual writes. `find-connections` scans `## Key Concepts` **and**
+after claims, density, and Core Idea stabilize; its candidates are the union of
+retained-point support, source-present inquiry relevance, and explicit user
+additions. It catches load-bearing entries that were not surfaced during
+individual writes; do not scan unrelated source-map candidates.
+`find-connections` scans `## Key Concepts` **and**
 `## Mentioned` for recurrence detection, so everything the claim actually leans on must
 appear in one or the other.
 
@@ -221,16 +233,16 @@ candidate's eventual type is decided downstream, in `find-connections` — never
 At write time, put every concrete named referent (person, place, organization, book or
 creative work, named tool, or event) in `## Mentioned`, flat and unprefixed. Put every
 abstract concept, term, method, or framework in `## Key Concepts` using the
-Reference-note format below. Downstream, the entity-check keeps people, places, and
-organizations surfacing-only; the reusability test decides whether a non-entity
-candidate becomes a Reference note. Get this guess wrong and the link still just sits
+Reference-note format below. Downstream, entity exclusion keeps people, places, and
+organizations surfacing-only; the remaining Admission sequence decides whether a
+non-entity candidate becomes a Reference note. Get this guess wrong and the link still just sits
 broken like any other unresolved candidate — nothing is lost, and the "spot terms and
 entities" batch confirmation is exactly where the user can catch and correct a misread
 before it's written.
 
 **Mentioned format** — flat, unprefixed, no config lookup needed:
 `[[Niklas Luhmann]]`, `[[Wano]]`, `[[Ship30]]` (as a brand/organization — see
-`GLOSSARY.md`'s Admission test entry for when the same string reads as a method
+`GLOSSARY.md`'s Admission sequence entry for when the same string reads as a method
 instead), `[[The Lord of the Rings]]`, `[[Obsidian]]`, or `[[Oktoberfest]]`.
 
 **Reference-note format** — resolving `<note-filename>` correctly here is not just

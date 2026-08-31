@@ -1,0 +1,36 @@
+{
+  "schema_version": "1",
+  "map_contract_version": "1",
+  "reading_context": {
+    "inquiry": "How can the method transfer beyond the source's examples?",
+    "state": "partial",
+    "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "unit_assessments": [
+    {
+      "unit_id": "unit-2",
+      "relevance": "central",
+      "learning_relevance": "high",
+      "interpretive_risk": "low",
+      "comprehension": "emerging",
+      "selection": "candidate",
+      "disposition": "user-reconstructs-relation-then-agent-drafts",
+      "draft_state": "untouched"
+    },
+    {
+      "unit_id": "unit-3",
+      "relevance": "supporting",
+      "learning_relevance": "low",
+      "interpretive_risk": "high",
+      "comprehension": "sufficient",
+      "selection": "verify",
+      "disposition": "agent-verifies-without-forced-paraphrase",
+      "draft_state": "verified"
+    }
+  ],
+  "derived_grounding_frontier": {
+    "unit_ids": ["unit-2", "unit-3"],
+    "authoritative": false,
+    "derivation": "recomputed from context, assessments, and current note"
+  }
+}

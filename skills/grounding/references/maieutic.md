@@ -19,10 +19,10 @@ check the emerging idea against, because the "evidence" here is the user's
 own experience, not a document.
 
 **Use this when** the answer is blank and there's no source at all — the
-same midwife mechanism `discovery-walk.md` uses, aimed directly at memory or
+same midwife mechanism `guided-reading.md` uses, aimed directly at memory or
 experience since there's no text to walk through instead.
 
-**Don't use this when** a source is present and blank — `discovery-walk.md`
+**Don't use this when** a source is present and blank — `guided-reading.md`
 is the composite built for that case, using maieutic as one of its three
 ingredients rather than running it alone.
 

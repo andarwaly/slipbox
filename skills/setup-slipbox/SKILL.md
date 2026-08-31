@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.8.0"
+  version: "1.10.0"
 ---
 
 # Setup Slipbox
@@ -50,9 +50,9 @@ Check the vault for existing signal before asking the user anything:
 
 Present what you found, one item at a time. Recommend a default and lead with it — e.g. "No filename convention found. I recommend kebab-case (`my-note-title.md`): sound right, or do you use something else?" Silence is not confirmation; wait for an explicit answer per item before moving to the next.
 
-- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference`; see `GLOSSARY.md` for the Reference note's admission test).
+- **Paths**: `resources/`, `literature/`, `evergreen/`, and the reference notes' folder (`paths.reference`; see `GLOSSARY.md` for the Reference note's Admission sequence).
 - **Filename casing** per note type (kebab-case, Title Case, snake_case, or whatever the vault already does).
-- **Note-type prefixes**: ask once, for all three note types together — "Want a symbol prefix on note titles, so they're distinguishable at a glance even if they all end up in the same folder? Default: `§` for literature, `※` for reference, `✱` for evergreen. Keep these, pick your own, or skip prefixes entirely?" Record per-type: a string, or `false` for no prefix. Resources never get a prefix — no question asked for that type.
+- **Filename/link-target prefixes**: ask once, for all three note types together — "Want a symbol prefix on filenames and link targets, so they're distinguishable at a glance even if they all end up in the same folder? Default: `§` for literature, `※` for reference, `✱` for evergreen. Keep these, pick your own, or skip prefixes entirely?" Record per-type: a string, or `false` for no prefix. Resources never get a prefix — no question asked for that type. H1 headings remain clean and never include the prefix; per-link display aliases are clean/unprefixed.
 - **Templates**: three note templates (literature, reference, evergreen) plus four resource templates (article, news, social, video) — seven total, each with its own explicit path. These are real Obsidian template files: the core Templates plugin's default location, or Templater's if the user already has it configured. Do not invent a separate agent-native template spec.
   - **The three note templates almost always already exist** — resolve their path and move on, same as any other convention item.
   - **The four resource templates usually don't** — the templates *folder* typically exists (from note-taking), but article/news/social/video `.md` files inside it typically don't, since clipping is a newer concept for most vaults than note-taking. For each one that's missing at its resolved path, offer to draft it together right there rather than asking the user to go write Obsidian template syntax cold:
@@ -136,19 +136,24 @@ Canonical: copy `assets/humanize-checklist.json` verbatim to `.slipbox/humanize-
 Runs identically on every invocation, first run or re-run — no conditional branch:
 
 ```bash
-mkdir -p .slipbox/bin .slipbox/evergreen
+mkdir -p .slipbox/bin .slipbox/evergreen .slipbox/work .slipbox/cache/source-maps
 touch .slipbox/links.jsonl
 cp skills/setup-slipbox/scripts/slipbox .slipbox/bin/slipbox
 chmod +x .slipbox/bin/slipbox
 ```
 
-The script copy is always overwritten (versioned code, not user data — distinct from `.slipbox/evergreen/*.md`/`config.json`, which are never overwritten by this step). `mkdir -p`/`touch` are no-ops on a re-run — nothing here needs a conditional "does this already exist" branch the way SQLite's schema-version check once did, since there's no schema left to be at a version of.
+The script copy is always overwritten (versioned code, not user data — distinct from `.slipbox/evergreen/*.md`/`config.json`, which are never overwritten by this step). `mkdir -p`/`touch` are no-ops on a re-run. `.slipbox/work/` is recoverable transient work and is always local; `.slipbox/cache/source-maps/` stores source-map cache entries whose persistence is selected separately below.
+
+If the vault uses an ignore file, propose adding `.slipbox/work/` and (when cache persistence is `local`) `.slipbox/cache/source-maps/` using the same ask-first policy as the vault pointer. Never add an ignore rule for tracked source maps. Never offer or write a tracked setting for `.slipbox/work/`.
 
 The installed CLI also exposes `slipbox note validate --type literature|reference|evergreen --path PATH [--basename NAME] [--title TITLE]`. Literature, Reference, and Evergreen note writers run it on the assembled temporary draft and again after re-reading the saved path; a failed post-write validation blocks success. Resource captures keep their content subtype in frontmatter and are checked by `/write-checks`' Resource mode without this validator.
 
-Evergreen candidates are captured with `slipbox evergreen add --slug SLUG --reason "..." [--origin-kind KIND] [--origin-path PATH]...`. The origin kind is one of `source`, `literature-note`, `note-connection`, `standalone`, or `unknown`; paths are vault-relative Markdown paths validated at capture time. Omitting provenance preserves compatibility and records `unknown` with an empty path list. Existing candidates receive those defaults at read time without being rewritten, and provenance cannot be changed by `evergreen update`.
+Evergreen candidates carry `origin_kind` (`source`, `literature-note`,
+`note-connection`, `standalone`, or `unknown`) and validated vault-relative
+`origin_paths`. Missing legacy provenance reads as `unknown` with an empty path list
+without rewriting the candidate; subsequent backlog updates never alter provenance.
 
-**Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/` and `.slipbox/links.jsonl` exist.
+**Done when:** `.slipbox/bin/slipbox` is installed and executable, and `.slipbox/evergreen/`, `.slipbox/work/`, `.slipbox/cache/source-maps/`, and `.slipbox/links.jsonl` exist.
 
 ### 06 - Write `.slipbox/config.json`
 
@@ -161,10 +166,36 @@ Draft the config from everything confirmed in Sections A and B, against the fiel
 - `links.style` — the link style discovered/confirmed for `derived-from`, `sources`, `source`.
 - `templates` — seven explicit paths: `literature_path`, `reference_path`, `evergreen_path`, `article_path`, `news_path`, `social_path`, `video_path`.
 - `transcript_languages` — ordered list from Section A's clip config.
+- `git` — `{mode: off|ask|auto, commit_style: {mode: detected|fallback}, activity_trailers: boolean}`. If no repository is detected, store `mode: "off"` and explain that Git can be enabled later. If a repository is detected, ask `off`, `ask` (recommended), or `auto`; `commit_style.mode` records whether the commit convention was detected or the fallback will be used. Do not persist a Git-detection boolean or repository-root state.
+- `cache` — `{source_maps: {persistence: local|tracked}}`; ask this independently, defaulting to `local`.
+- `migrations` — `{literature_headings: {mode: selected|all-valid|all-compatible|lazy|defer, selected?: [vault-relative existing note paths]}, reference: {mode: all|all-valid|selected|lazy|defer, selected?: [vault-relative existing note paths]}, evergreen_headings: {mode: all-valid|selected|lazy|defer, selected?: [vault-relative existing note paths]}}`; persist separately authorized note-format policies. `selected` requires at least one vault-relative path (no absolute paths or dot-segment traversal). For `lazy`, write `mode: lazy` and do not modify notes during setup. If a policy is absent, treat it as `defer` for backwards compatibility; never infer authorization from absence.
 
 Show the draft to the user, let them edit it, then validate the approved draft against `assets/config.schema.json` before writing. If validation fails, fix the draft and re-validate — never write a config that doesn't conform.
 
 **Done when:** `.slipbox/config.json` is written, matches the approved draft, and validates against `assets/config.schema.json`.
+
+### Cache and migration inventory
+
+On first run and re-run, inspect existing cache/source-map metadata and report counts separately for compatible, missing, incompatible, older-compatible, unresolved-source, and orphaned entries. An existing vault with Literature notes but no cache is a normal migration case: inventory the Resource files first, then build source-owned maps from each complete frozen Resource. Never build a cache from selective Literature-note content; a Literature note is a partial, inquiry-shaped view and cannot stand in for the source.
+
+For each existing Literature note, reconcile its `## Core Idea`, `## Source Points` (and legacy `## Key Claims`), `## Key Concepts`, `## Mentioned`, and `## Open Questions` against source units. Record the reconciliation privately with one status per mapped item: `matched`, `matched-with-qualification-risk`, `matched-to-multiple-units`, `unmatched`, or `source-support-unclear`. A missing or unresolved Resource blocks reconciliation for that note and is reported for repair. Reconciliation is source-first and diagnostic: it must not rewrite note semantics automatically.
+
+Offer these independent choices for cache work: build missing + incompatible (recommended), build a chosen scope, refresh all, or defer. Then, separately, offer selectable mechanical note-format migration: detect legacy prefixed H1s in Reference and Evergreen notes and the exact `## Key Claims` heading in Literature notes; migrate all-valid notes, migrate selected notes, migrate lazily/on first access, or defer. **Lazy/on-first-access** records authorization without changing notes during setup; each exact compatible repair happens only when a note is subsequently opened by a slipbox workflow. **Defer** records no authorization and leaves the migration for a later explicit setup run. Do not rename headings or clean H1s inside unusual or incompatible structures; skip them and report the reason. Cache authorization and note-format migration authorization remain separate. A deferred migration leaves existing notes and caches untouched.
+
+### Reference migration inventory and authorization
+
+Reference migration is part of the independent note-format migration decision after cache work. Never infer authorization from cache choice. First run a read-only mechanical audit of every configured Reference zone (and any legacy `paths.term` zone when present), reporting counts and paths for:
+
+- prefixed or otherwise non-clean H1 headings;
+- legacy `term`/`reference` type or field names, including `term`, `source`, `literature`, and `references` provenance fields;
+- duplicate aliases, duplicate provenance values, and notes that list both a Literature note and its original Resource;
+- Literature links in `sources`, unresolved source links, and Literature→Reference ledger edges;
+- notes whose configured type, folder, or field map is missing or incompatible; and
+- ledger entries that need a tombstone before a corrected Resource→Reference edge can be recorded.
+
+For resolvable records, the mechanical repair normalizes the H1 to the clean concept name, converts legacy provenance to the configured `sources` field containing deduplicated original Resource links, removes case-insensitive alias duplicates, and appends link tombstones plus corrected Resource→Reference events in one recoverable migration operation. It must not guess through an unresolved source, change a body, or delete a ledger row; unresolved structures are skipped and reported for repair.
+
+Offer `all`, `selected`, `lazy`, or `defer` for Reference migration. `selected` requires explicit vault-relative note paths. `lazy` records authorization and performs the same audit/repair only when that Reference is first opened by a slipbox workflow; `defer` records no authorization. Keep these choices independent from cache and Literature-heading migration, and never silently migrate a Person, Location, or Organization note into Reference.
 
 ### 07 - Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`
 
@@ -177,7 +208,7 @@ Two unconditionally-copied assets, same treatment as `humanize-checklist.json` a
 
 ## Done
 
-Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values). The CLI's full command surface — `evergreen`, `links`, `config`, `humanize` — is documented in the copied `.slipbox/AGENTS.md`, which other skills in this family read from directly.
+Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/work/`, `.slipbox/cache/source-maps/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values). The CLI's full command surface — `evergreen`, `links`, `config`, `humanize` — is documented in the copied `.slipbox/AGENTS.md`, which other skills in this family read from directly.
 
 Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
 
@@ -187,7 +218,7 @@ This section sits outside the numbered `## Workflow` above — it never runs as 
 
 1. Validate the existing `.slipbox/config.json` against `assets/config.schema.json` first, before doing anything else. A file that predates the schema or was hand-edited may not conform — surface any validation errors to the user before proceeding to the diff, rather than feeding a malformed file straight into it.
 2. Re-discover conventions and style the same way as Explore/Section A/Section B, using the current state of the vault.
-3. Diff the re-discovered conventions against the existing `.slipbox/config.json`.
+3. Diff the re-discovered conventions against the existing `.slipbox/config.json`, including Git policy and cache persistence.
 4. Report specific mismatches, e.g. "config says kebab-case, the last 12 notes are Title Case" — name the field and both values, don't just say something changed.
 5. For each mismatch, ask the user which side wins. Do not re-ask questions that didn't drift.
 6. **Field_map drift check** — for each *resolved* (non-deferred) `field_map` entry, re-read the mapped-onto property's current type from the vault and compare against what's recorded:
@@ -195,10 +226,11 @@ This section sits outside the numbered `## Workflow` above — it never runs as 
    - **Property gone entirely** (deleted from every note in the vault) — re-trigger the *original* resolution branch for that field (map onto a different property, create fresh, or opt-out); the old mapping now points at nothing.
    - **Deferred entries are skipped by this check entirely** — nothing's resolved yet to drift from; they stay `{"deferred": true}` until `/write-checks` resolves them lazily at first write.
 7. Update `config.json` with the resolved answers, then re-validate against `assets/config.schema.json` before writing.
-8. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
-9. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.
-10. Re-copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md` and `assets/AGENTS.md` to `.slipbox/AGENTS.md`, unconditionally, same category as `humanize-checklist.json` — both pick up any skill-package-level update. Neither is on the "never overwrite" list below; they're routine refreshes, not user-owned state. Write `.slipbox/AGENTS.md` last, after every other re-copy and write in this list has succeeded, same ordering guarantee as a first run.
-11. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
+8. Recreate `.slipbox/work/` and `.slipbox/cache/source-maps/`; inspect and report the cache/migration inventory described above. Keep cache and note-format migration authorizations separate.
+9. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
+10. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.
+11. Re-copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md` and `assets/AGENTS.md` to `.slipbox/AGENTS.md`, unconditionally, same category as `humanize-checklist.json` — both pick up any skill-package-level update. Neither is on the "never overwrite" list below; they're routine refreshes, not user-owned state. Write `.slipbox/AGENTS.md` last, after every other re-copy and write in this list has succeeded, same ordering guarantee as a first run.
+12. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
 
 **Never** overwrite `.slipbox/evergreen/*.md`, `.slipbox/discussions/`, or any existing note during a re-run.
 

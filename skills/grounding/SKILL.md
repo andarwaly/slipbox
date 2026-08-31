@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Grounding
@@ -14,11 +14,10 @@ by probing it one question at a time until it's explicit, correct, and confirmed
 state it for them — draw only from what they actually said. Ask exactly one substantive
 question per turn — never batch, never present a checklist.
 
-**A session-opening line only, then silence**: the first message of a session states
-plainly that a grounding session is starting (naming the source or topic in play).
-Nothing repeats after that — no per-turn marker, no label on individual questions. A
-repeating marker would undercut the very techniques below built to feel like genuine
-conversation rather than a labeled interrogation.
+The caller supplies the session's opening context and question. A direct `/grounding`
+invocation without a wrapper should begin by naming the source or topic and asking what
+the user wants to understand. After that, stay silent about the mechanism — no per-turn
+marker or label on individual questions.
 
 ## Fidelity
 
@@ -111,8 +110,11 @@ full decomposition in one turn.
 
 ## Reading the answer
 
-Every session starts the same way: ask for a plain restatement — "what stood out to
-you?" or equivalent. What comes back is read, not assumed:
+The caller supplies the reading context and entry question — for example, the user's
+inquiry, a passage already read, or a stated intention to finish reading first. A
+direct `/grounding` invocation without a wrapper should open with a plain-context
+question such as "what are we working through, and what do you want to understand?"
+What comes back is read, not assumed:
 
 - **Confident** — clear, complete, no hedging.
 - **Hesitant** — explicit hedging ("I think maybe...", "not sure but..."), trailing off
@@ -121,9 +123,10 @@ you?" or equivalent. What comes back is read, not assumed:
 - **Confused** — touched something, but garbled or circular — distinct from Blank:
   something was said, it just doesn't hold together yet.
 
-A blank answer never gets diagnosed silently. Instead, offer a choice:
-> "would it help to walk through this together, or do you want to try explaining what
-> stood out first?"
+A blank or not-yet-started reading never gets diagnosed silently. If intent is unclear,
+offer a choice between reading or trying a first pass independently and working through
+the source together. If the user explicitly wants to finish reading first, acknowledge
+that naturally and let them return; do not force a route or a fixed choice card.
 
 This offer only ever fires after a first plain attempt has genuinely failed — never
 upfront, never in place of asking for a stated reading state, which is never asked for
@@ -154,7 +157,8 @@ softening.
 |---|---|
 | Confident | `references/verification.md` |
 | Hesitant | `references/feynman.md` |
-| Blank, source present, "walk together" chosen | `references/discovery-walk.md` |
+| Not-started or partial, source present, collaborative reading chosen | `references/guided-reading.md` |
+| Blank, source present, collaborative reading chosen | `references/guided-reading.md` |
 | Blank, no source at all | `references/maieutic.md` |
 | Confused | `references/self-explanation.md` |
 
@@ -224,11 +228,11 @@ counts as either. Probe once more if it isn't.
 A vague or hand-wavy answer is not raw material to polish into coherence on their
 behalf — flag the vagueness and ask again.
 
-A `references/discovery-walk.md` session passes through this same Gate once, over the
-whole accumulated result at the end of the walk — not per turn. Each turn already checks
-itself against the source locally as the walk proceeds; the Gate's job is confirming the
-walk's *whole* result as one statement, the same discipline every other technique
-applies to a single restatement.
+A `references/guided-reading.md` session passes through this same Gate once, over the
+whole accumulated result at the end of the collaboration — not per move. Each move
+already checks itself against the source locally; the Gate's job is confirming the
+collaboration's *whole* result as one statement, the same discipline every other
+technique applies to a single restatement.
 
 ## Noticing a tension
 
@@ -244,21 +248,19 @@ Never manufacture a tension to fill this slot; only surface one you actually not
 
 ## Done
 
-Hand back one grounding result envelope containing at most two semantic items,
-plus origin metadata — nothing else:
+Hand back one grounding result envelope containing at most two semantic items plus
+origin metadata:
 
 - the confirmed statement, verbatim
 - only if the user opted in above, a short description of the flagged tension
-- origin metadata returned to the caller: the actual vault-relative paths
-  participating in the session, or an explicit no-path context when no notes or
-  source were retrieved
+- the actual vault-relative paths participating in the session, or explicit no-path
+  context when no notes or source were retrieved
 
-No filename, no format, no note-type label, and grounding performs no CLI write or
-database write of any kind — all of that
+No filename, no format, no note-type label, and no CLI/database write — all of that
 belongs to whichever skill invoked this one. This holds regardless of which technique
-ran or which caller invoked the session — `grounding`'s output never depends on who's
-calling it. The caller chooses `note-connection` with the participating paths,
-or `standalone` with no path flag, when it records a candidate.
+ran or which caller invoked the session. The caller records a candidate with
+`origin_kind: note-connection` and participating paths, or `origin_kind: standalone`
+with no path when retrieval found nothing.
 
 ## References
 
@@ -267,7 +269,7 @@ or `standalone` with no path flag, when it records a candidate.
 | `references/verification.md` | Confirms a confident restatement by checking it against the source as evidence. | Reading state = Confident. |
 | `references/elenchus.md` | Cross-examines a stated position with six question moves, exposing where its own logic doesn't hold. | Reached only from inside `verification.md`, on a genuine mismatch between a confident statement and the source — never dispatched directly from Choosing a technique. |
 | `references/feynman.md` | Explain-then-patch loop: explain in plain language, notice where it breaks down, patch that specific gap. | Reading state = Hesitant. |
-| `references/discovery-walk.md` | Passage-by-passage walkthrough, one question asked before each next passage is revealed. | Reading state = Blank, a source is present, and the user chooses "walk through this together" over trying to explain first. |
+| `references/guided-reading.md` | Adaptive source collaboration using explanation, clarification, comparison, retrieval, or prediction with calibrated support. | Reading is not-started or partial, a source is present, and the user chooses to work through it together. |
 | `references/maieutic.md` | Draws out a first spoken form from nothing articulated yet, then tests what came out. | Reading state = Blank, no source at all. |
 | `references/self-explanation.md` | Open-ended sense-making repair for a mental model that doesn't yet hold together. | Reading state = Confused. |
 | `references/compass.md` | Orients a synthesis session toward a direction to explore next (NORTH/WEST/SOUTH/EAST) — a separate, upstream layer from the dispatch table above. | A session is building toward a synthesized position (multiple sources, or an unwritten hunch) and needs a direction to explore next, rather than a response to something already said. |

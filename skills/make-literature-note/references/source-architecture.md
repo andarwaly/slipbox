@@ -1,4 +1,4 @@
-# Source architecture — whole-source reasoning, never written to disk
+# Source architecture — whole-source reasoning, feeding the source map
 
 Six optional lenses for reading a source's shape before or alongside claim discovery,
 feeding Core Idea formation specifically. A Core Idea synthesized purely from a bag of
@@ -7,8 +7,11 @@ structure and motivation as much as by individual claims. This file's scope is t
 source; `qew-theory.md` covers a different grain, the per-claim reasoning that decides
 whether one passage is claim-worthy and checks one Conclusion once it's drafted.
 
-None of this becomes note content. Like Q/E/W, it is internal reasoning only — a way of
-looking at the source, not a checklist to fill in or a template the note has to satisfy.
+These lenses populate or refine the source map's spine, units, relations, posture, core
+idea candidates, and integrity flags. They do not become note content. Like Q/E/W, they
+are internal reasoning only — a way of looking at the source, not a checklist to fill in
+or a template the note has to satisfy. Inquiry context and transcript belong in the
+separate session-scoped inquiry map, never in the source map.
 
 **Every lens below is optional.** A source lacking a piece — no stated resolution, no
 named tension, no explicit motivation — is a valid finding about that source, not a gap

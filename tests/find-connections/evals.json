@@ -2,7 +2,7 @@
   "test_cases": [
     {
       "prompt": "find-connections across the vault",
-      "expected_output": "Scans existing notes for two distinct outputs, presented separately: (a) mechanical link suggestions — two related but unlinked notes, presented as a batch for the user to approve/reject together, then written as both a links row and a [[wikilink]]; (b) sparked ideas — a genuinely new synthesis noticed between existing notes, not stated in either alone, routed into the evergreen candidate store for later make-evergreen-note grounding, never auto-written as a note itself.",
+      "expected_output": "Scans existing notes for two distinct outputs, presented separately: (a) mechanical link suggestions — two related but unlinked notes, presented as a batch for the user to approve/reject together, then recorded as a link and a [[wikilink]]; (b) sparked ideas — a genuinely new synthesis noticed between existing notes, not stated in either alone, recorded as an Evergreen candidate for later make-evergreen-note grounding, never auto-written as a note itself.",
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
@@ -50,19 +50,66 @@
     },
     {
       "prompt": "find-connections --references where a wikilink target recurs across notes and turns out to be a person's name",
-      "expected_output": "Entity-check runs before the reusability test: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no make-literature-note/make-reference-note invocation happens on this entity's behalf.",
+      "expected_output": "Entity exclusion runs before the Admission sequence: a vault-wide, folder-agnostic filename lookup checks whether a Person/Location/Organization note already exists for this name, with no paths.* config involved. Once identified as a Person candidate, it is batch-presented the same way a Reference candidate would be (recurrence threshold met, shown with its source notes) but find-connections never attempts to write it — no Person note gets created, and no make-literature-note/make-reference-note invocation happens on this entity's behalf.",
       "assertions": [
         {"type": "not_contains", "text": "Reference candidate"},
         {"type": "not_contains", "text": "make-reference-note"}
       ]
     },
     {
-      "prompt": "find-connections --evergreen finds a spark between Notes/Spacing.md and Notes/Compounding.md",
-      "expected_output": "Routes the spark with note-connection provenance and repeats both exact scanned vault-relative paths as origin-path flags.",
+      "prompt": "find-connections --references where a candidate appears in a source-map cache but was not retained in any final Literature note",
+      "expected_output": "Does not surface the cached candidate. Caches may verify a selected candidate only; discovery reads final Literature Key Concepts, Mentioned, and relevant retained prose.",
       "assertions": [
-        {"type": "contains", "text": "--origin-kind note-connection"},
-        {"type": "contains", "text": "--origin-path \"Notes/Spacing.md\""},
-        {"type": "contains", "text": "--origin-path \"Notes/Compounding.md\""}
+        {"type": "contains", "text": "not surface"},
+        {"type": "contains", "text": "final Literature"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where two variant labels recur but one source-specific label lacks independent support",
+      "expected_output": "Clusters labels before counting, then applies the ordered admission sequence. The unresolved candidate is reported without invoking a title-shape test.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "admission sequence"},
+        {"type": "not_contains", "text": "declarative-title"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where a candidate recurs in three Literature notes but all three notes trace to one duplicated source",
+      "expected_output": "Reports the recurrence cluster as unresolved because recurrence does not establish warrant and the duplicated notes provide only one independent support path; leaves every wikilink untouched and creates no provisional Reference artifact or work_id.",
+      "assertions": [
+        {"type": "contains", "text": "unresolved"},
+        {"type": "contains", "text": "recurrence does not establish warrant"},
+        {"type": "contains", "text": "no provisional Reference artifact"},
+        {"type": "contains", "text": "no work_id"},
+        {"type": "contains", "text": "wikilink untouched"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where a recurring candidate is approved but one contributing source has no grounded Literature note",
+      "expected_output": "Presents the candidate in the read-only batch, then directs the user to make-literature-note for the ungrounded source before make-reference-note; it creates no Reference artifact during discovery.",
+      "assertions": [
+        {"type": "contains", "text": "read-only"},
+        {"type": "contains", "text": "make-literature-note"},
+        {"type": "not_contains", "text": "creates a Reference artifact"}
+      ]
+    },
+    {
+      "prompt": "find-connections --references where a recurring cluster is a tool, event, or creative work rather than an abstract concept",
+      "expected_output": "Reports the cluster as a Reference candidate when the ordered admission gates pass, showing alt_names, recurrence count, and source notes; it remains batch-presented and the user invokes make-reference-note themselves.",
+      "assertions": [
+        {"type": "contains", "text": "alt_names"},
+        {"type": "contains", "text": "batch-presented"},
+        {"type": "contains", "text": "make-reference-note"}
+      ]
+    },
+    {
+      "prompt": "find-connections --evergreen finds a spark between Notes/Spacing.md and Notes/Compounding.md",
+      "expected_output": "Records an Evergreen candidate through /using-slipbox with origin_kind note-connection and both exact scanned vault-relative paths in origin_paths.",
+      "assertions": [
+        {"type": "contains", "text": "origin_kind"},
+        {"type": "contains", "text": "note-connection"},
+        {"type": "contains", "text": "Notes/Spacing.md"},
+        {"type": "contains", "text": "Notes/Compounding.md"}
       ]
     }
   ]

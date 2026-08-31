@@ -1,0 +1,8 @@
+{
+  "work_id": "01J9RESUME0000000000000000",
+  "reading_state": "partial",
+  "resource": "partial-reading-resume.md",
+  "covered_source_units": ["unit-1"],
+  "staged_source_points": ["The source defines two boundaries."],
+  "next_unresolved_obligation": "compare the boundaries' failure modes"
+}

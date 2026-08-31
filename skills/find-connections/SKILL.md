@@ -9,7 +9,9 @@ metadata:
 
 # Find-connections
 
-Bold terms in this file are defined in `GLOSSARY.md`.
+Bold terms in this file are defined in `.slipbox/GLOSSARY.md`.
+At runtime, resolve that glossary from the installed vault path `.slipbox/GLOSSARY.md`;
+the repository `CONTEXT.md` is authoring-only and is not runtime input.
 
 ## Prerequisite
 
@@ -39,9 +41,10 @@ narrow scope to connections relating to just those notes, instead of a whole-vau
 
 ### Scan
 
-Scan literature notes' `## Key Concepts` **and** `## Mentioned` sections **and** other
-mentions of the same or similar things elsewhere in notes' bodies — not just formally
-wikilinked Key Concepts/Mentioned entries. This scan does not extend to `##
+Read the final Literature notes' `## Key Concepts` **and** `## Mentioned` sections,
+plus relevant retained prose — not just one source's cache or an unretained candidate.
+Source-map caches may verify a selected candidate, but never surface a candidate that
+was not retained in a Literature note. This scan does not extend to `##
 Open Questions`: no cross-note tracking or indexing exists for open questions, deferred
 by design — that section is read back directly by the user, not surfaced through this
 skill. The same underlying idea can surface under different labels in
@@ -63,7 +66,7 @@ a dedup pass gated behind the threshold would never get the chance to run.
 ### Classify each cluster crossing threshold
 
 For each cluster that crosses the recurrence threshold (2+ distinct notes), classify
-in this order — entity-check first, then the reusability test:
+in this order — entity exclusion first, followed by the remaining Admission sequence:
 
 1. **Entity-check.** Is this a person, place, or organization — real or fictional?
    Check via a vault-wide, folder-agnostic filename lookup (the same way Obsidian's
@@ -72,19 +75,27 @@ in this order — entity-check first, then the reusability test:
    already-noted entity as broken if the vault splits these across multiple folders
    (e.g. `coworkers/`, `family/`, `authors/`).
    - If yes: this is a surfacing-only entity candidate. `find-connections` never
-     writes people, places, or organizations, real or fictional (per `GLOSSARY.md`).
+     writes people, places, or organizations, real or fictional (per `.slipbox/GLOSSARY.md`).
      Report it the same way as a Reference candidate (recurrence threshold,
      batch-presented), just without ever attempting a write.
-   - Entity-check runs first (see `GLOSSARY.md` for the classification-order rationale).
-2. **Reusability test** (only if not an entity; see `GLOSSARY.md` for deletion test and declarative-title test definitions).
-   - Passes both: Reference-note candidate.
-   - Fails either, or the check is never reached (cluster never crosses threshold):
-     stays an unresolved broken wikilink indefinitely. This is a legitimate resting
-     state, not a defect to resolve.
+   - Entity-check runs first (see `.slipbox/GLOSSARY.md` for the classification-order rationale).
+2. **Admission sequence** (only if not an entity; see `.slipbox/GLOSSARY.md`): stable
+   lookup identity, source independence, boundedness, adaptive
+   evidence sufficiency, and natural-unit scope. Apply evidence sufficiency after the
+   other checks, not as a reward for recurrence: one authoritative primary source can
+   support a settled standard, while otherwise two independently grounded sources are
+   required. Duplicated, syndicated, or otherwise non-independent sources count as one
+   support path. Materially contested variants remain unresolved until independent support
+   covers the competing definitions or the user resolves the conflict. A candidate that
+   fails any check, or never reaches threshold, stays an unresolved broken wikilink
+   indefinitely.
 
-Non-entity books/creative works, named tools, and events continue to the reusability
-test. If they pass, report them as Reference-note candidates; if they fail, leave them
-as unresolved Mentioned links.
+Non-entity books/creative works, named tools, and events continue through the same
+Admission gates. If all applicable gates pass, report them as Reference-note candidates
+and state why the evidence is sufficient. If any gate fails, report the candidate as
+`unresolved`, name the missing support, and leave the wikilink untouched as an unresolved
+Mentioned link. Never equate a recurrence count with warrant, and never create a
+provisional Reference artifact or a `work_id` from this read-only scan.
 
 ### Present as a batch
 
@@ -122,9 +133,8 @@ rejects, or edits each one in one pass.
 
 For each approved suggestion:
 
-```bash
-.slipbox/bin/slipbox links add --source <slug> --target <slug> --rel cites
-```
+Record the link with its exact source, target, relation, and provenance
+`/using-slipbox`.
 
 Then add the matching `[[wikilink]]` in whichever note's prose the connection belongs
 to, per the existing two-part criterion: it needs the `links` row above as a mechanical
@@ -136,18 +146,12 @@ note's subject, not just incidentally name it.
 For each sparked idea, insert it as its own candidate — never write a note directly, and
 never fold it into a link suggestion:
 
-```bash
-.slipbox/bin/slipbox evergreen add --slug compounding-repetition \
-  --reason "Spacing and compounding share delayed reinforcement" \
-  --origin-kind note-connection \
-  --origin-path "Notes/Spacing.md" \
-  --origin-path "Notes/Compounding.md"
-```
+Record an Evergreen candidate with the proposition, reason, and origin paths
+`/using-slipbox`.
 
-Repeat `--origin-path` for every note participating in the generated spark,
-using the actual vault-relative paths from the files scanned, regardless of
-which configured note folder contains them. Never reconstruct paths from
-`paths.*`, `filenames.*`, or prefixes.
+Set `origin_kind` to `note-connection` and include every actual vault-relative path
+participating in the spark in `origin_paths`. Never reconstruct paths from `paths.*`,
+`filenames.*`, or prefixes.
 
 `make-evergreen-note` picks these up from its own backlog read, same as any other flagged
 tension.
@@ -166,3 +170,9 @@ threshold, stays a broken wikilink — expected, not an error.
 criterion is met, the inline wikilink); every sparked idea is logged in the evergreen
 backlog, not written as a note. The user is told what was added and what was routed to
 the backlog.
+
+Reference candidates are handed off only after the user approves a batch item:
+invoke `make-literature-note` for any source that is not yet grounded, then
+invoke `make-reference-note` once its Literature note has a grounded `Key
+Concepts` link. Discovery remains read-only while preserving the
+Literature-first boundary.
