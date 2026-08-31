@@ -40,6 +40,12 @@ persistence is independently `local` or `tracked`. The runtime supports
 Specialist workflow migration to this contract is shipped separately; this
 runtime documentation describes the shared interface only.
 
+The Literature workflow is regression-tested end to end across short essays,
+reference-style explanations, breaking-news allegations, lectures, mixed
+investigations, interrupted reading, legacy-note recovery, and immediate
+Reference handoff. These cases preserve source posture and uncertainty while
+exercising the shared recoverable-work and publication contract.
+
 ## Skills
 
 - **[setup-slipbox](./docs/setup-slipbox.md)**: one-time onboarding, vault conventions, writing style, `slipbox` CLI install. Run once per vault.

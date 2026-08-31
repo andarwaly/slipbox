@@ -6,7 +6,7 @@ description: Ground a clipped source into one or more Source Points — the sour
   source.
 license: MIT
 metadata:
-  version: "1.18.0"
+  version: "1.19.0"
 ---
 
 # Make-literature-note

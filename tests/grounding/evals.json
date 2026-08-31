@@ -87,6 +87,17 @@
       "assertions": [
         {"type": "contains", "text": "?"}
       ]
+    },
+    {
+      "prompt": "End-to-end Literature fixture: the user is partway through an explanatory lecture, answers confidently about the mechanism, then hesitates on a caveat and asks to continue together.",
+      "expected_output": "Keeps the source as the fidelity boundary, verifies the confident mechanism, switches to a calibrated Feynman-style explanation for the hesitation, and asks one substantive question at a time without supplying the caveat or forcing a prediction.",
+      "assertions": [
+        {"type": "contains", "text": "source"},
+        {"type": "contains", "text": "verif"},
+        {"type": "contains", "text": "calibr"},
+        {"type": "contains", "text": "substantive question"},
+        {"type": "not_contains", "text": "forcing a prediction"}
+      ]
     }
   ]
 }

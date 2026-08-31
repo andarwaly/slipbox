@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
 ---
 
 # Grounding
