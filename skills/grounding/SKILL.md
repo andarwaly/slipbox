@@ -2,7 +2,7 @@
 name: grounding
 description: A relentless one-question-at-a-time interview that holds a statement to whatever material is present — a source, retrieved notes, or nothing at all — until it's explicitly confirmed.
 metadata:
-  version: "1.5.1"
+  version: "1.6.0"
 ---
 
 # Grounding
@@ -111,8 +111,11 @@ full decomposition in one turn.
 
 ## Reading the answer
 
-Every session starts the same way: ask for a plain restatement — "what stood out to
-you?" or equivalent. What comes back is read, not assumed:
+The caller supplies the reading context and entry question — for example, the user's
+inquiry, a passage already read, or a stated intention to finish reading first. A
+direct `/grounding` invocation without a wrapper should open with a plain-context
+question such as "what are we working through, and what do you want to understand?"
+What comes back is read, not assumed:
 
 - **Confident** — clear, complete, no hedging.
 - **Hesitant** — explicit hedging ("I think maybe...", "not sure but..."), trailing off
@@ -121,9 +124,10 @@ you?" or equivalent. What comes back is read, not assumed:
 - **Confused** — touched something, but garbled or circular — distinct from Blank:
   something was said, it just doesn't hold together yet.
 
-A blank answer never gets diagnosed silently. Instead, offer a choice:
-> "would it help to walk through this together, or do you want to try explaining what
-> stood out first?"
+A blank or not-yet-started reading never gets diagnosed silently. If intent is unclear,
+offer a choice between reading or trying a first pass independently and working through
+the source together. If the user explicitly wants to finish reading first, acknowledge
+that naturally and let them return; do not force a route or a fixed choice card.
 
 This offer only ever fires after a first plain attempt has genuinely failed — never
 upfront, never in place of asking for a stated reading state, which is never asked for
@@ -154,7 +158,7 @@ softening.
 |---|---|
 | Confident | `references/verification.md` |
 | Hesitant | `references/feynman.md` |
-| Blank, source present, "walk together" chosen | `references/discovery-walk.md` |
+| Not-started or partial, source present, collaborative reading chosen | `references/guided-reading.md` |
 | Blank, no source at all | `references/maieutic.md` |
 | Confused | `references/self-explanation.md` |
 
@@ -224,11 +228,11 @@ counts as either. Probe once more if it isn't.
 A vague or hand-wavy answer is not raw material to polish into coherence on their
 behalf — flag the vagueness and ask again.
 
-A `references/discovery-walk.md` session passes through this same Gate once, over the
-whole accumulated result at the end of the walk — not per turn. Each turn already checks
-itself against the source locally as the walk proceeds; the Gate's job is confirming the
-walk's *whole* result as one statement, the same discipline every other technique
-applies to a single restatement.
+A `references/guided-reading.md` session passes through this same Gate once, over the
+whole accumulated result at the end of the collaboration — not per move. Each move
+already checks itself against the source locally; the Gate's job is confirming the
+collaboration's *whole* result as one statement, the same discipline every other
+technique applies to a single restatement.
 
 ## Noticing a tension
 
@@ -261,7 +265,7 @@ calling it.
 | `references/verification.md` | Confirms a confident restatement by checking it against the source as evidence. | Reading state = Confident. |
 | `references/elenchus.md` | Cross-examines a stated position with six question moves, exposing where its own logic doesn't hold. | Reached only from inside `verification.md`, on a genuine mismatch between a confident statement and the source — never dispatched directly from Choosing a technique. |
 | `references/feynman.md` | Explain-then-patch loop: explain in plain language, notice where it breaks down, patch that specific gap. | Reading state = Hesitant. |
-| `references/discovery-walk.md` | Passage-by-passage walkthrough, one question asked before each next passage is revealed. | Reading state = Blank, a source is present, and the user chooses "walk through this together" over trying to explain first. |
+| `references/guided-reading.md` | Adaptive source collaboration using explanation, clarification, comparison, retrieval, or prediction with calibrated support. | Reading is not-started or partial, a source is present, and the user chooses to work through it together. |
 | `references/maieutic.md` | Draws out a first spoken form from nothing articulated yet, then tests what came out. | Reading state = Blank, no source at all. |
 | `references/self-explanation.md` | Open-ended sense-making repair for a mental model that doesn't yet hold together. | Reading state = Confused. |
 | `references/compass.md` | Orients a synthesis session toward a direction to explore next (NORTH/WEST/SOUTH/EAST) — a separate, upstream layer from the dispatch table above. | A session is building toward a synthesized position (multiple sources, or an unwritten hunch) and needs a direction to explore next, rather than a response to something already said. |

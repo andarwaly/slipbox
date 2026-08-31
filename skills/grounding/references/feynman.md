@@ -33,7 +33,7 @@ assumes a simplifiable idea exists; confusion means there's no settled idea
 yet to simplify.
 
 **Don't use this when** nothing at all comes back. That's Blank, not
-Hesitant — see `discovery-walk.md` or `maieutic.md` depending on whether a
+Hesitant — see `guided-reading.md` or `maieutic.md` depending on whether a
 source is present.
 
 ## Concept

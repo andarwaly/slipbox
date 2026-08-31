@@ -28,7 +28,7 @@ answer, and never as the default opening move for a confident answer.
 
 **Don't use this when** the answer is hesitant, blank, or confused — there's
 no settled statement yet to check against anything. See `feynman.md`,
-`discovery-walk.md`, `maieutic.md`, or `self-explanation.md` depending on
+`guided-reading.md`, `maieutic.md`, or `self-explanation.md` depending on
 which of those applies.
 
 ## Concept
