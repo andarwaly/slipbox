@@ -19,7 +19,7 @@
 # deliberately avoids associative arrays (`declare -A`, bash 4+) for that reason.
 set -euo pipefail
 
-CLI_VERSION="2.4.0"
+CLI_VERSION="2.4.1"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVERGREEN_DIR="$SELF_DIR/evergreen"
@@ -371,6 +371,13 @@ def new_work_id(now_ms=None, random_bytes=None) -> str:
     for shift in range(125, -1, -5):
         chars.append(_ULID_ALPHABET[(value >> shift) & 31])
     return "".join(chars)
+
+
+def work_vault_root(work_root: Path) -> Path:
+    # Installed work is <vault>/.slipbox/work; retain the flat standalone layout
+    # supported by cache commands and the CLI smoke fixtures.
+    internal = work_root.parent
+    return internal.parent if internal.name == ".slipbox" else internal
 
 
 def load_work(work_root: Path, work_id: str) -> tuple[Path, dict]:
@@ -825,7 +832,7 @@ if not activity.strip():
     fail("--activity must not be empty", USAGE_EXIT)
 work_id = new_work_id()
 created = now_stamp()
-vault_root = Path(os.environ["WORK_ROOT"]).parent
+vault_root = work_vault_root(Path(os.environ["WORK_ROOT"]))
 affected = [line for line in os.environ.get("AFFECTED", "").splitlines() if line]
 for label, path in (("--source", source), ("--target", target)):
     if path: _safe_vault_path(vault_root, path, label)
@@ -926,17 +933,17 @@ changed_identities = set()
 for field in ("source", "target"):
     value = os.environ.get(field.upper(), "")
     if value:
-        _safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}")
+        _safe_vault_path(work_vault_root(Path(os.environ["WORK_ROOT"])), value, f"--{field}")
         previous_identity = manifest.get(field + "_identity")
         identity_changed = previous_identity != value
         if identity_changed:
             changed_identities.add(value)
         manifest[field + "_identity"] = value
         if identity_changed or not manifest.get(field + "_starting_fingerprint"):
-            manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(Path(os.environ["WORK_ROOT"]).parent, value, f"--{field}"))
+            manifest[field + "_starting_fingerprint"] = file_fingerprint(_safe_vault_path(work_vault_root(Path(os.environ["WORK_ROOT"])), value, f"--{field}"))
         manifest[field] = {"identity": value, "starting_fingerprint": manifest[field + "_starting_fingerprint"]}
 paths = list(manifest.get("affected_paths", []))
-vault_root = Path(os.environ["WORK_ROOT"]).parent
+vault_root = work_vault_root(Path(os.environ["WORK_ROOT"]))
 for path in os.environ.get("AFFECTED", "").splitlines():
     if path:
         _safe_vault_path(vault_root, path, "--affected-path")
@@ -965,7 +972,7 @@ cmd_work_resume() {
   WORK_ROOT="$(work_path)" WORK_ID="$1" py <<'PYEOF'
 work_dir, manifest = load_work(Path(os.environ["WORK_ROOT"]), os.environ["WORK_ID"])
 def current(identity):
-    return file_fingerprint(Path(os.environ["WORK_ROOT"]).parent / identity) if identity else None
+    return file_fingerprint(work_vault_root(Path(os.environ["WORK_ROOT"])) / identity) if identity else None
 source, target = manifest.get("source_identity"), manifest.get("target_identity")
 expected_affected = manifest.get("affected_starting_fingerprints", {})
 affected_matches = all(current(path) == fingerprint for path, fingerprint in expected_affected.items())
@@ -985,7 +992,7 @@ cmd_work_finalize() {
 root = Path(os.environ["WORK_ROOT"]); work_dir, manifest = load_work(root, os.environ["WORK_ID"])
 if manifest.get("status") != "ready-to-finalize":
     fail("work finalize requires status ready-to-finalize")
-vault = root.parent
+vault = work_vault_root(root)
 staged = manifest.get("mutations")
 if staged is None:
     staged_path = work_dir / "mutations.json"
@@ -1078,13 +1085,13 @@ if manifest.get("git_commit_status") == "committed":
     print(json.dumps(manifest, indent=2)); raise SystemExit
 if os.environ.get("LEAVE") == "1":
     manifest["status"] = "published"; manifest["git_commit_status"] = "left-uncommitted"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
-vault = root.parent
+vault = work_vault_root(root)
 try:
     repo = subprocess.check_output(["git", "-C", str(vault), "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL).strip()
 except (OSError, subprocess.CalledProcessError):
     manifest["git_commit_status"] = "off"; manifest["status"] = "published"; manifest["updated_at"] = now_stamp(); save_work_manifest(work_dir, manifest); print(json.dumps(manifest, indent=2)); raise SystemExit
 config = {}
-try: config = load_json(str(vault / "config.json"), "config")
+try: config = load_json(str(root.parent / "config.json"), "config")
 except SystemExit: config = {}
 git_config = config.get("git", {}) if isinstance(config, dict) else {}
 mode = git_config.get("mode", "ask")
@@ -1103,7 +1110,8 @@ if not paths:
     paths = [m.get("path") for m in mutations if isinstance(m, dict) and isinstance(m.get("path"), str)]
 cache_persistence = config.get("cache", {}).get("source_maps", {}).get("persistence") if isinstance(config.get("cache", {}), dict) else None
 if cache_persistence != "tracked":
-    paths = [p for p in paths if not p.startswith("cache/source-maps/")]
+    cache_prefix = (root.parent / "cache" / "source-maps").relative_to(vault).as_posix() + "/"
+    paths = [p for p in paths if not p.startswith(cache_prefix)]
 baselines = manifest.get("git_baselines", {})
 safe_paths = [p for p in paths if not baselines.get(p, {}).get("status")]
 downgraded = [p for p in paths if p not in safe_paths]

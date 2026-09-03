@@ -1126,7 +1126,7 @@ mkdir -p "$GIT_SCRATCH/.slipbox/bin" "$GIT_SCRATCH/.slipbox/work" "$GIT_SCRATCH/
 cp "$REPO_ROOT/skills/setup-slipbox/scripts/slipbox" "$GIT_SCRATCH/.slipbox/bin/slipbox"
 chmod +x "$GIT_SCRATCH/.slipbox/bin/slipbox"
 printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
-printf 'base\n' > "$GIT_SCRATCH/.slipbox/target.md"
+printf 'base\n' > "$GIT_SCRATCH/target.md"
 printf 'unrelated\n' > "$GIT_SCRATCH/unrelated.md"
 git -C "$GIT_SCRATCH" init -q
 git -C "$GIT_SCRATCH" config user.email test@example.com
@@ -1138,7 +1138,7 @@ git -C "$GIT_SCRATCH" add unrelated.md
 INDEX_BEFORE=$(git -C "$GIT_SCRATCH" write-tree)
 commit_result=$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity create --affected-path target.md)
 git_id=$(printf '%s' "$commit_result" | json_at '["work_id"]')
-printf 'updated\n' > "$GIT_SCRATCH/.slipbox/target.md"
+printf 'updated\n' > "$GIT_SCRATCH/target.md"
 python3 - "$GIT_SCRATCH/.slipbox/work/$git_id/manifest.json" <<'PY'
 import json, sys
 p=sys.argv[1]; m=json.load(open(p)); m.update(status="published", published_paths=["target.md"]); json.dump(m, open(p, "w"))
@@ -1147,7 +1147,7 @@ check "work commit preserves unrelated index" bash -c "cd '$GIT_SCRATCH/.slipbox
 check_eq "unrelated index remains staged" "$INDEX_BEFORE" "$(git -C "$GIT_SCRATCH" write-tree)"
 check_json "commit records committed state" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$git_id")"
 check_match "commit includes work trailer" '*Slipbox-Work-ID:*' "$(git -C "$GIT_SCRATCH" show -1 --format=%B)"
-printf 'old backlog\n' > "$GIT_SCRATCH/.slipbox/old-backlog.md"
+printf 'old backlog\n' > "$GIT_SCRATCH/old-backlog.md"
 git -C "$GIT_SCRATCH" add . && git -C "$GIT_SCRATCH" commit -qm backlog-base
 RENAME_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind migration --activity backlog-rename --affected-path old-backlog.md)" | json_at '["work_id"]')
 printf 'new backlog\n' > "$GIT_SCRATCH/.slipbox/work/$RENAME_ID/replacement.md"
@@ -1158,11 +1158,11 @@ PY
 check "backlog rename finalizes" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work finalize '$RENAME_ID'"
 check_json "backlog rename publishes both paths" 'assert data["published_paths"] == ["old-backlog.md", "new-backlog.md"]' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work inspect "$RENAME_ID")"
 check "backlog rename Git commit stages deletion and destination" bash -c "cd '$GIT_SCRATCH/.slipbox' && bin/slipbox work commit '$RENAME_ID' --yes"
-check_no_file "backlog old path removed" "$GIT_SCRATCH/.slipbox/old-backlog.md"
-check_file "backlog new path committed" "$GIT_SCRATCH/.slipbox/new-backlog.md"
+check_no_file "backlog old path removed" "$GIT_SCRATCH/old-backlog.md"
+check_file "backlog new path committed" "$GIT_SCRATCH/new-backlog.md"
 printf '%s\n' '{"git":{"mode":"auto","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
 AUTO_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity auto --affected-path auto.md)" | json_at '["work_id"]')
-printf 'auto\n' > "$GIT_SCRATCH/.slipbox/auto.md"
+printf 'auto\n' > "$GIT_SCRATCH/auto.md"
 python3 - "$GIT_SCRATCH/.slipbox/work/$AUTO_ID/manifest.json" <<'PY'
 import json,sys
 p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["auto.md"]);json.dump(m,open(p,"w"))
@@ -1170,7 +1170,7 @@ PY
 check_json "auto mode commits without confirmation" 'assert data["git_commit_status"] == "committed"' <<<"$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work commit "$AUTO_ID")"
 
 RACE_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity race --affected-path race.md)" | json_at '["work_id"]')
-printf 'race\n' > "$GIT_SCRATCH/.slipbox/race.md"
+printf 'race\n' > "$GIT_SCRATCH/race.md"
 python3 - "$GIT_SCRATCH/.slipbox/work/$RACE_ID/manifest.json" <<'PY'
 import json,sys
 p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["race.md"]);json.dump(m,open(p,"w"))
@@ -1188,7 +1188,7 @@ check_json "no repository is treated as Git off" 'assert data["git_commit_status
 
 printf '%s\n' '{"git":{"mode":"ask","commit_style":{"mode":"fallback"},"activity_trailers":true}}' > "$GIT_SCRATCH/.slipbox/config.json"
 ASK_ID=$(printf '%s' "$(cd "$GIT_SCRATCH/.slipbox" && bin/slipbox work create --kind literature --activity ask --affected-path ask.md)" | json_at '["work_id"]')
-printf 'ask\n' > "$GIT_SCRATCH/.slipbox/ask.md"
+printf 'ask\n' > "$GIT_SCRATCH/ask.md"
 python3 - "$GIT_SCRATCH/.slipbox/work/$ASK_ID/manifest.json" <<'PY'
 import json,sys
 p=sys.argv[1];m=json.load(open(p));m.update(status="published",published_paths=["ask.md"]);json.dump(m,open(p,"w"))

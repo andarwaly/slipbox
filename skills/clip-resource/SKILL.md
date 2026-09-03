@@ -4,14 +4,14 @@ description: Fetch one or more URLs and write each as a frozen Resource, matchin
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Clip Resource
 
 Bold terms in this file are defined in `GLOSSARY.md`.
 
-For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL and publishes a Resource file that looks like Web Clipper's own output. Each URL runs as independent recoverable Resource work under `/using-slipbox`; extraction and the template-resolved draft are checkpointed before the frozen target is published. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `.slipbox/bin/slipbox config get templates.<type>_path`, filename/frontmatter conventions via `.slipbox/bin/slipbox config get filenames.<type>`, and transcript languages via `.slipbox/bin/slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's published.
+For the case where the user has no Web Clipper, no Readwise, nothing installed: this skill fetches a URL and publishes a Resource file that looks like Web Clipper's own output. Each URL runs as independent recoverable Resource work under `/using-slipbox`; extraction and the template-resolved draft are checkpointed before the frozen target is published. It never touches `.slipbox/candidates/` or takes part in the candidate pipeline; it reads template paths via `.slipbox/bin/slipbox config get templates.<type>_path`, filename/frontmatter conventions from the configured template and established vault rules, and transcript languages via `.slipbox/bin/slipbox config get transcript_languages`, not pipeline bookkeeping. `make-literature-note` (and other note-writing skills) read the Resource file later; this skill's job ends once it's published.
 
 ## Prerequisite
 
@@ -65,6 +65,17 @@ Read the template first — its location comes from the `templates.<type>_path` 
 
 ### 05 - Write
 
+Read the destination with `.slipbox/bin/slipbox config get paths.resources` and decode
+its JSON string value. Join that vault-relative folder with the resolved Resource
+filename, preserving configured casing and nested directories. Pass this exact path
+as the work target and artifact mutation path `/using-slipbox`; report the same saved
+path after publication. The CLI accepts the complete vault-relative path and validates
+it; the caller resolves the configured folder. A missing, empty, or invalid setting
+blocks publication and requires configuration repair; preserve any extraction/draft
+already obtained. Do not substitute a default folder or append a content-type folder.
+On resume, compare the stored target with this configured destination; if they differ,
+report the mismatch and resolve it with the user before publication.
+
 Classify whether the resolved template used bare variables or a quoted instruction (see `references/variable-glossary.md`); this controls whether the staged draft needs the Resource-mode `/write-checks` gate below.
 
 Start or resume work for this Resource with kind `resource`, activity `clip`, and the
@@ -99,7 +110,7 @@ For a single URL, two valid endings, both explicit:
 
   **Type:** article
   **URL:** https://example.com/some-post
-  **Saved to:** resources/article/some-post.md
+  **Saved to:** <resolved Resource path>
   ```
 
 - **Fetch failure**: the fetch returned an error, or returned content but it's a paywall teaser, a login wall, a blocked/rate-limited transcript request, or otherwise not the real article/thread/video. Do not write a partial Resource file, and do not attempt to work around the paywall, login gate, or block. A clear failure report is a complete, correct run of this skill; a half-written Resource file is not.
@@ -119,9 +130,9 @@ Clip Results — 3 URLs
 
 | URL | Type | Result |
 |---|---|---|
-| example.com/a | article | Saved to `resources/article/a.md` |
+| example.com/a | article | Saved to `<resolved Resource path for a>` |
 | example.com/b | video | Failed — transcript disabled |
-| example.com/c | social | Saved to `resources/social/c.md` |
+| example.com/c | social | Saved to `<resolved Resource path for c>` |
 ```
 
 No closing prompt or question after either shape. State the outcome and end.

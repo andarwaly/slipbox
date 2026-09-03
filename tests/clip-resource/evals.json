@@ -208,6 +208,34 @@
         {"type": "contains", "text": "one URL's failure never"},
         {"type": "contains", "text": "one result row per URL"}
       ]
+    },
+    {
+      "prompt": "Finish an extracted Article clip whose staged draft is complete and whose resolved filename is Developing Taste.md. The vault configuration has paths.resources set to Library/Source Material. The invocation supplies no destination folder. Publish the clip through the normal workflow.",
+      "expected_output": "Reads paths.resources through the installed CLI, decodes its JSON string, and uses Library/Source Material/Developing Taste.md consistently as the work target, mutation path, and reported saved path. Adds neither .slipbox nor an article subfolder.",
+      "assertions": [
+        {
+          "type": "contains",
+          "text": "config get paths.resources"
+        },
+        {
+          "type": "contains",
+          "text": "Library/Source Material/Developing Taste.md"
+        },
+        {
+          "type": "not_contains",
+          "text": ".slipbox/Library/Source Material/Developing Taste.md"
+        }
+      ]
+    },
+    {
+      "prompt": "A clip has extraction.json and draft.md preserved, but config get paths.resources reports a missing setting. Finish publishing it.",
+      "expected_output": "Preserves the staged files, reports the missing configuration, and stops before publication without guessing Resources or resources/article as a fallback.",
+      "assertions": [
+        {
+          "type": "not_contains",
+          "text": "Clip Saved"
+        }
+      ]
     }
   ]
 }
