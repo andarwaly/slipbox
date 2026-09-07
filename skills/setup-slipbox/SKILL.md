@@ -4,7 +4,7 @@ description: One-time onboarding for the slipbox skill family — discovers vaul
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.10.0"
+  version: "1.12.0"
 ---
 
 # Setup Slipbox
@@ -118,7 +118,11 @@ Start from `assets/style-profile.schema.json` and interview the user against its
 - `tone_by_note`: inspect the actual note types under `config.json`'s `frontmatter` map and ask for the tone of each configured type. Never hardcode unsupported note types. Always asked upfront for every type, regardless of whether that type's `field_map` was deferred above — tone is vault-wide, not tied to any per-type resolution step, and asking it is a single short question, not worth deferring.
 - `language`: primary language, secondary language, technical-term preference, and the user's own code-switching description. `code_switching` remains a free string until its vocabulary is settled.
 - `vocabulary`: phrases the user says they often use and words or phrases they want avoided.
-- `formatting`: bullet use, wikilinks, aliases, headings, quotes, and citation placement.
+- `formatting`: bullet use, wikilinks, aliases, headings, quotes, and citation placement;
+  also ask whether the user has nuanced preferences for tables or Mermaid
+  diagrams. Record only stated preferences as optional `table_preferences` and
+  `mermaid_preferences` strings. Their absence preserves compatibility: use either
+  format only when the user requests it or when it clearly improves comprehension.
 - `editing_style`: iterative editing, renaming, compression, and redundancy removal preferences.
 
 Show the complete draft to the user. Let them edit or approve it. Verify preference-sensitive shape choices against an actual note where useful, but never treat that note as a corpus to analyze. Validate the approved profile against `assets/style-profile.schema.json` before writing `.slipbox/style-profile.json`.
@@ -210,7 +214,31 @@ Two unconditionally-copied assets, same treatment as `humanize-checklist.json` a
 
 Tell the user what was created: `.slipbox/style-profile.json`, `.slipbox/humanize-checklist.json`, `.slipbox/bin/slipbox`, `.slipbox/evergreen/`, `.slipbox/work/`, `.slipbox/cache/source-maps/`, `.slipbox/links.jsonl`, `.slipbox/config.json`, `.slipbox/GLOSSARY.md`, and `.slipbox/AGENTS.md`. Tell them which skills depend on this having run first: `clip-resource`, `find-connections` (its `--references` mode absorbs what `find-terms` used to do), the note-writing skills that compose notes from sources — `/grounding` (the bare engine, invoked directly for ad-hoc grounding), `ground-me` (literature-style passthrough), `make-literature-note` (literature notes), `make-reference-note` (Reference notes), and `make-evergreen-note` (evergreen notes) — and `/write-checks`, which every note-writing skill above runs before writing — checking the stated note preferences and humanizer workflow, and resolving each frontmatter field's mapping, formatting, zone placement, and title prefix. Also tell them that individual `config.json` values can be changed later without re-running this whole setup, via `.slipbox/bin/slipbox config set <dotted.path> <value>` (and `.slipbox/bin/slipbox config get` to inspect current values). The CLI's full command surface — `evergreen`, `links`, `config`, `humanize` — is documented in the copied `.slipbox/AGENTS.md`, which other skills in this family read from directly.
 
-Propose (never write silently) a one-line pointer into the vault's own `AGENTS.md`/`CLAUDE.md` — e.g. "This vault uses the slipbox skill family; its CLI lives at `.slipbox/bin/slipbox`." — the same way the vault may already document where to find the `obsidian` CLI. Show the exact line, ask before appending it, and skip this entirely if the user declines.
+Propose the following block for the vault's own `AGENTS.md`/`CLAUDE.md`. Show the exact
+block and ask before inserting or replacing it; skip it entirely if the user declines.
+When an older one-line Slipbox pointer exists, replace that line rather than retaining
+both forms.
+
+```markdown
+## Slipbox
+
+This vault uses the Slipbox skill family for source capture and grounded note-making.
+
+Before Slipbox work:
+- Read [`.slipbox/AGENTS.md`](.slipbox/AGENTS.md) for the installed workflow and runtime contract.
+- Read [`.slipbox/GLOSSARY.md`](.slipbox/GLOSSARY.md) for installed domain definitions. This is the vault-runtime counterpart of the package's authoring-only `CONTEXT.md`.
+
+Use the Slipbox skills for work in their domain:
+- `clip-resource` captures a URL as a frozen Resource.
+- `make-literature-note` grounds one Resource into one Literature note with source-owned Source Points.
+- `make-reference-note` synthesizes an explanatory Reference from grounded Literature notes.
+- `make-evergreen-note` develops the user's own cross-note Take.
+- `find-connections --references` surfaces reusable References and named referents; `find-connections --evergreen` finds note connections and possible Evergreen ideas.
+- `ground-me` runs ad-hoc grounding without committing to a note type.
+- `setup-slipbox` initializes or deliberately refreshes Slipbox configuration and runtime assets.
+
+Let these workflows compose `/grounding`, `/using-slipbox`, and `/write-checks`; do not bypass their grounding, transaction, or validation boundaries. The CLI lives at `.slipbox/bin/slipbox` and is invoked by its full path.
+```
 
 ## Re-run semantics (drift check, manual trigger only)
 
@@ -230,7 +258,9 @@ This section sits outside the numbered `## Workflow` above — it never runs as 
 9. Refresh `.slipbox/style-profile.json` through the stated preference interview, using the current configured note types and current notes only for verification. Show the old/new profile diff and ask before overwriting it.
 10. Re-copy `assets/humanize-checklist.json` to `.slipbox/humanize-checklist.json`, overwriting the existing copy — this picks up any skill-package-level update to the canonical workflow snapshot since the vault was last set up.
 11. Re-copy `assets/GLOSSARY.md` to `.slipbox/GLOSSARY.md` and `assets/AGENTS.md` to `.slipbox/AGENTS.md`, unconditionally, same category as `humanize-checklist.json` — both pick up any skill-package-level update. Neither is on the "never overwrite" list below; they're routine refreshes, not user-owned state. Write `.slipbox/AGENTS.md` last, after every other re-copy and write in this list has succeeded, same ordering guarantee as a first run.
-12. Check whether the vault's `AGENTS.md`/`CLAUDE.md` already carries the `.slipbox/bin/slipbox` pointer from Done. If it's missing (a vault set up before that step existed, or the user declined it previously), propose adding it now the same way, ask before writing, skip if declined.
+12. Compare the vault's `AGENTS.md`/`CLAUDE.md` with the Slipbox block in Done. If it is
+    missing or still uses the older one-line pointer, show the exact proposed addition or
+    replacement, ask before writing, and skip it if declined.
 
 **Never** overwrite `.slipbox/evergreen/*.md`, `.slipbox/discussions/`, or any existing note during a re-run.
 

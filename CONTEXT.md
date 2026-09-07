@@ -21,14 +21,18 @@ Source-oriented. Answers what the source chiefly communicates, whether through a
 
 **Reference note** (`make-reference-note`'s output — renamed from Term note, and its scope
 broadened; see [[reference-note-admission-contract]]):
-Bounded, concept-centered, and lookup-oriented: it holds a stable fact or an
-established/reusable framework rather than personal synthesis, and answers “what is
-X?” It accumulates across resources. Warrant-only extensions preserve the existing
-bounded body while adding deduplicated provenance; when a new grounded source changes
-the definition boundary or an essential characteristic, bounded fields may be
-recomposed transactionally. Tools, events, named creative works, and other reusable non-entity
-referents belong here; people, locations, and organizations remain Mentioned and
-surfacing-only.
+Explanatory, practical, concept-centered, and lookup-oriented: it always opens with a
+clean H1 and a concise definition, then adapts its headings and content to the user's
+lookup intent. It can explain established characteristics, causes, mechanisms,
+examples, applications, and guidance when those details are established, reusable, and
+material to the lookup. It is not a personal synthesis or a source-by-source dossier.
+The body is bounded by one coherent subject and the user's question, not by a fixed
+short template. It accumulates across resources. Warrant-only extensions preserve the
+existing body while adding deduplicated provenance; when new grounded evidence changes
+the definition boundary, an essential characteristic, or established content needed by
+the lookup inquiry, relevant body sections may be recomposed transactionally. Tools, events, named creative works, and other reusable
+non-entity referents belong here; people, locations, and organizations remain Mentioned
+and surfacing-only.
 
 **Admission sequence.** A candidate is admitted only when these checks pass, in this
 order:
@@ -130,11 +134,11 @@ success. Specialist workflow migration is a separate concern from this shared
 runtime contract.
 
 - A literature note is anchored to exactly one source and holds one or more Source Points, each independently citable.
-- A Reference note is anchored to a concept, accumulates across multiple sources over separate runs, and holds a definition, not a stance.
+- A Reference note is anchored to a concept, accumulates across multiple sources over separate runs, and holds an explanatory lookup, not a personal stance.
 - An evergreen note cites zero or more literature/Reference/evergreen notes as support; it does not contain them, and holds the Take.
 - A Source Point lives in a literature note; a Take lives in an evergreen note. They never coexist in the same note.
 - `make-literature-note` and `make-evergreen-note` both internally invoke the same skill, **`grounding`** (bare, fidelity-agnostic name, matching how `grill-with-docs` invokes `grilling`) — each states its own fidelity-direction inline (source-bound or notes-bound), rather than each having its own separate discussion skill. `grounding` is also user-invocable directly, unlike the old internal-only `discussion` skill it replaces.
-- `make-reference-note` (renamed from `ground-term`, then from `write-reference`; see [[find-terms-find-connections-merge]]) produces/extends Reference notes, triggered by the user naming a concept directly, or by `find-connections --references` (absorbed `find-terms`; see below) reporting one that recurs across notes but has no Reference note yet — a derived, on-demand report, not a stored queue. Its own job is synthesis, not citation-discipline: by the time a candidate crosses the recurrence threshold, the `/grounding` interview already happened at the claim level, inside whichever literature notes' `## Key Concepts` wikilink to it, via `make-literature-note`'s own session. `make-reference-note` pulls those already-grounded characterizations out and reconciles them into one definition; the user's explicit invocation selects the candidate, with consultation only for a genuine ambiguity, conflict, naming issue, or scope decision before writing — it never runs `/grounding` itself. Extending an *existing* Reference note with a source that hasn't been grounded yet routes through `make-literature-note` first, always — grounding stays at the claim level with no special case for this skill.
+- `make-reference-note` (renamed from `ground-term`, then from `write-reference`; see [[find-terms-find-connections-merge]]) produces/extends Reference notes, triggered by the user naming a concept directly, or by `find-connections --references` (absorbed `find-terms`; see below) reporting one that recurs across notes but has no Reference note yet — a derived, on-demand report, not a stored queue. Its own job is synthesis, not citation-discipline: by the time a candidate crosses the recurrence threshold, the `/grounding` interview already happened at the claim level, inside whichever literature notes' `## Key Concepts` wikilink to it, via `make-literature-note`'s own session. `make-reference-note` pulls those already-grounded characterizations out and reconciles them into one explanatory lookup; the user's explicit invocation selects the candidate, with consultation only for a genuine ambiguity, conflict, naming issue, or scope decision before writing — it never runs `/grounding` itself. Extending an *existing* Reference note with a source that hasn't been grounded yet routes through `make-literature-note` first, always — grounding stays at the claim level with no special case for this skill.
 - `find-terms` and `find-connections` are merged into one skill, `find-connections`, taking an explicit mode flag: `--references` (the absorbed `find-terms` behavior — Reference and Mentioned-referent recurrence, dedup, batch-presented, never auto-written) or `--evergreen` (the original `find-connections` behavior — mechanical links and sparked ideas, which do write directly). No flag given stops and asks which mode. `--references` reads final Literature notes' `Key Concepts`, `Mentioned`, and relevant retained prose. Source-map caches may verify a selected candidate, but never surface a candidate not retained in a Literature note. It runs semantic clustering before threshold-counting and applies the admission sequence in order; people, locations, and organizations remain surfacing-only, while reusable concepts and named works/tools/events are Reference candidates.
 - Each of the three note types has its own template file (Obsidian core Templates plugin or Templater, whichever the user has), discovered or offered by `setup-slipbox` per type, not a single shared template.
 

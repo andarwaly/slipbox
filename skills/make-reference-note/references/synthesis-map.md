@@ -8,6 +8,8 @@ permanent synthesis cache.
 The map records:
 
 - `candidate` — the clean concept identity and target Reference path/slug;
+- `inquiry` — the user's explicit lookup intent, or the general explanatory lookup
+  default when the invocation names only the subject;
 - `literature` — every contributing final Literature-note path and its grounded characterization;
 - `resources` — deduplicated canonical Resource paths/links, each with its source-map fingerprint when available;
 - `admission` — the ordered checks, evidence, and admitted/unresolved result;
@@ -18,7 +20,8 @@ The map records:
 
 A source that only strengthens warrant changes `resources`, provenance, and the
 Resource→Reference link; it must not cause body bytes to change. A source that
-changes the definition boundary may change only the required bounded body
-fields. Re-read and fingerprint the target immediately before staging and let
+changes the definition boundary, an essential characteristic, or established content
+needed by the lookup inquiry may change only the relevant explanatory body sections, preserving unrelated sections, aliases, and provenance. Re-read and
+fingerprint the target immediately before staging and let
 `work finalize` compare-and-swap it; a concurrent target change blocks the
 operation and leaves the work resumable.

@@ -171,6 +171,20 @@
       "prompt": "Migrate a batch containing compatible, older-compatible, incompatible, unresolved-source, and orphaned source-map entries.",
       "expected_output": "Reports each cache category separately, offers a selected or all-compatible migration scope, leaves unresolved and orphaned entries untouched, and keeps cache migration authorization independent from Literature heading and Reference note migration.",
       "assertions": [{"type":"contains","text":"older-compatible"},{"type":"contains","text":"incompatible"},{"type":"contains","text":"unresolved"},{"type":"contains","text":"orphaned"},{"type":"contains","text":"independent from"}]
+    },
+    {
+      "prompt": "Set up Slipbox in a vault whose root AGENTS.md contains only the old one-line Slipbox CLI pointer.",
+      "expected_output": "Shows one exact replacement block and waits for approval before writing it. The block points agents to .slipbox/AGENTS.md and .slipbox/GLOSSARY.md, names the user-facing Slipbox skills and find-connections modes, identifies /grounding, /using-slipbox, and /write-checks as composed engines, and gives the full CLI path. It explains that GLOSSARY.md is the runtime counterpart of authoring-only CONTEXT.md rather than pointing vault agents to an unavailable package file.",
+      "assertions": [
+        {"type": "contains","text": ".slipbox/AGENTS.md"},
+        {"type": "contains","text": ".slipbox/GLOSSARY.md"},
+        {"type": "contains","text": "make-reference-note"},
+        {"type": "contains","text": "find-connections --references"},
+        {"type": "contains","text": "/using-slipbox"},
+        {"type": "contains","text": ".slipbox/bin/slipbox"},
+        {"type": "contains","text": "approval"},
+        {"type": "not_contains","text": "retain both forms"}
+      ]
     }
   ]
 }

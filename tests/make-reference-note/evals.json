@@ -3,19 +3,47 @@
     {
       "prompt": "make-reference-note for the concept in fixtures/conceptual-depth-bounded.md",
       "files": ["fixtures/conceptual-depth-bounded.md"],
-      "expected_output": "Produces a bounded lookup entry with a clean H1, one concise definition, essential characteristics, and optional disambiguation only where useful; resolves provenance to original Resources in frontmatter, uses the exact prefixed basename/link target when configured, and does not add mandatory provenance, mechanism, application, implications, or Open Questions sections.",
+      "expected_output": "Produces an explanatory practical lookup with a clean H1 and concise definition, then chooses precise headings for the user's lookup intent. It may include established characteristics, mechanisms, examples, applications, or guidance when those details materially improve the lookup; resolves provenance to original Resources in frontmatter and uses the exact prefixed basename/link target when configured.",
       "assertions": [
-        {"type": "contains", "text": "clean H1"},
-        {"type": "contains", "text": "prefixed basename/link target"},
-        {"type": "contains", "text": "original Resources"},
-        {"type": "contains", "text": "essential characteristics"},
-        {"type": "not_contains", "text": "mandatory Sources"},
-        {"type": "not_contains", "text": "source-by-source"}
+        {"type": "contains","text": "clean H1"},
+        {"type": "contains","text": "prefixed basename/link target"},
+        {"type": "contains","text": "original Resources"},
+        {"type": "contains","text": "essential characteristics"},
+        {"type": "contains","text": "lookup intent"},
+        {"type": "not_contains","text": "source-by-source"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for a user asking how a stable mechanism works and when to apply it",
+      "expected_output": "Starts with H1 and a concise definition, then includes only established mechanism and application guidance that answers the inquiry, organized by conceptual dependency rather than source order.",
+      "assertions": [
+        {"type": "contains","text": "mechanism"},
+        {"type": "contains","text": "application"},
+        {"type": "contains","text": "conceptual"},
+        {"type": "not_contains","text": "source order"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for an explanatory concept where a Markdown table would clarify several established variants",
+      "expected_output": "May use a table when it materially improves comprehension, following the optional style-profile table preference when present; the table reorganizes admitted content and does not expand the note's scope.",
+      "assertions": [
+        {"type": "contains","text": "table"},
+        {"type": "contains","text": "style-profile"},
+        {"type": "contains","text": "scope"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note for an explanatory framework where a Mermaid diagram would clarify dependent steps",
+      "expected_output": "May use Mermaid when it materially improves comprehension, following the optional style-profile Mermaid preference when present; the diagram keeps the framework's natural unit and reorganizes admitted content without expanding scope.",
+      "assertions": [
+        {"type": "contains","text": "Mermaid"},
+        {"type": "contains","text": "natural unit"},
+        {"type": "contains","text": "scope"}
       ]
     },
     {
       "prompt": "make-reference-note for a named tool, event, and creative work",
-      "expected_output": "Adapts the bounded body to each subject kind without requiring fixed subtype headings or subtype configuration.",
+      "expected_output": "Adapts the explanatory practical lookup to each subject kind and the user's inquiry without requiring fixed subtype headings or subtype configuration.",
       "assertions": [
         {"type": "contains", "text": "tool"},
         {"type": "contains", "text": "event"},
@@ -25,7 +53,7 @@
     },
     {
       "prompt": "make-reference-note \"Zettelkasten Method\" — no Reference note exists yet; two literature notes' Key Concepts already wikilink to it, each with its own grounded characterization from a prior /grounding session",
-      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one merged definition where they agree or add distinct facets, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix; consults only if synthesis remains genuinely ambiguous.",
+      "expected_output": "Gathers the grounded characterization from each literature note (no re-interview — that already happened at the claim level via make-literature-note), reconciles them into one explanatory lookup organized by the concept and inquiry rather than source order, then writes a fresh Reference note through /write-checks, resolving the field_map for the reference type and the reference-type title prefix; consults only if synthesis remains genuinely ambiguous.",
       "assertions": [
         {"type": "contains", "text": "reference"}
       ]
@@ -221,7 +249,7 @@
     },
     {
       "prompt": "make-reference-note extending an existing note when a new source changes the definition boundary",
-      "expected_output": "Uses activity=recompose, stages draft.md and mutations.json with two distinct mutations—one Reference artifact and one links.jsonl ledger mutation—each carrying an expected_fingerprint, then finalizes them together with one work finalize while replacing only the required bounded body fields and preserving unchanged aliases and provenance.",
+      "expected_output": "Uses activity=recompose, stages draft.md and mutations.json with two distinct mutations—one Reference artifact and one links.jsonl ledger mutation—each carrying an expected_fingerprint, then finalizes them together with one work finalize while replacing only the required explanatory sections and preserving unrelated sections, aliases, and provenance.",
       "assertions": [
         {"type": "contains", "text": "activity=recompose"},
         {"type": "contains", "text": "only the required"},
@@ -233,6 +261,17 @@
         {"type": "contains", "text": "two distinct mutations"},
         {"type": "contains", "text": "finalizes them together"},
         {"type": "contains", "text": "one work finalize"}
+      ]
+    },
+    {
+      "prompt": "make-reference-note extending an existing note whose definition remains stable when a new grounded source adds established mechanism and guidance requested by the user",
+      "expected_output": "Uses activity=recompose because the new grounded content answers the lookup inquiry, updates only the relevant explanatory sections, preserves unrelated sections, aliases, and prior provenance, and finalizes the Reference and links mutation atomically.",
+      "assertions": [
+        {"type": "contains","text": "activity=recompose"},
+        {"type": "contains","text": "lookup inquiry"},
+        {"type": "contains","text": "relevant explanatory sections"},
+        {"type": "contains","text": "unrelated sections"},
+        {"type": "contains","text": "atomically"}
       ]
     },
     {
@@ -255,7 +294,7 @@
     },
     {
       "prompt": "make-reference-note invoked directly for a synthesized definition",
-      "expected_output": "Publishes the bounded draft selected by the explicit invocation through the transactional work lifecycle; it proceeds without requesting a second approval and consults the user only to resolve genuine ambiguity.",
+      "expected_output": "Publishes the explanatory draft selected by the explicit invocation through the transactional work lifecycle; it proceeds without requesting a second approval and consults the user only to resolve genuine ambiguity.",
       "assertions": [
         {"type": "contains", "text": "explicit invocation"},
         {"type": "contains", "text": "without requesting a second approval"},
@@ -325,9 +364,9 @@
     },
     {
       "prompt": "make-reference-note for a concise bounded concept, a named framework, a tool, an event, and a creative work",
-      "expected_output": "Adapts the same bounded lookup shape across all five subject kinds: clean H1, concise definition, essential characteristics where useful, and Resource-only provenance without subtype-specific headings or a source dossier.",
+      "expected_output": "Adapts an explanatory practical lookup across all five subject kinds: clean H1, concise definition, and precise sections selected for the inquiry, with Resource-only provenance and no source dossier or subtype-specific template.",
       "assertions": [
-        {"type": "contains", "text": "bounded lookup"},
+        {"type": "contains", "text": "explanatory practical lookup"},
         {"type": "contains", "text": "Resource-only provenance"},
         {"type": "not_contains", "text": "source dossier"}
       ]
@@ -361,7 +400,7 @@
     },
     {
       "prompt": "make-reference-note extending an existing note where the new grounded source changes the definition boundary",
-      "expected_output": "Uses recompose, changes only the bounded body fields required by the new synthesis, preserves aliases and prior provenance, and finalizes the note and links mutation atomically.",
+      "expected_output": "Uses recompose, changes only the explanatory sections required by the new synthesis, preserves unrelated sections, aliases, and prior provenance, and finalizes the note and links mutation atomically.",
       "assertions": [
         {"type": "contains", "text": "recompose"},
         {"type": "contains", "text": "preserves aliases"},

@@ -3,7 +3,7 @@ name: write-checks
 description: Check a note draft against the vault's own style and humanize checklist, and resolve its frontmatter fields against config.json's field_map — use when another skill in the slipbox family is about to write a note to disk.
 license: MIT
 metadata:
-  version: "1.9.0"
+  version: "1.10.0"
 ---
 
 # Write-checks
@@ -69,7 +69,7 @@ last closeout batch.
 
 ## Style
 
-Read `.slipbox/style-profile.json` as the user's stated note-shape and editing preference contract. Follow its sentence shape, configured note-type tone, formatting, vocabulary, and editing preferences. If `formatting.blank_lines_between_blocks` is `false`, save compact Markdown: retain blank lines only for genuine semantic paragraph breaks or where Markdown parsing requires one. Do not insert them merely between a heading and prose, consecutive prose lines, prose and a list, list items and the next heading, or other adjacent blocks. If the key is absent, preserve the existing spaced behavior for compatibility. Do not infer or mimic a corpus voice, and do not use the profile as a humanizer detection baseline.
+Read `.slipbox/style-profile.json` as the user's stated note-shape and editing preference contract. Follow its sentence shape, configured note-type tone, formatting, vocabulary, and editing preferences. If `formatting.blank_lines_between_blocks` is `false`, save compact Markdown: retain blank lines only for genuine semantic paragraph breaks or where Markdown parsing requires one. Do not insert them merely between a heading and prose, consecutive prose lines, prose and a list, list items and the next heading, or other adjacent blocks. If the key is absent, preserve the existing spaced behavior for compatibility. For Reference notes, an explicit user request for a table or Mermaid overrides the stored presentation preference when that form can represent the admitted material accurately. Otherwise use `formatting.table_preferences` and `formatting.mermaid_preferences` when present. When absent, introduce tables or Mermaid only when a material comprehension gain justifies them. Keep either format within the admitted lookup scope and use it to reorganize redundant prose rather than expand the subject. Do not infer or mimic a corpus voice, and do not use the profile as a humanizer detection baseline.
 
 ## Humanize
 

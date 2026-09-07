@@ -18,6 +18,7 @@ Run this before using any other slipbox skill. It discovers conventions from you
 6. **CLI install** — copies `slipbox` (the CLI every other skill uses to talk to `.slipbox/evergreen/`, `.slipbox/links.jsonl`, and `.slipbox/config.json` — no SQLite, plain files) into your vault at `.slipbox/bin/slipbox`, and creates `.slipbox/evergreen/`, `.slipbox/work/`, `.slipbox/cache/source-maps/`, and the links log. Work is always local; source-map cache persistence is asked separately.
 7. **Config write** — drafts `.slipbox/config.json` from everything confirmed above, shows it to you, and writes it only after your approval and after it validates against the skill's own config schema.
 8. **Copy `GLOSSARY.md` and write `.slipbox/AGENTS.md`** — copies the glossary in unconditionally, then writes `.slipbox/AGENTS.md` last, only once every other artifact above already exists. Its presence is the completion sentinel every other slipbox skill checks for, so a partial run must never leave it behind.
+9. **Offer vault guidance** — shows an optional `## Slipbox` block for your vault's root `AGENTS.md`/`CLAUDE.md`. The block points agents to `.slipbox/AGENTS.md` and `.slipbox/GLOSSARY.md`, names each user-facing Slipbox workflow, identifies the composed engines and CLI, and replaces the older one-line pointer when present. It is written only after your approval.
 
 ## Usage
 

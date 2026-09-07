@@ -74,7 +74,7 @@ _Avoid_: admission gates (these run only if the entity-check comes back negative
 
 **Evergreen note**
 The file a confirmed Take gets written into: idea-oriented, not bound to one source or term, synthesized from multiple existing notes plus personal experience. Unlike a literature or Reference note, can be revisited and fully rewritten across separate sessions.
-_Avoid_: Literature note (source-bound, one-shot per claim, never rewritten); Reference note (concept-bound lookup artifact with transactional recomposition when its definition boundary changes).
+_Avoid_: Literature note (source-bound, one-shot per claim, never rewritten); Reference note (concept-bound lookup artifact with transactional recomposition when grounded inquiry-relevant content changes).
 
 **Evidence**
 In Question/Evidence/Warrant reasoning, what the source said or showed, reported rather than interpreted. The raw material a Conclusion is built from, and the one part of that trio (besides Conclusion) written to disk, in condensed form.
@@ -171,11 +171,19 @@ A named concept, method, tool, framework, or stable fact with a reusable label, 
 _Avoid_: Reference note (the file the Reference's definition accumulates into, not the concept itself).
 
 **Reference note**
-The file a Reference's bounded, reusable definition lives in. When a new source only
-adds warrant, publication preserves the existing body and appends deduplicated Resource
-provenance. When new evidence changes the definition boundary, the body may be
-transactionally recomposed through compare-and-swap publication; this is not an
-provenance-only append policy.
+The file a Reference's explanatory, practical lookup lives in. It always begins with a
+clean H1 and concise definition, then uses precise sections selected for the user's
+lookup intent. Established characteristics, causes, mechanisms, examples, applications,
+or guidance may be included when they materially improve comprehension and remain
+bounded to the same coherent subject. Prose, bullets, Markdown tables, and Mermaid may
+present that admitted content; an explicit user request takes priority, while the style
+profile controls other choices. Stable competing accounts may be compared when needed
+for the lookup, but a conflict that prevents a stable definition blocks admission. When
+a new source only adds warrant, publication
+preserves the existing body and appends deduplicated Resource provenance. When new
+evidence changes the definition boundary, an essential characteristic, or established
+content needed by the lookup inquiry, relevant body sections may be transactionally
+recomposed through compare-and-swap publication.
 _Avoid_: Literature note (per-source, one-shot, holds Source Points rather than a definition); Evergreen note (idea-oriented and notes-bound rather than lookup-oriented).
 
 **Resource**

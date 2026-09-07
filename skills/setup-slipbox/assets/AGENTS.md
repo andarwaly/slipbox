@@ -2,7 +2,7 @@
 
 This file exists only after a fully successful `setup-slipbox` run. Its presence is the completion sentinel every other skill in this family checks before doing anything: if `.slipbox/AGENTS.md` doesn't exist, `setup-slipbox` hasn't finished, and no other skill should proceed.
 
-This is separate from the vault's own root `AGENTS.md`/`CLAUDE.md`. That file carries a human-facing, opt-in one-line pointer proposed by `setup-slipbox`'s Done section ("This vault uses the slipbox skill family..."), written only if the user agrees to it. This file is unconditional, always present after setup, and written for an agent reading it mid-task, not for a human onboarding to the vault.
+This is separate from the vault's own root `AGENTS.md`/`CLAUDE.md`. `setup-slipbox` proposes an opt-in root guidance block that points back to this runtime contract and `.slipbox/GLOSSARY.md`, names the Slipbox skills, and identifies their composed engines; it is written only if the user agrees. This file is unconditional, always present after setup, and written for an agent reading it mid-task, not for a human onboarding to the vault.
 
 ## Workflow
 

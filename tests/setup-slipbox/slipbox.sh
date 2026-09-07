@@ -178,11 +178,44 @@ empty_selected = copy.deepcopy(base)
 empty_selected["migrations"] = {"evergreen_headings": {"mode":"lazy", "selected":[]}}
 assert valid(empty_selected) is False
 PY
+
+echo "--- style profile schema: optional explanatory visual preferences ---"
+STYLE_SCHEMA="$REPO_ROOT/skills/setup-slipbox/assets/style-profile.schema.json"
+python3 - "$STYLE_SCHEMA" <<'PY'
+import json, sys
+schema = json.load(open(sys.argv[1]))
+formatting_schema = schema["properties"]["formatting"]
+formatting = formatting_schema["properties"]
+assert formatting["table_preferences"]["type"] == "string"
+assert formatting["mermaid_preferences"]["type"] == "string"
+assert "table_preferences" not in formatting_schema["required"]
+assert "mermaid_preferences" not in formatting_schema["required"]
+try:
+    from jsonschema import Draft7Validator
+except ImportError:
+    Draft7Validator = None
+base_formatting = {
+    "bullet_heavy": True, "wikilinks": "use", "aliases": "use",
+    "headings": "descriptive", "quotes": "sparingly", "citations": "frontmatter"
+}
+if Draft7Validator:
+    validator = Draft7Validator(formatting_schema)
+    validator.validate(base_formatting)
+    validator.validate({**base_formatting, "table_preferences": "comparisons", "mermaid_preferences": "relationships"})
+    assert not validator.is_valid({**base_formatting, "table_preferences": True})
+print("ok   - old formatting validates; table and Mermaid preferences are optional strings")
+PY
 pass "schema accepts exact git/cache configuration and rejects invalid modes, missing persistence, and tracked work"
 
 echo "--- setup bootstrap contract ---"
 SETUP_SKILL="$REPO_ROOT/skills/setup-slipbox/SKILL.md"
 check_match "setup creates work and source-map cache directories" '* .slipbox/work .slipbox/cache/source-maps*' "$(grep -F 'mkdir -p .slipbox/bin .slipbox/evergreen .slipbox/work .slipbox/cache/source-maps' "$SETUP_SKILL")"
+assert_contains "setup records table preferences" '`table_preferences`' "$SETUP_SKILL"
+assert_contains "setup records Mermaid preferences" '`mermaid_preferences`' "$SETUP_SKILL"
+for guidance in '.slipbox/AGENTS.md' '.slipbox/GLOSSARY.md' 'clip-resource' 'make-literature-note' 'make-reference-note' 'make-evergreen-note' 'find-connections --references' 'find-connections --evergreen' 'ground-me' 'setup-slipbox' '/grounding' '/using-slipbox' '/write-checks' '.slipbox/bin/slipbox'; do
+  check_match "vault guidance includes $guidance" "*$guidance*" "$(sed -n '/^```markdown$/,/^```$/p' "$SETUP_SKILL")"
+done
+check_no_match "vault guidance retires the one-line pointer" '*one-line pointer into the vault*' "$(cat "$SETUP_SKILL")"
 AGENTS_LINE=$(grep -n 'Copy `assets/AGENTS.md`' "$SETUP_SKILL" | head -1 | cut -d: -f1)
 CONFIG_LINE=$(grep -n 'config.json` is written' "$SETUP_SKILL" | head -1 | cut -d: -f1)
 if [ "$AGENTS_LINE" -gt "$CONFIG_LINE" ]; then pass "completion sentinel is ordered after config"; else failed "completion sentinel ordering"; fi

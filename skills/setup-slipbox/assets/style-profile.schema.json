@@ -83,6 +83,14 @@
         "headings": { "type": "string" },
         "quotes": { "type": "string" },
         "citations": { "type": "string" },
+        "table_preferences": {
+          "type": "string",
+          "description": "Optional nuanced preferences for when and how notes use Markdown tables. Omit when the user has no preference."
+        },
+        "mermaid_preferences": {
+          "type": "string",
+          "description": "Optional nuanced preferences for when and how notes use Mermaid diagrams. Omit when the user has no preference."
+        },
         "blank_lines_between_blocks": {
           "type": "boolean",
           "description": "Whether saved notes use blank lines between adjacent Markdown blocks. Absent means preserve the legacy spaced format."

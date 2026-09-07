@@ -2,11 +2,11 @@
 name: make-reference-note
 description: Synthesize an already-grounded Reference note from the literature
   notes that wikilink to it — pulls in each note's grounded characterization,
-  reconciles them into one definition and writes the completed result.
+  reconciles them into one explanatory lookup and writes the completed result.
 disable-model-invocation: true
 license: MIT
 metadata:
-  version: "1.11.0"
+  version: "1.12.0"
 ---
 
 # Make-reference-note
@@ -31,6 +31,11 @@ thought of it themselves or because `find-connections --references` surfaced it 
 recurrence candidate. There is no backlog this skill pulls from itself; recurrence is
 derived on demand by `find-connections`, not surfaced into a queue this skill owns.
 
+Capture any lookup inquiry included in the invocation and carry it into
+`synthesis-map.json`. If the user names only the subject, use a general explanatory
+lookup as the inquiry. Do not add a question merely to choose sections when the intent
+is already explicit.
+
 Use `.slipbox/bin/slipbox config get paths.reference` to locate the folder, checking for
 a Reference note for this candidate there — not an assumed `reference/` folder —
 before writing. Apply the `.slipbox/bin/slipbox config get filenames.reference` casing convention:
@@ -50,9 +55,9 @@ manifest's `kind` is `reference`, and its `activity` is one of `create`,
 
 - `manifest.json` — target and contributing-source identities plus starting fingerprints;
 - `synthesis-map.json` — the reconciled evidence map (see `references/synthesis-map.md`); and
-- `draft.md` — the complete bounded Reference draft, including frontmatter.
+- `draft.md` — the complete explanatory Reference draft, including frontmatter.
 
-Checkpoint work with the reconciled synthesis and bounded draft `/using-slipbox` after
+Checkpoint work with the reconciled synthesis and explanatory draft `/using-slipbox` after
 the source-resolution/admission boundary and again after any ambiguity is resolved.
 There is no permanent synthesis cache: `synthesis-map.json` is transient work
 state and is discarded with the work item after publication.
@@ -107,16 +112,28 @@ Recurrence count is discovery evidence only; it is never itself a warrant for ad
 
 ## Synthesize and resolve ambiguity
 
-Reconcile the gathered characterizations into one bounded lookup entry. Follow
-`references/bounded-lookup.md`: clean H1, one concise definition, essential
-characteristics/components, and optional disambiguation only when a common confusion
-materially impairs lookup. The body adapts across concepts, frameworks, tools, events,
-and creative works; it has no subtype-specific required headings.
+Reconcile the gathered characterizations into one explanatory practical lookup. Follow
+`references/bounded-lookup.md`: always begin with a clean H1 and concise definition,
+then choose precise headings and content that answer the user's lookup intent. Include
+established characteristics, causes, mechanisms, examples, applications, or guidance
+when they are relevant and materially improve the lookup. The body adapts across
+concepts, frameworks, tools, events, and creative works; it has no fixed template.
+Keep one coherent subject and omit supported details that do not serve the lookup.
 
 Provenance is frontmatter only. Populate only the configured Reference fields
 (`type`, `created`, `aliases`/`alt_names`, and `sources`); `sources` contains the
-deduplicated original Resource links, never Literature-note links. Do not add body
-`Sources`, mechanism, application, implications, or `Open Questions` sections.
+deduplicated original Resource links, never Literature-note links. Do not add a
+source-by-source dossier, personal judgments, or novel recommendations.
+Source-specific claims stay in Literature notes; personal judgments and novel
+recommendations route to Evergreen. Stable, credible disagreement may be represented
+briefly when necessary for the lookup, while unsupported or unstable identity claims
+remain out. Do not fill gaps from model knowledge.
+
+Follow `.slipbox/style-profile.json` through `/write-checks`. Prose, bullets, Markdown
+tables, and Mermaid are all eligible. Honor an explicit user request for a table or
+Mermaid when it can represent the grounded material accurately; otherwise use the
+profile's preference and introduce either proactively only for a material comprehension
+gain. Use a visual form to replace redundant prose, never to expand the admitted scope.
 
 Record every contributing Literature path, resolved Resource identity,
 source-map fingerprint (when available), admission evidence, agreements,
@@ -124,7 +141,7 @@ conflicts, and proposed changes in `synthesis-map.json`. This map is the audit
 trail for the current work, not a second note and not a source-by-source body.
 
 - Where characterizations agree or add distinct facets, merge them into one coherent
-  definition rather than listing each source's phrasing separately.
+  explanatory lookup rather than listing each source's phrasing separately.
 - Where characterizations conflict, surface the conflict to the user rather than
   silently picking one — resolve it the same way any other flagged tension in this
   family gets handled: if the user opts in to flagging it rather than resolving it now,
@@ -179,7 +196,7 @@ Use the shared actions below for every admitted operation:
 - Start or resume work for the Reference candidate `/using-slipbox`, selecting
   `create`, `extend-provenance`, or `recompose` and recording the target's
   starting fingerprint in `manifest.json`.
-- Checkpoint work with the reconciled synthesis and bounded draft `/using-slipbox`.
+- Checkpoint work with the reconciled synthesis and explanatory draft `/using-slipbox`.
   Write the complete candidate note to `draft.md`; do not write the vault target.
 - Stage `mutations.json` with one artifact mutation for the Reference target,
   whose `expected_fingerprint` is the manifest fingerprint (or `null` for a
@@ -202,7 +219,8 @@ Use the shared actions below for every admitted operation:
 
 Use activity `extend-provenance` when the new grounded source only strengthens
 the existing warrant. Use activity `recompose` when it changes the definition
-boundary or any essential characteristic.
+boundary, an essential characteristic, or adds established explanatory content needed
+for the user's lookup inquiry.
 
 `sources` already has its resolved mapping and formatting from the reference's first
 write — no field resolution needed here.
@@ -213,8 +231,9 @@ write — no field resolution needed here.
    path, including the Reference target and `links.jsonl`.
 3. For `extend-provenance`, preserve the existing body bytes and aliases, append only
    the deduplicated Resource to the mapped `sources` array, and write the complete
-   candidate note to `draft.md`. For `recompose`, change only the required bounded
-   body fields and preserve unchanged frontmatter. Never write either draft directly
+   candidate note to `draft.md`. For `recompose`, change only the explanatory sections
+   required by the changed synthesis and preserve unrelated sections and unchanged
+   frontmatter. Never write either draft directly
    to the vault target.
 4. Validate `draft.md` with `/write-checks`, then stage `mutations.json` containing
    the artifact replacement (`path`, `replacement_path`, and expected fingerprint)
@@ -230,12 +249,12 @@ write — no field resolution needed here.
 
 ## Done
 
-- New reference: the file on disk reflects the synthesized definition selected by the explicit invocation.
+- New reference: the file on disk reflects the synthesized explanatory lookup selected by the explicit invocation, beginning with the required H1 and definition.
 - Extension: the file on disk reflects every source that has ever fed it, old and new;
   a `links` row (`rel_type: 'extends'`) connects the new resource to the reference
   note.
-- Recomposition: only the bounded body fields required by the changed synthesis are
-  replaced; unchanged aliases and provenance are preserved, and compare-and-swap
+- Recomposition: only the explanatory sections required by the changed synthesis are
+  replaced; unrelated sections, aliases, and provenance are preserved, and compare-and-swap
   publication blocks concurrent target edits.
 - Any flagged tension is logged in the evergreen backlog.
 - The user is told the file path.
@@ -278,7 +297,7 @@ values and retaining them in the migration map as blocked repairs. Unresolved va
 not block unrelated resolvable values unless they make the candidate's identity or
 definition ambiguous.
 
-For selected notes whose body is not already a bounded lookup, start a `migration`
+For selected notes whose body is not already an explanatory lookup, start a `migration`
 Reference work with Start or resume work `/using-slipbox`, re-verify the original Literature notes,
 Resources, and source-map fingerprints, and checkpoint before editing the draft. Classify
 each removed or displaced passage as `already preserved source detail`, `reader-owned
